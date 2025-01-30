@@ -1,0 +1,292 @@
+/* static/css/style.css */
+
+/* Base Styles */
+:root {
+    --primary-color: #3B82F6;
+    --primary-dark: #2563EB;
+    --secondary-color: #10B981;
+    --text-color: #1F2937;
+    --text-light: #6B7280;
+    --background-light: #F3F4F6;
+    --white: #FFFFFF;
+    --error: #EF4444;
+    --success: #10B981;
+  }
+  
+  /* Typography */
+  body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    color: var(--text-color);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  
+  /* Custom Components */
+  
+  /* Buttons */
+  .btn {
+    @apply px-6 py-2 rounded-lg transition duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-500 text-white hover:bg-blue-600;
+  }
+  
+  .btn-secondary {
+    @apply bg-green-500 text-white hover:bg-green-600;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-blue-500 text-blue-500 hover:bg-blue-50;
+  }
+  
+  /* Cards */
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .card-header {
+    @apply p-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply p-6;
+  }
+  
+  .card-footer {
+    @apply p-4 border-t border-gray-200;
+  }
+  
+  /* Form Elements */
+  .form-group {
+    @apply mb-4;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .form-input.error {
+    @apply border-red-500;
+  }
+  
+  textarea.form-input {
+    @apply h-32 resize-none;
+  }
+  
+  /* Navigation */
+  .nav-link {
+    @apply px-4 py-2 text-gray-600 hover:text-blue-500 transition duration-300;
+  }
+  
+  .nav-link.active {
+    @apply text-blue-500 font-medium;
+  }
+  
+  /* Hero Section */
+  .hero {
+    @apply relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white;
+    min-height: 500px;
+  }
+  
+  .hero-content {
+    @apply container mx-auto px-4 py-16 relative z-10;
+  }
+  
+  /* Features Grid */
+  .features-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8;
+  }
+  
+  .feature-card {
+    @apply p-6 bg-white rounded-lg shadow-md;
+    @apply transform transition duration-300 hover:-translate-y-1;
+  }
+  
+  /* Alerts */
+  .alert {
+    @apply p-4 mb-4 rounded-lg;
+  }
+  
+  .alert-success {
+    @apply bg-green-100 text-green-700 border border-green-400;
+  }
+  
+  .alert-error {
+    @apply bg-red-100 text-red-700 border border-red-400;
+  }
+  
+  .alert-warning {
+    @apply bg-yellow-100 text-yellow-700 border border-yellow-400;
+  }
+  
+  .alert-info {
+    @apply bg-blue-100 text-blue-700 border border-blue-400;
+  }
+  
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* Loading States */
+  .loading {
+    @apply relative pointer-events-none opacity-75;
+  }
+  
+  .loading::after {
+    content: "";
+    @apply absolute inset-0 bg-white bg-opacity-50;
+  }
+  
+  /* Responsive Utilities */
+  @media (max-width: 640px) {
+    .container {
+      @apply px-4;
+    }
+    
+    .hero {
+      min-height: 400px;
+    }
+  }
+  
+  /* Image Styles */
+  .img-responsive {
+    @apply max-w-full h-auto;
+  }
+  
+  .img-rounded {
+    @apply rounded-lg;
+  }
+  
+  .img-circle {
+    @apply rounded-full;
+  }
+  
+  /* Event Type Icons */
+  .event-icon {
+    @apply w-12 h-12 rounded-full flex items-center justify-center;
+  }
+  
+  .event-icon-wedding {
+    @apply bg-pink-100 text-pink-600;
+  }
+  
+  .event-icon-corporate {
+    @apply bg-blue-100 text-blue-600;
+  }
+  
+  .event-icon-sports {
+    @apply bg-green-100 text-green-600;
+  }
+  
+  /* Footer Styles */
+  .footer {
+    @apply bg-gray-800 text-gray-300;
+  }
+  
+  .footer-link {
+    @apply text-gray-300 hover:text-white transition duration-300;
+  }
+  
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+  
+  /* Utility Classes */
+  .shadow-hover {
+    @apply transition-shadow duration-300;
+  }
+  
+  .shadow-hover:hover {
+    @apply shadow-lg;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-blue-600;
+  }
+  
+  /* AI Feature Highlighting */
+  .ai-feature {
+    @apply relative pl-8;
+  }
+  
+  .ai-feature::before {
+    content: "🤖";
+    @apply absolute left-0 top-1/2 transform -translate-y-1/2;
+  }
+  
+  /* Privacy Badge */
+  .privacy-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    @apply bg-purple-100 text-purple-800;
+  }
+  
+  /* Gallery Grid */
+  .gallery-grid {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+  }
+  
+  .gallery-item {
+    @apply relative overflow-hidden rounded-lg;
+    aspect-ratio: 1;
+  }
+  
+  .gallery-item img {
+    @apply w-full h-full object-cover transition duration-300;
+  }
+  
+  .gallery-item:hover img {
+    @apply transform scale-105;
+  }

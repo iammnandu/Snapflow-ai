@@ -1,0 +1,33 @@
+{% extends 'home/base.html' %}
+
+{% block title %}SnapFlow - Home{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Discover the Power of AI in Event Photography</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <!-- Event Categories -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Event Categories</h2>
+            <ul class="space-y-2">
+                <li class="flex items-center"><span class="w-4 h-4 bg-blue-500 rounded-full mr-2"></span>Weddings & Personal Events</li>
+                <li class="flex items-center"><span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>Corporate Functions</li>
+                <li class="flex items-center"><span class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></span>Sports & Activities</li>
+                <li class="flex items-center"><span class="w-4 h-4 bg-purple-500 rounded-full mr-2"></span>Cultural Events</li>
+            </ul>
+        </div>
+        
+        <!-- AI Features -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">AI-Powered Features</h2>
+            <ul class="space-y-2">
+                <li>🤖 Automated Photo Tagging</li>
+                <li>🎯 Smart Image Selection</li>
+                <li>✨ Intelligent Enhancement</li>
+                <li>🔒 Privacy Protection</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

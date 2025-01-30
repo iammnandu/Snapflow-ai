@@ -1,0 +1,27 @@
+{% extends 'home/base.html' %}
+
+{% block title %}SnapFlow - AI-Driven Event Photo Management{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome to SnapFlow</h1>
+    <p class="text-xl text-gray-600 mb-8">AI-Powered Event Photography Management System</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Smart Organization</h3>
+            <p class="text-gray-600">AI-powered photo categorization and tagging for effortless management</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Real-Time Sharing</h3>
+            <p class="text-gray-600">Instant upload and sharing capabilities for live event coverage</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Privacy First</h3>
+            <p class="text-gray-600">Advanced privacy controls and secure sharing options</p>
+        </div>
+    </div>
+    
+    <a href="{% url 'home:index' %}" class="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition duration-300">Get Started</a>
+</div>
+{% endblock %}
