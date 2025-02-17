@@ -31,3 +31,5 @@
 venv/
 env/
 ENV/
+
+user_detaits.txt

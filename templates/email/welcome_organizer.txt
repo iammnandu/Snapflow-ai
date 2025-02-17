@@ -1,0 +1,22 @@
+Welcome to Event Management!
+
+Hello {{ username }},
+
+Welcome aboard as an Event Organizer! We're excited to have you join our platform.
+
+As an organizer, you can:
+- Create and manage events
+- Hire photographers
+- Manage participant lists
+- Access event analytics
+
+To get started:
+1. Complete your organizer profile
+2. Create your first event
+3. Invite participants
+
+Visit {{ login_url }} to complete your profile.
+
+If you have any questions, our support team is here to help!
+
+© {% now "Y" %} Event Management. All rights reserved.

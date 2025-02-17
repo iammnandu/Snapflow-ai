@@ -1,0 +1,24 @@
+Welcome to Our Photography Network!
+
+Hello {{ username }},
+
+Welcome to our platform as a Professional Photographer!
+
+Here's what you can do:
+- Create your professional profile
+- Showcase your portfolio
+- Connect with event organizers
+- Manage your assignments
+- Upload and organize event photos
+
+Next steps:
+1. Complete your photographer profile
+2. Upload your portfolio
+3. Set your availability
+4. Add your watermark (optional)
+
+Visit {{ login_url }} to complete your profile.
+
+Note: Your profile will be reviewed by our team for verification.
+
+© {% now "Y" %} Event Management. All rights reserved.

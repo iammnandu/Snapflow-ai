@@ -1,0 +1,11 @@
+{% extends "users/base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Select User Type</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Continue</button>
+    </form>
+</div>
+{% endblock %}

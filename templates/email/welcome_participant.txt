@@ -1,0 +1,22 @@
+Welcome to Event Management!
+
+Hello {{ username }},
+
+Welcome to our event platform! We're glad to have you as a participant.
+
+As a participant, you can:
+- View event details and updates
+- Access event photos
+- Manage your privacy settings
+- Request photo modifications
+
+To get started:
+1. Complete your profile
+2. Set your photo privacy preferences
+3. Connect with your event
+
+Visit {{ login_url }} to complete your profile.
+
+Enjoy your event experience!
+
+© {% now "Y" %} Event Management. All rights reserved.
