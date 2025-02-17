@@ -9,54 +9,45 @@ class UserTypeSelectionForm(forms.Form):
         label="Select User Type"
     )
 
-class BaseRegistrationForm(UserCreationForm):
+class BasicRegistrationForm(UserCreationForm):
+    """Initial registration form with only basic fields"""
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'password1', 'password2')
 
-class OrganizerRegistrationForm(BaseRegistrationForm):
-    class Meta(BaseRegistrationForm.Meta):
-        fields = BaseRegistrationForm.Meta.fields + ('company_name', 'website')
-
-class PhotographerRegistrationForm(BaseRegistrationForm):
-    class Meta(BaseRegistrationForm.Meta):
-        fields = BaseRegistrationForm.Meta.fields + ('portfolio_url', 'photographer_role')
-
-class ParticipantRegistrationForm(BaseRegistrationForm):
-    class Meta(BaseRegistrationForm.Meta):
-        fields = BaseRegistrationForm.Meta.fields + ('participant_type', 'image_visibility')
-
-class ProfileUpdateForm(forms.ModelForm):
+class OrganizerProfileForm(forms.ModelForm):
+    """Profile completion form for organizers"""
     class Meta:
         model = CustomUser
-        fields = ['avatar', 'phone_number']
+        fields = ['avatar', 'phone_number', 'company_name', 'website']
+        widgets = {
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'company_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'website': forms.URLInput(attrs={'class': 'form-control'}),
+        }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.role == CustomUser.Roles.ORGANIZER:
-            self.fields['company_name'] = forms.CharField(required=True)
-            self.fields['website'] = forms.URLField(required=False)
-        
-        elif self.instance.role == CustomUser.Roles.PHOTOGRAPHER:
-            self.fields['portfolio_url'] = forms.URLField(required=True)
-            self.fields['photographer_role'] = forms.ChoiceField(
-                choices=CustomUser.PhotographerRoles.choices,
-                required=True
-            )
-            self.fields['watermark'] = forms.ImageField(required=False)
-        
-        elif self.instance.role == CustomUser.Roles.PARTICIPANT:
-            self.fields['participant_type'] = forms.ChoiceField(
-                choices=CustomUser.ParticipantTypes.choices,
-                required=True
-            )
-            self.fields['image_visibility'] = forms.ChoiceField(
-                choices=[
-                    ('PUBLIC', 'Public'),
-                    ('PRIVATE', 'Private'),
-                    ('EVENT_ONLY', 'Event Only')
-                ],
-                required=True
-            )
-            self.fields['blur_requested'] = forms.BooleanField(required=False)
-            self.fields['remove_requested'] = forms.BooleanField(required=False)
+class PhotographerProfileForm(forms.ModelForm):
+    """Profile completion form for photographers"""
+    class Meta:
+        model = CustomUser
+        fields = ['avatar', 'phone_number', 'portfolio_url', 'photographer_role', 'watermark']
+        widgets = {
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'portfolio_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'photographer_role': forms.Select(attrs={'class': 'form-control'}),
+            'watermark': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+class ParticipantProfileForm(forms.ModelForm):
+    """Profile completion form for participants"""
+    class Meta:
+        model = CustomUser
+        fields = ['avatar', 'phone_number', 'participant_type', 'image_visibility', 'blur_requested', 'remove_requested']
+        widgets = {
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'participant_type': forms.Select(attrs={'class': 'form-control'}),
+            'image_visibility': forms.Select(attrs={'class': 'form-control'}),
+        }
