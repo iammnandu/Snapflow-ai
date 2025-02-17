@@ -8,6 +8,33 @@ from .forms import (
     OrganizerProfileForm, PhotographerProfileForm, ParticipantProfileForm
 )
 
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import BasicRegistrationForm
+
+def auth_view(request):
+    """Combined login and registration view"""
+    return render(request, 'users/auth.html')
+
+def register(request):
+    if request.method == 'POST':
+        form = BasicRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.role = request.POST.get('role')
+            user.save()
+            login(request, user)
+            messages.success(request, 'Registration successful! Please complete your profile.')
+            return redirect('users:complete_profile')
+        else:
+            messages.error(request, 'Registration failed. Please correct the errors.')
+            return redirect('users:auth')
+    return redirect('users:auth')
+
+
 def select_user_type(request):
     if request.method == 'POST':
         form = UserTypeSelectionForm(request.POST)
@@ -19,27 +46,6 @@ def select_user_type(request):
         form = UserTypeSelectionForm()
     return render(request, 'users/select_user_type.html', {'form': form})
 
-def register(request):
-    user_type = request.session.get('selected_user_type')
-    if not user_type:
-        return redirect('users:select_user_type')
-    
-    if request.method == 'POST':
-        form = BasicRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.role = user_type
-            user.save()
-            login(request, user)
-            messages.success(request, 'Registration successful! Please complete your profile.')
-            return redirect('users:complete_profile')
-    else:
-        form = BasicRegistrationForm()
-    
-    return render(request, 'users/register.html', {
-        'form': form,
-        'user_type': user_type
-    })
 
 @login_required
 def complete_profile(request):

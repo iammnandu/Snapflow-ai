@@ -1,0 +1,118 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block body_block %}
+        <!-- Features Hero Start -->
+        <div class="container-xxl bg-primary py-5">
+            <div class="container py-5 px-lg-5">
+                <div class="row g-5 align-items-center">
+                    <div class="col-lg-6 text-center text-lg-start">
+                        <h1 class="text-white mb-4 animated slideInDown">Explore SnapFlow's Powerful Features</h1>
+                        <p class="text-white pb-3 animated slideInDown">From real-time photo uploads to AI-powered editing, SnapFlow is designed to make event photography seamless and efficient for everyone.</p>
+                        <a href="#feature-list" class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill me-3 animated slideInLeft">View Features</a>
+                    </div>
+                    <div class="col-lg-6 d-flex justify-content-center justify-content-lg-end wow fadeInUp" data-wow-delay="0.3s">
+                        <img class="img-fluid animated zoomIn" src="img/feature-hero.png" alt="Feature Hero Image">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Features Hero End -->
+
+        <!-- Feature List Start -->
+        <div class="container-xxl py-5" id="feature-list">
+            <div class="container py-5 px-lg-5">
+                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                    <h5 class="text-primary-gradient fw-medium">Why SnapFlow?</h5>
+                    <h1 class="mb-5">Key Features That Set Us Apart</h1>
+                </div>
+                <div class="row g-4">
+                    <!-- Feature 1: Real-Time Uploads -->
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="feature-item bg-light rounded p-4 text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle mb-4" style="width: 100px; height: 100px;">
+                                <i class="fa fa-cloud-upload-alt fa-3x text-white"></i>
+                            </div>
+                            <h4 class="mb-3">Real-Time Photo Uploads</h4>
+                            <p class="mb-0">Photographers can upload images in real-time, ensuring live event coverage and instant access for participants.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 2: AI-Powered Editing -->
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="feature-item bg-light rounded p-4 text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle mb-4" style="width: 100px; height: 100px;">
+                                <i class="fa fa-robot fa-3x text-white"></i>
+                            </div>
+                            <h4 class="mb-3">AI-Powered Editing</h4>
+                            <p class="mb-0">Enhance your photos with AI-driven tools like auto-cropping, lighting correction, and smart filters.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 3: Privacy Controls -->
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="feature-item bg-light rounded p-4 text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle mb-4" style="width: 100px; height: 100px;">
+                                <i class="fa fa-shield-alt fa-3x text-white"></i>
+                            </div>
+                            <h4 class="mb-3">Granular Privacy Controls</h4>
+                            <p class="mb-0">Control who sees your photos with customizable privacy settings, including face-blurring and restricted access.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 4: Custom Event Websites -->
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="feature-item bg-light rounded p-4 text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle mb-4" style="width: 100px; height: 100px;">
+                                <i class="fa fa-globe fa-3x text-white"></i>
+                            </div>
+                            <h4 class="mb-3">Custom Event Websites</h4>
+                            <p class="mb-0">Create personalized event pages with branding, event details, and photo galleries.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 5: Smart Image Organization -->
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="feature-item bg-light rounded p-4 text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle mb-4" style="width: 100px; height: 100px;">
+                                <i class="fa fa-layer-group fa-3x text-white"></i>
+                            </div>
+                            <h4 class="mb-3">Smart Image Organization</h4>
+                            <p class="mb-0">Automatically categorize photos by event type, people, and themes using AI.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 6: Highlight Reel Generator -->
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="feature-item bg-light rounded p-4 text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle mb-4" style="width: 100px; height: 100px;">
+                                <i class="fa fa-film fa-3x text-white"></i>
+                            </div>
+                            <h4 class="mb-3">Highlight Reel Generator</h4>
+                            <p class="mb-0">AI compiles top moments into a video reel, perfect for sharing on social media.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Feature List End -->
+
+        <!-- Feature Details Start -->
+        <div class="container-xxl py-5">
+            <div class="container py-5 px-lg-5">
+                <div class="row g-5 align-items-center">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <h5 class="text-primary-gradient fw-medium">Deep Dive</h5>
+                        <h1 class="mb-4">How SnapFlow Works</h1>
+                        <p class="mb-4">SnapFlow simplifies event photography with a seamless workflow for organizers, photographers, and participants. Here's how it works:</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-3"><i class="fa fa-check text-primary-gradient me-2"></i>Photographers upload photos in real-time during the event.</li>
+                            <li class="mb-3"><i class="fa fa-check text-primary-gradient me-2"></i>AI organizes and enhances photos automatically.</li>
+                            <li class="mb-3"><i class="fa fa-check text-primary-gradient me-2"></i>Participants view, download, and share photos instantly.</li>
+                            <li class="mb-3"><i class="fa fa-check text-primary-gradient me-2"></i>Organizers manage privacy and branding effortlessly.</li>
+                        </ul>
+                        <a href="" class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill mt-3">Learn More</a>
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <img class="img-fluid" src="img/feature-details.png" alt="Feature Details">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Feature Details End -->
+{% endblock %}

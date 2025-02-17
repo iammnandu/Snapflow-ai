@@ -16,6 +16,10 @@ def index(request):
 def landing(request):
     return render(request, 'home/landing.html')
 
+def get_features(request):
+    return render(request, 'home/features.html')
+
+
 class AboutView(TemplateView):
     template_name = 'home/about.html'
 

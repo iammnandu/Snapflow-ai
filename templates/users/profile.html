@@ -1,11 +1,265 @@
 {% extends "users/base.html" %}
-{% block content %}
-<div class="container">
-    <h2>Your Profile</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-    </form>
+
+{% block body_block %}
+<div class="container profile-container">
+    <div class="forms-container">
+        <div class="profile-form-container">
+            <form method="POST" enctype="multipart/form-data" class="profile-form" novalidate>
+                {% csrf_token %}
+                <h2 class="title">Update Your Profile</h2>
+                
+                {% if form.avatar %}
+                <div class="avatar-preview">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Current avatar" class="current-avatar">
+                    {% else %}
+                        <i class="fas fa-user-circle default-avatar"></i>
+                    {% endif %}
+                </div>
+                <div class="input-field">
+                    <i class="fas fa-user-circle"></i>
+                    {{ form.avatar }}
+                </div>
+                {% endif %}
+
+                {% if form.phone_number %}
+                <div class="input-field">
+                    <i class="fas fa-phone"></i>
+                    {{ form.phone_number }}
+                </div>
+                {% endif %}
+
+                {% if user.role == 'ORGANIZER' %}
+                    <div class="input-field">
+                        <i class="fas fa-building"></i>
+                        {{ form.company_name }}
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-globe"></i>
+                        {{ form.website }}
+                    </div>
+                {% endif %}
+
+                {% if user.role == 'PHOTOGRAPHER' %}
+                    <div class="input-field">
+                        <i class="fas fa-camera"></i>
+                        {{ form.portfolio_url }}
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-user-tag"></i>
+                        {{ form.photographer_role }}
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-copyright"></i>
+                        {{ form.watermark }}
+                    </div>
+                {% endif %}
+
+                {% if user.role == 'PARTICIPANT' %}
+                    <div class="input-field">
+                        <i class="fas fa-users"></i>
+                        {{ form.participant_type }}
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-eye"></i>
+                        {{ form.image_visibility }}
+                    </div>
+                    <div class="privacy-options">
+                        <div class="checkbox-field">
+                            <label for="{{ form.blur_requested.id_for_label }}">
+                                {{ form.blur_requested }}
+                                <span>Request face blur in photos</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-field">
+                            <label for="{{ form.remove_requested.id_for_label }}">
+                                {{ form.remove_requested }}
+                                <span>Request photo removal option</span>
+                            </label>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                        <p class="error-message">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <input type="submit" value="Update Profile" class="btn solid" />
+            </form>
+        </div>
+    </div>
+
+    <div class="panels-container">
+        <div class="panel single-panel">
+            <div class="content">
+                <h3>{{ user.get_role_display }}</h3>
+                <p>Keep your profile up to date to make the most of our platform!</p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+/* Profile Update Page Specific Styles */
+.profile-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.profile-form-container {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    left: 75%;
+    width: 50%;
+    z-index: 5;
+}
+
+.profile-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0rem 5rem;
+    overflow: hidden;
+}
+
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 3px solid #4481eb;
+}
+
+.current-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.default-avatar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #4481eb;
+}
+
+.privacy-options {
+    width: 100%;
+    max-width: 285px;
+    margin: 10px 0;
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    padding: 0 10px;
+}
+
+.checkbox-field label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.checkbox-field input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+}
+
+.form-errors {
+    width: 100%;
+    max-width: 285px;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #fff3f3;
+    border: 1px solid #ffcdd2;
+}
+
+.error-message {
+    color: #f44336;
+    font-size: 0.85rem;
+    margin: 5px 0;
+}
+
+.input-field input[type="file"] {
+    padding: 10px 0;
+}
+
+.input-field select {
+    background: none;
+    outline: none;
+    border: none;
+    line-height: 1;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #333;
+    width: 100%;
+    height: 100%;
+    padding: 0 0.5rem;
+    cursor: pointer;
+    appearance: none;
+}
+
+.single-panel {
+    background-image: linear-gradient(-45deg, #4481eb 0%, #04befe 100%);
+    position: absolute;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    padding: 3rem 17% 2rem 12%;
+}
+
+@media (max-width: 870px) {
+    .profile-form-container {
+        width: 100%;
+        left: 50%;
+        top: 95%;
+        transform: translate(-50%, -100%);
+    }
+
+    .single-panel {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 2.5rem 8%;
+    }
+
+    .panel .content {
+        padding-right: 0;
+        text-align: center;
+    }
+}
+
+@media (max-width: 570px) {
+    .profile-form {
+        padding: 0 1.5rem;
+    }
+
+    .panel .content {
+        padding: 0.5rem 1rem;
+    }
+
+    .profile-container {
+        padding: 1.5rem;
+    }
+}
+</style>
 {% endblock %}
