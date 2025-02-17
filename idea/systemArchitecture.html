@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SnapFlow System Architecture - Interactive Version</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --background-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--background-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            background: linear-gradient(120deg, #2563eb, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .theme-switcher {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .legend-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .flowchart-container {
+            width: 100%;
+            overflow: auto;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .flowchart {
+            transform-origin: top left;
+            transition: transform 0.3s ease;
+        }
+
+        .node-info {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        .node-info.visible {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Dark mode styles */
+        .dark-mode {
+            --background-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        .dark-mode .container {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+        }
+
+        .dark-mode .toolbar {
+            background: #2d3748;
+        }
+
+        .dark-mode .legend {
+            background: #2d3748;
+        }
+
+        .dark-mode .legend-item {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+
+        /* Search functionality styles */
+        .search-container {
+            position: relative;
+            margin-right: 1rem;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 0.875rem;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: #f1f5f9;
+        }
+
+        /* Mini-map styles */
+        .minimap {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            width: 200px;
+            height: 150px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .minimap-content {
+            transform-origin: 0 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">SnapFlow System Architecture</h1>
+            <p class="subtitle">Interactive System Flow Diagram</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search nodes...">
+                <div class="search-results"></div>
+            </div>
+
+            <div class="controls">
+                <button onclick="zoomIn()">
+                    <span>Zoom In</span>
+                </button>
+                <button onclick="zoomOut()">
+                    <span>Zoom Out</span>
+                </button>
+                <button onclick="resetZoom()">
+                    <span>Reset</span>
+                </button>
+                <button onclick="toggleTheme()">
+                    <span>Toggle Theme</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e1f5fe; border: 1px solid #01579b"></div>
+                <span>Process</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fff3e0; border: 1px solid #ff6f00"></div>
+                <span>Decision Point</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e8f5e9; border: 1px solid #2e7d32"></div>
+                <span>Endpoint</span>
+            </div>
+        </div>
+        
+        <div class="flowchart-container">
+            <div class="flowchart" id="flowchart">
+                <pre class="mermaid">
+%%{init: {'theme': 'neutral', 'themeVariables': { 'fontSize': '16px' }}}%%
+flowchart TD
+    Start([Access SnapFlow Platform]) --> Authentication{Authentication Required?}
+    
+    %% Authentication Flow
+    Authentication -->|Yes| Login[Login/Register]
+    Authentication -->|No| UserType{Select User Role}
+    Login --> UserType
+    
+    %% User Role Selection with Details
+    UserType -->|Event Organizer| CreateEvent[Create Event]
+    UserType -->|Photographer| JoinEvent[Join Event]
+    UserType -->|Participant| ViewEvent[Access Event]
+    UserType -->|General User| BrowsePublic[Browse Public Content]
+    
+    %% Event Creation Flow
+    CreateEvent --> EventSetup{Event Setup}
+    EventSetup --> BasicDetails[Basic Event Details]
+    EventSetup --> PrivacySettings[Privacy Controls]
+    EventSetup --> CrewManagement[Manage Event Crew]
+    
+    BasicDetails & PrivacySettings & CrewManagement --> EventCustomization
+    
+    EventCustomization --> CustomTheme[Theme Selection]
+    EventCustomization --> GallerySetup[Gallery Configuration]
+    EventCustomization --> AIFeatures[Enable AI Features]
+    
+    %% Photographer Workflow
+    JoinEvent --> AcceptInvite[Accept Invitation]
+    AcceptInvite --> SetupEquipment[Configure Equipment]
+    SetupEquipment --> StartUploading{Start Uploading?}
+    
+    StartUploading -->|Yes| UploadProcess[Upload Photos]
+    UploadProcess --> AIProcessing{AI Processing Pipeline}
+    
+    %% AI Processing Detail
+    AIProcessing --> FaceDetection[Face Detection]
+    AIProcessing --> QualityCheck[Quality Assessment]
+    AIProcessing --> AutoEnhance[Auto Enhancement]
+    AIProcessing --> SmartTag[Smart Tagging]
+    
+    FaceDetection & QualityCheck & AutoEnhance & SmartTag --> ReviewQueue[Review Queue]
+    
+    %% Editor Workflow
+    ReviewQueue --> EditorReview{Editor Review}
+    EditorReview -->|Needs Edit| ManualEdit[Manual Editing]
+    EditorReview -->|Approved| ClientQueue[Client Review Queue]
+    ManualEdit --> ClientQueue
+    
+    %% Client Review
+    ClientQueue --> ClientReview{Client Review}
+    ClientReview -->|Request Changes| ReviewQueue
+    ClientReview -->|Approved| PublishPhoto[Publish to Gallery]
+    
+    %% Participant Flow
+    ViewEvent --> CreateProfile[Create Temp Profile]
+    CreateProfile --> AccessGallery[Access Event Gallery]
+    AccessGallery --> InteractContent[Interact with Content]
+    InteractContent --> Download[Download Photos]
+    
+    %% Public Access
+    BrowsePublic --> SearchSystem[Search System]
+    SearchSystem --> FilterOptions[Apply Filters]
+    FilterOptions --> ViewPublic[View Public Content]
+    
+    %% AI Feature Integration
+    PublishPhoto --> AIStoryboard[Generate AI Storyboard]
+    PublishPhoto --> HighlightReel[Create Highlight Reel]
+    
+    %% Styling
+    classDef process fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#ff6f00,stroke-width:2px
+    classDef endpoint fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    
+    class Start,Download,ViewPublic,PublishPhoto,AIStoryboard,HighlightReel endpoint
+    class Authentication,UserType,EventSetup,StartUploading,AIProcessing,EditorReview,ClientReview decision
+    class CreateEvent,JoinEvent,ViewEvent,BrowsePublic,FaceDetection,QualityCheck,AutoEnhance,SmartTag process
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="node-info"></div>
+    <div class="minimap">
+        <div class="minimap-content"></div>
+    </div>
+
+    <script>
+        // Initialize Mermaid with custom theme
+        mermaid.initialize({
+            startOnLoad: true,
+            securityLevel: 'loose',
+            theme: 'neutral',
+            flowchart: {
+                curve: 'basis',
+                padding: 20
+            }
+        });
+
+        // Zoom functionality with smooth transitions
+        let currentZoom = 1;
+        const flowchartContainer = document.querySelector('.flowchart-container');
+        const flowchart = document.querySelector('.flowchart');
+        const zoomStep = 1.2;
+
+        function updateZoom() {
+            flowchart.style.transform = `scale(${currentZoom})`;
+            updateMinimap();
+        }
+
+        function zoomIn() {
+            currentZoom *= zoomStep;
+            updateZoom();
+        }
+
+        function zoomOut() {
+            currentZoom /= zoomStep;
+            updateZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            updateZoom();
+        }
+
+        // Dark mode toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            updateMermaidTheme();
+        }
+
+        function updateMermaidTheme() {
+            const isDark = document.body.classList.contains('dark-mode');
+            mermaid.initialize({
+                theme: isDark ? 'dark' : 'neutral'
+            });
+            // Reinitialize the diagram
+            const content = document.querySelector('.mermaid').textContent;
+            document.querySelector('.mermaid').textContent = content;
+            mermaid.init();
+        }
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-input');
+        const searchResults = document.querySelector('.search-results');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const nodes = document.querySelectorAll('.flowchart g.node');
+            const matches = Array.from(nodes).filter(node => 
+                node.textContent.toLowerCase().includes(searchTerm)
+            );
+
+            searchResults.innerHTML = '';
+            searchResults.style.display = searchTerm ? 'block' : 'none';
+
+            matches.forEach(match => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.textContent = match.textContent;
+                div.addEventListener('click', () => {
+                    highlightNode(match);
+                    searchResults.style.display = 'none';
+                    searchInput.value = '';
+                });
+                searchResults.appendChild(div);
+            });
+        });
+
+        // Node highlighting and info display
+        function highlightNode(node) {
+            // Remove previous highlights
+            document.querySelectorAll('.node-highlight').forEach(el => 
+                el.classList.remove('node-highlight')
+            );
+            
+            // Add highlight to selected node
+            node.classList.add('node-highlight');
+            
+            // Center view on node
+            const bbox = node.getBBox();
+            const x = bbox.x + bbox.width / 2;
+            const y = bbox.y + bbox.height / 2;
+            
+            flowchartContainer.scrollLeft = x * currentZoom - flowchartContainer.clientWidth / 2;
+            flowchartContainer.scrollTop = y * currentZoom - flowchartContainer.clientHeight / 2;
+
+            // Show node info
+            showNodeInfo(node);
+        }
+
+        // Node info display
+        const nodeInfo = document.querySelector('.node-info');
+
+        function showNodeInfo(node) {
+            const nodeType = getNodeType(node);
+            const connections = getNodeConnections(node);
+            
+            nodeInfo.innerHTML = `
+                <h3>${node.textContent}</h3>
+                <p><strong>Type:</strong> ${nodeType}</p>
+                <p><strong>Connections:</strong></p>
+                <ul>
+                    ${connections.map(conn => `<li>${conn}</li>`).join('')}
+                </ul>
+            `;
+            
+            nodeInfo.classList.add('visible');
+            
+            setTimeout(() => {
+                nodeInfo.classList.remove('visible');
+            }, 5000);
+        }
+
+        function getNodeType(node) {
+            if (node.classList.contains('process')) return 'Process';
+            if (node.classList.contains('decision')) return 'Decision Point';
+            if (node.classList.contains('endpoint')) return 'Endpoint';
+            return 'Standard Node';
+        }
+
+        function getNodeConnections(node) {
+            const connections = [];
+            const edges = document.querySelectorAll('.flowchart .edgePath');
+            
+            edges.forEach(edge => {
+                const path = edge.querySelector('path');
+                if (path.getAttribute('d').includes(node.id)) {
+                    const label = edge.querySelector('.edgeLabel');
+                    connections.push(label ? label.textContent : 'Connected Node');
+                }
+            });
+            
+            return connections;
+        }
+
+        // Minimap functionality
+        const minimap = document.querySelector('.minimap');
+        const minimapContent = document.querySelector('.minimap-content');
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        function updateMinimap() {
+            const flowchartContent = flowchart.querySelector('.mermaid');
+            const clone = flowchartContent.cloneNode(true);
+            minimapContent.innerHTML = '';
+            minimapContent.appendChild(clone);
+
+            // Calculate the scale for the minimap
+            const scale = Math.min(
+                minimap.clientWidth / flowchartContent.scrollWidth,
+                minimap.clientHeight / flowchartContent.scrollHeight
+            ) * 0.9; // Slightly smaller to fit within the minimap
+
+            minimapContent.style.transform = `scale(${scale})`;
+
+            // Update the minimap viewport
+            updateMinimapViewport();
+        }
+
+        function updateMinimapViewport() {
+            const viewport = document.createElement('div');
+            viewport.style.position = 'absolute';
+            viewport.style.border = '2px solid var(--primary-color)';
+            viewport.style.backgroundColor = 'rgba(37, 99, 235, 0.2)';
+            viewport.style.pointerEvents = 'none';
+
+            // Calculate viewport size and position
+            const scale = parseFloat(minimapContent.style.transform.match(/scale\(([^)]+)\)/)[1]);
+            const viewportWidth = flowchartContainer.clientWidth / (currentZoom * scale);
+            const viewportHeight = flowchartContainer.clientHeight / (currentZoom * scale);
+            const viewportLeft = flowchartContainer.scrollLeft / (currentZoom * scale);
+            const viewportTop = flowchartContainer.scrollTop / (currentZoom * scale);
+
+            viewport.style.width = `${viewportWidth}px`;
+            viewport.style.height = `${viewportHeight}px`;
+            viewport.style.left = `${viewportLeft}px`;
+            viewport.style.top = `${viewportTop}px`;
+
+            // Remove existing viewport and add the new one
+            const existingViewport = minimapContent.querySelector('.minimap-viewport');
+            if (existingViewport) existingViewport.remove();
+            viewport.classList.add('minimap-viewport');
+            minimapContent.appendChild(viewport);
+        }
+
+        // Minimap dragging to pan the flowchart
+        minimap.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX - minimap.offsetLeft;
+            startY = e.pageY - minimap.offsetTop;
+            scrollLeft = flowchartContainer.scrollLeft;
+            scrollTop = flowchartContainer.scrollTop;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            e.preventDefault();
+            const x = e.pageX - minimap.offsetLeft;
+            const y = e.pageY - minimap.offsetTop;
+            const walkX = (x - startX) * 2;
+            const walkY = (y - startY) * 2;
+
+            flowchartContainer.scrollLeft = scrollLeft - walkX;
+            flowchartContainer.scrollTop = scrollTop - walkY;
+
+            updateMinimapViewport();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Pan functionality for the flowchart
+        let isPanning = false;
+        let lastX, lastY;
+
+        flowchartContainer.addEventListener('mousedown', (e) => {
+            if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+                isPanning = true;
+                lastX = e.pageX;
+                lastY = e.pageY;
+                flowchartContainer.style.cursor = 'grabbing';
+            }
+        });
+
+        flowchartContainer.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+
+            const dx = e.pageX - lastX;
+            const dy = e.pageY - lastY;
+
+            flowchartContainer.scrollLeft -= dx;
+            flowchartContainer.scrollTop -= dy;
+
+            lastX = e.pageX;
+            lastY = e.pageY;
+
+            updateMinimapViewport();
+        });
+
+        flowchartContainer.addEventListener('mouseup', () => {
+            isPanning = false;
+            flowchartContainer.style.cursor = 'default';
+        });
+
+        // Initialize minimap after Mermaid renders
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                updateMinimap();
+                // Fit the flowchart to the screen initially
+                const flowchartContent = flowchart.querySelector('.mermaid');
+                const containerWidth = flowchartContainer.clientWidth;
+                const containerHeight = flowchartContainer.clientHeight;
+                const contentWidth = flowchartContent.scrollWidth;
+                const contentHeight = flowchartContent.scrollHeight;
+
+                const scale = Math.min(
+                    containerWidth / contentWidth,
+                    containerHeight / contentHeight
+                ) * 0.9; // Slightly smaller to fit within the container
+
+                currentZoom = scale;
+                updateZoom();
+            }, 1000);
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            updateMinimap();
+            updateMinimapViewport();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey) {
+                switch (e.key) {
+                    case '+':
+                    case '=':
+                        e.preventDefault();
+                        zoomIn();
+                        break;
+                    case '-':
+                        e.preventDefault();
+                        zoomOut();
+                        break;
+                    case '0':
+                        e.preventDefault();
+                        resetZoom();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
