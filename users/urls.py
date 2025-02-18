@@ -13,5 +13,6 @@ urlpatterns = [
     ), name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('complete-profile/', views.complete_profile, name='complete_profile'),
-    path('profile/', views.profile, name='profile'),
+    path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('profile/update/', views.ProfileUpdateView.as_view(), name='profile_update'),
 ]

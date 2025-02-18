@@ -1,265 +1,316 @@
-{% extends "users/base.html" %}
-
-{% block body_block %}
-<div class="container profile-container">
-    <div class="forms-container">
-        <div class="profile-form-container">
-            <form method="POST" enctype="multipart/form-data" class="profile-form" novalidate>
-                {% csrf_token %}
-                <h2 class="title">Update Your Profile</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        
+        .avatar-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .edit-mode .view-only {
+            display: none;
+        }
+        
+        .view-mode .edit-only {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="profile-container">
+        <!-- Profile Header -->
+        <div class="profile-section">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold">{{ user.get_role_display }} Profile</h1>
+                <button id="editButton" 
+                        class="view-only bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                        onclick="toggleEditMode()">
+                    Edit Profile
+                </button>
+            </div>
+            
+            <div class="flex flex-col md:flex-row items-start gap-6">
+                <div class="flex flex-col items-center">
+                    <img src="{{ user.avatar.url|default:'/static/default-avatar.png' }}" 
+                         alt="Profile Avatar"
+                         class="avatar-preview mb-3">
+                    <div class="edit-only">
+                        <label class="cursor-pointer bg-gray-200 px-4 py-2 rounded">
+                            Change Avatar
+                            <input type="file" name="avatar" class="hidden" accept="image/*">
+                        </label>
+                    </div>
+                </div>
                 
-                {% if form.avatar %}
-                <div class="avatar-preview">
-                    {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" alt="Current avatar" class="current-avatar">
-                    {% else %}
-                        <i class="fas fa-user-circle default-avatar"></i>
-                    {% endif %}
-                </div>
-                <div class="input-field">
-                    <i class="fas fa-user-circle"></i>
-                    {{ form.avatar }}
-                </div>
-                {% endif %}
-
-                {% if form.phone_number %}
-                <div class="input-field">
-                    <i class="fas fa-phone"></i>
-                    {{ form.phone_number }}
-                </div>
-                {% endif %}
-
-                {% if user.role == 'ORGANIZER' %}
-                    <div class="input-field">
-                        <i class="fas fa-building"></i>
-                        {{ form.company_name }}
-                    </div>
-                    <div class="input-field">
-                        <i class="fas fa-globe"></i>
-                        {{ form.website }}
-                    </div>
-                {% endif %}
-
-                {% if user.role == 'PHOTOGRAPHER' %}
-                    <div class="input-field">
-                        <i class="fas fa-camera"></i>
-                        {{ form.portfolio_url }}
-                    </div>
-                    <div class="input-field">
-                        <i class="fas fa-user-tag"></i>
-                        {{ form.photographer_role }}
-                    </div>
-                    <div class="input-field">
-                        <i class="fas fa-copyright"></i>
-                        {{ form.watermark }}
-                    </div>
-                {% endif %}
-
-                {% if user.role == 'PARTICIPANT' %}
-                    <div class="input-field">
-                        <i class="fas fa-users"></i>
-                        {{ form.participant_type }}
-                    </div>
-                    <div class="input-field">
-                        <i class="fas fa-eye"></i>
-                        {{ form.image_visibility }}
-                    </div>
-                    <div class="privacy-options">
-                        <div class="checkbox-field">
-                            <label for="{{ form.blur_requested.id_for_label }}">
-                                {{ form.blur_requested }}
-                                <span>Request face blur in photos</span>
-                            </label>
+                <div class="flex-1">
+                    <form id="profileForm" method="POST" enctype="multipart/form-data" class="edit-only">
+                        {% csrf_token %}
+                        
+                        <!-- Common Fields -->
+                        <div class="form-group">
+                            <label class="block text-gray-700 mb-2">Username</label>
+                            <input type="text" value="{{ user.username }}" class="w-full px-3 py-2 border rounded" readonly>
                         </div>
-                        <div class="checkbox-field">
-                            <label for="{{ form.remove_requested.id_for_label }}">
-                                {{ form.remove_requested }}
-                                <span>Request photo removal option</span>
-                            </label>
+                        
+                        <div class="form-group">
+                            <label class="block text-gray-700 mb-2">Email</label>
+                            <input type="email" value="{{ user.email }}" class="w-full px-3 py-2 border rounded" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="block text-gray-700 mb-2">Phone Number</label>
+                            <input type="tel" name="phone_number" value="{{ user.phone_number }}" 
+                                   class="w-full px-3 py-2 border rounded">
+                        </div>
+                        
+                        {% if user.role == 'ORGANIZER' %}
+                            <!-- Organizer Fields -->
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Company Name</label>
+                                <input type="text" name="company_name" value="{{ user.company_name }}"
+                                       class="w-full px-3 py-2 border rounded">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Website</label>
+                                <input type="url" name="website" value="{{ user.website }}"
+                                       class="w-full px-3 py-2 border rounded">
+                            </div>
+                        
+                        {% elif user.role == 'PHOTOGRAPHER' %}
+                            <!-- Photographer Fields -->
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Portfolio URL</label>
+                                <input type="url" name="portfolio_url" value="{{ user.portfolio_url }}"
+                                       class="w-full px-3 py-2 border rounded">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Photographer Role</label>
+                                <select name="photographer_role" class="w-full px-3 py-2 border rounded">
+                                    {% for value, label in user.PhotographerRoles.choices %}
+                                        <option value="{{ value }}" {% if user.photographer_role == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Watermark</label>
+                                {% if user.watermark %}
+                                    <img src="{{ user.watermark.url }}" alt="Current Watermark" class="mb-2 max-w-xs">
+                                {% endif %}
+                                <input type="file" name="watermark" accept="image/png" class="w-full">
+                            </div>
+                        
+                        {% elif user.role == 'PARTICIPANT' %}
+                            <!-- Participant Fields -->
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Participant Type</label>
+                                <select name="participant_type" class="w-full px-3 py-2 border rounded">
+                                    {% for value, label in user.ParticipantTypes.choices %}
+                                        <option value="{{ value }}" {% if user.participant_type == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-gray-700 mb-2">Image Visibility</label>
+                                <select name="image_visibility" class="w-full px-3 py-2 border rounded">
+                                    <option value="PUBLIC" {% if user.image_visibility == 'PUBLIC' %}selected{% endif %}>Public</option>
+                                    <option value="PRIVATE" {% if user.image_visibility == 'PRIVATE' %}selected{% endif %}>Private</option>
+                                    <option value="EVENT_ONLY" {% if user.image_visibility == 'EVENT_ONLY' %}selected{% endif %}>Event Only</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" name="blur_requested" {% if user.blur_requested %}checked{% endif %}>
+                                    Request face blur in photos
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" name="remove_requested" {% if user.remove_requested %}checked{% endif %}>
+                                    Request photo removal
+                                </label>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex justify-end gap-4">
+                            <button type="button" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                                    onclick="toggleEditMode()">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- View Mode Content -->
+                    <div class="view-only">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="font-semibold">Username:</p>
+                                <p>{{ user.username }}</p>
+                            </div>
+                            
+                            <div>
+                                <p class="font-semibold">Email:</p>
+                                <p>{{ user.email }}</p>
+                            </div>
+                            
+                            <div>
+                                <p class="font-semibold">Phone:</p>
+                                <p>{{ user.phone_number|default:"Not provided" }}</p>
+                            </div>
+                            
+                            {% if user.role == 'ORGANIZER' %}
+                                <div>
+                                    <p class="font-semibold">Company:</p>
+                                    <p>{{ user.company_name|default:"Not provided" }}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="font-semibold">Website:</p>
+                                    <p>{{ user.website|default:"Not provided" }}</p>
+                                </div>
+                            
+                            {% elif user.role == 'PHOTOGRAPHER' %}
+                                <div>
+                                    <p class="font-semibold">Portfolio:</p>
+                                    <p>{{ user.portfolio_url|default:"Not provided" }}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="font-semibold">Role:</p>
+                                    <p>{{ user.get_photographer_role_display }}</p>
+                                </div>
+                                
+                                {% if user.watermark %}
+                                    <div class="col-span-2">
+                                        <p class="font-semibold">Watermark:</p>
+                                        <img src="{{ user.watermark.url }}" alt="Watermark" class="max-w-xs mt-2">
+                                    </div>
+                                {% endif %}
+                            
+                            {% elif user.role == 'PARTICIPANT' %}
+                                <div>
+                                    <p class="font-semibold">Type:</p>
+                                    <p>{{ user.get_participant_type_display }}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="font-semibold">Image Visibility:</p>
+                                    <p>{{ user.get_image_visibility_display }}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="font-semibold">Privacy Settings:</p>
+                                    <ul class="list-disc list-inside">
+                                        {% if user.blur_requested %}
+                                            <li>Face blur requested</li>
+                                        {% endif %}
+                                        {% if user.remove_requested %}
+                                            <li>Photo removal requested</li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
-                {% endif %}
-
-                {% if form.non_field_errors %}
-                <div class="form-errors">
-                    {% for error in form.non_field_errors %}
-                        <p class="error-message">{{ error }}</p>
-                    {% endfor %}
                 </div>
-                {% endif %}
-
-                <input type="submit" value="Update Profile" class="btn solid" />
-            </form>
-        </div>
-    </div>
-
-    <div class="panels-container">
-        <div class="panel single-panel">
-            <div class="content">
-                <h3>{{ user.get_role_display }}</h3>
-                <p>Keep your profile up to date to make the most of our platform!</p>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-/* Profile Update Page Specific Styles */
-.profile-container {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    overflow: hidden;
-    background-color: #fff;
-}
+    <script>
+        function toggleEditMode() {
+            const container = document.querySelector('.profile-container');
+            if (container.classList.contains('view-mode')) {
+                container.classList.remove('view-mode');
+                container.classList.add('edit-mode');
+            } else {
+                container.classList.remove('edit-mode');
+                container.classList.add('view-mode');
+            }
+        }
 
-.profile-form-container {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    left: 75%;
-    width: 50%;
-    z-index: 5;
-}
+        // Initialize view mode
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.profile-container').classList.add('view-mode');
+        });
 
-.profile-form {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    padding: 0rem 5rem;
-    overflow: hidden;
-}
+        // Preview avatar image before upload
+        document.querySelector('input[name="avatar"]').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('.avatar-preview').src = e.target.result;
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
 
-.avatar-preview {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-bottom: 20px;
-    border: 3px solid #4481eb;
-}
-
-.current-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.default-avatar {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    color: #4481eb;
-}
-
-.privacy-options {
-    width: 100%;
-    max-width: 285px;
-    margin: 10px 0;
-}
-
-.checkbox-field {
-    display: flex;
-    align-items: center;
-    margin: 8px 0;
-    padding: 0 10px;
-}
-
-.checkbox-field label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: #333;
-}
-
-.checkbox-field input[type="checkbox"] {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-}
-
-.form-errors {
-    width: 100%;
-    max-width: 285px;
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 5px;
-    background-color: #fff3f3;
-    border: 1px solid #ffcdd2;
-}
-
-.error-message {
-    color: #f44336;
-    font-size: 0.85rem;
-    margin: 5px 0;
-}
-
-.input-field input[type="file"] {
-    padding: 10px 0;
-}
-
-.input-field select {
-    background: none;
-    outline: none;
-    border: none;
-    line-height: 1;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #333;
-    width: 100%;
-    height: 100%;
-    padding: 0 0.5rem;
-    cursor: pointer;
-    appearance: none;
-}
-
-.single-panel {
-    background-image: linear-gradient(-45deg, #4481eb 0%, #04befe 100%);
-    position: absolute;
-    left: 0;
-    width: 50%;
-    height: 100%;
-    padding: 3rem 17% 2rem 12%;
-}
-
-@media (max-width: 870px) {
-    .profile-form-container {
-        width: 100%;
-        left: 50%;
-        top: 95%;
-        transform: translate(-50%, -100%);
-    }
-
-    .single-panel {
-        width: 100%;
-        height: auto;
-        position: relative;
-        padding: 2.5rem 8%;
-    }
-
-    .panel .content {
-        padding-right: 0;
-        text-align: center;
-    }
-}
-
-@media (max-width: 570px) {
-    .profile-form {
-        padding: 0 1.5rem;
-    }
-
-    .panel .content {
-        padding: 0.5rem 1rem;
-    }
-
-    .profile-container {
-        padding: 1.5rem;
-    }
-}
-</style>
-{% endblock %}
+        // Form submission handling
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('{% url "users:profile" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Profile updated successfully!');
+                    toggleEditMode();
+                    location.reload();
+                } else {
+                    alert('Error updating profile. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating profile. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>
