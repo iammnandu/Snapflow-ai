@@ -1,3 +1,332 @@
-from django.shortcuts import render
+#events/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.http import JsonResponse
+from django.db.models import Q
+from django.utils.crypto import get_random_string
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import FormView
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
-# Create your views here.
+
+from .models import (
+    Event, EventAccessRequest, EventCrew, EventParticipant, EventConfiguration,
+    EventTheme
+)
+from .forms import (
+    EventAccessRequestForm, EventCreationForm, EventConfigurationForm, CrewInvitationForm,
+    ParticipantInvitationForm, EventThemeForm, PrivacySettingsForm
+)
+
+# Event Creation and Management Views
+class EventCreateView(LoginRequiredMixin, CreateView):
+    model = Event
+    form_class = EventCreationForm
+    template_name = 'events/event_create.html'
+    
+    def form_valid(self, form):
+        form.instance.organizer = self.request.user
+        form.instance.status = Event.EventStatus.DRAFT
+        response = super().form_valid(form)
+        
+        # Create default configuration
+        EventConfiguration.objects.create(event=self.object)
+        messages.success(self.request, 'Event created successfully! Complete the setup process.')
+        return response
+
+class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Event
+    template_name = 'events/event_setup.html'
+    context_object_name = 'event'
+    
+    def test_func(self):
+        return self.get_object().organizer == self.request.user
+    
+    def get_form_class(self):
+        setup_step = self.kwargs.get('step', 'basic')
+        form_classes = {
+            'basic': EventCreationForm,
+            'privacy': PrivacySettingsForm,
+            'crew': CrewInvitationForm,
+            'theme': EventThemeForm,
+            'config': EventConfigurationForm,
+        }
+        return form_classes.get(setup_step)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_step'] = self.kwargs.get('step', 'basic')
+        context['steps'] = ['basic', 'privacy', 'crew', 'theme', 'config']
+        return context
+
+class EventDashboardView(LoginRequiredMixin, DetailView):
+    model = Event
+    template_name = 'events/event_dashboard.html'
+    context_object_name = 'event'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        
+        context.update({
+            'crew_members': event.crew_members.all(),
+            'participants': event.participants.all(),
+            'is_organizer': event.organizer == self.request.user,
+            'is_crew': event.crew_members.filter(member=self.request.user).exists(),
+        })
+        return context
+
+# Crew Management Views
+class CrewManagementView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Event
+    template_name = 'events/crew_management.html'
+    context_object_name = 'event'
+    
+    def test_func(self):
+        return self.get_object().organizer == self.request.user
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['crew_form'] = CrewInvitationForm()
+        context['crew_members'] = self.object.crew_members.all()
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        event = self.get_object()
+        form = CrewInvitationForm(request.POST)
+        
+        if form.is_valid():
+            crew = form.save(commit=False)
+            crew.event = event
+            crew.save()
+            # Send invitation email here
+            messages.success(request, 'Crew member invited successfully!')
+            return redirect('events:crew_management', slug=event.slug)
+        
+        return self.get(request, *args, **kwargs)
+
+@login_required
+def accept_crew_invitation(request, token):
+    crew_member = get_object_or_404(EventCrew, invitation_token=token)
+    if request.user.is_photographer:
+        crew_member.is_confirmed = True
+        crew_member.save()
+        messages.success(request, 'You have joined the event crew!')
+    return redirect('events:event_dashboard', slug=crew_member.event.slug)
+
+# Equipment Configuration View
+class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
+    model = EventCrew
+    template_name = 'events/equipment_config.html'
+    fields = ['equipment']
+    
+    def get_object(self):
+        return get_object_or_404(
+            EventCrew,
+            event__slug=self.kwargs['slug'],
+            member=self.request.user
+        )
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'Equipment configuration updated!')
+        return response
+
+# Event Gallery Views
+class EventGalleryView(DetailView):
+    model = Event
+    template_name = 'events/gallery.html'
+    context_object_name = 'event'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        
+        # Add gallery-specific context
+        context.update({
+            'can_upload': self.request.user.is_authenticated and (
+                event.organizer == self.request.user or
+                event.crew_members.filter(member=self.request.user).exists() or
+                event.allow_guest_upload
+            ),
+            'can_download': event.configuration.enable_download,
+        })
+        return context
+
+# Event Access Views
+@login_required
+def create_temp_profile(request, slug):
+    event = get_object_or_404(Event, slug=slug)
+    if request.method == 'POST':
+        # Create temporary participant profile
+        participant = EventParticipant.objects.create(
+            event=event,
+            user=request.user,
+            email=request.user.email,
+            name=request.user.get_full_name(),
+            registration_code=get_random_string(20)
+        )
+        messages.success(request, 'Temporary profile created successfully!')
+        return redirect('events:event_gallery', slug=slug)
+    return render(request, 'events/create_temp_profile.html', {'event': event})
+
+# AI Feature Management
+@login_required
+def toggle_ai_features(request, slug):
+    event = get_object_or_404(Event, slug=slug, organizer=request.user)
+    feature = request.POST.get('feature')
+    enabled = request.POST.get('enabled') == 'true'
+    
+    if feature in ['face_detection', 'moment_detection', 'auto_tagging']:
+        setattr(event, f'enable_{feature}', enabled)
+        event.save()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+# Event List Views
+class EventListView(ListView):
+    model = Event
+    template_name = 'events/event_list.html'
+    context_object_name = 'events'
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            return Event.objects.filter(
+                Q(organizer=user) |
+                Q(crew_members__member=user) |
+                Q(participants__user=user) |
+                Q(is_public=True)
+            ).distinct()
+        return Event.objects.filter(is_public=True)
+    
+
+
+class RequestEventAccessView(LoginRequiredMixin, FormView):
+    template_name = 'events/request_access.html'
+    form_class = EventAccessRequestForm
+    success_url = reverse_lazy('users:dashboard')
+
+    def form_valid(self, form):
+        event = form.cleaned_data['event']
+        
+        # Check if request already exists
+        existing_request = EventAccessRequest.objects.filter(
+            event=event,
+            user=self.request.user
+        ).first()
+        
+        if existing_request:
+            messages.warning(self.request, 'You have already requested access to this event')
+            return redirect('users:dashboard')
+
+        # Create new request
+        EventAccessRequest.objects.create(
+            event=event,
+            user=self.request.user,
+            request_type='PHOTOGRAPHER' if self.request.user.role == 'PHOTOGRAPHER' else 'PARTICIPANT',
+            message=form.cleaned_data.get('message', '')
+        )
+        
+        messages.success(self.request, 'Access request sent successfully')
+        return super().form_valid(form)
+
+@login_required
+def handle_access_request(request, request_id):
+    import json
+    
+    access_request = get_object_or_404(
+        EventAccessRequest, 
+        id=request_id,
+        event__organizer=request.user
+    )
+    
+    # Handle JSON data
+    if request.headers.get('Content-Type') == 'application/json':
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    else:
+        # Fall back to form data if needed
+        action = request.POST.get('action')
+    
+    if action == 'approve':
+        access_request.status = EventAccessRequest.RequestStatus.APPROVED
+        
+        # Add user to event based on their role
+        if access_request.request_type == 'PHOTOGRAPHER':
+            EventCrew.objects.create(
+                event=access_request.event,
+                member=access_request.user,
+                role='SECOND',
+                is_confirmed=True
+            )
+        else:
+            EventParticipant.objects.create(
+                event=access_request.event,
+                user=access_request.user,
+                email=access_request.user.email,
+                name=access_request.user.get_full_name(),
+                participant_type='GUEST'
+            )
+        
+        messages.success(request, 'Access request approved')
+    
+    elif action == 'reject':
+        access_request.status = EventAccessRequest.RequestStatus.REJECTED
+        messages.success(request, 'Access request rejected')
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+    
+    access_request.save()
+    return JsonResponse({'status': 'success'})
+
+# events/views.py (Add or update this view)
+
+@login_required
+def request_access(request):
+    """Simple form to request access to an event using event code"""
+    if request.method == 'POST':
+        event_code = request.POST.get('event_code', '').upper()
+        
+        try:
+            event = Event.objects.get(event_code=event_code)
+            
+            # Check if user already has access
+            if event.organizer == request.user:
+                messages.info(request, 'You are the organizer of this event.')
+                return redirect('events:event_dashboard', slug=event.slug)
+            
+            if EventCrew.objects.filter(event=event, member=request.user).exists():
+                messages.info(request, 'You are already a crew member for this event.')
+                return redirect('events:event_dashboard', slug=event.slug)
+                
+            if EventParticipant.objects.filter(event=event, user=request.user).exists():
+                messages.info(request, 'You are already a participant in this event.')
+                return redirect('events:event_gallery', slug=event.slug)
+            
+            # Check if request already exists
+            if EventAccessRequest.objects.filter(event=event, user=request.user).exists():
+                messages.warning(request, 'You have already requested access to this event.')
+                return redirect('users:dashboard')
+            
+            # Create new request
+            EventAccessRequest.objects.create(
+                event=event,
+                user=request.user,
+                request_type='PHOTOGRAPHER' if request.user.role == 'PHOTOGRAPHER' else 'PARTICIPANT',
+                message='Request via event code'
+            )
+            
+            messages.success(request, f'Access request sent to "{event.title}" successfully!')
+        except Event.DoesNotExist:
+            messages.error(request, 'Invalid event code. Please check and try again.')
+    
+    return redirect('users:dashboard')

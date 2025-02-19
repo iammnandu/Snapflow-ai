@@ -1,3 +1,5 @@
+# users/views.py
+from datetime import timezone
 from django.views.generic import TemplateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -6,6 +8,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
+
+
+from events.models import Event, EventAccessRequest, EventCrew, EventParticipant
+
+from .forms import BasicRegistrationForm, OrganizerProfileForm, ParticipantProfileForm, PhotographerProfileForm
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'users/profile.html'
@@ -104,3 +112,85 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('users:login')
+
+
+# users/views.py (Add these functions)
+
+@login_required
+def dashboard(request):
+    """Main dashboard view that shows different content based on user role"""
+    user = request.user
+    context = {}
+    
+    # Common data for all users
+    user_requests = EventAccessRequest.objects.filter(user=user)
+    context['user_requests'] = user_requests
+    
+
+    if user.role == 'ORGANIZER':
+        # Get organizer's events
+        events = Event.objects.filter(organizer=user)
+        
+        # Calculate statistics
+        total_participants = EventParticipant.objects.filter(event__organizer=user).count()
+        total_photographers = EventCrew.objects.filter(event__organizer=user).count()
+        
+        # Get pending access requests
+        pending_requests = EventAccessRequest.objects.filter(
+            event__organizer=user,
+            status='PENDING'
+        )
+        
+        context.update({
+            'events': events,
+            'total_participants': total_participants,
+            'total_photographers': total_photographers,
+            'pending_requests': pending_requests,
+        })
+        
+    elif user.role == 'PHOTOGRAPHER':
+        # Get photographer's event assignments
+        crew_memberships = EventCrew.objects.filter(member=user)
+        
+        # Calculate statistics
+        total_photos = 0  # Implement photo tracking later
+        upcoming_events = crew_memberships.filter(
+            event__start_date__gt=timezone.now()
+        ).count()
+        
+        context.update({
+            'crew_memberships': crew_memberships,
+            'total_photos': total_photos,
+            'upcoming_events': upcoming_events,
+        })
+        
+    elif user.role == 'PARTICIPANT':
+        # Get events the participant is part of
+        participations = EventParticipant.objects.filter(user=user)
+        
+        # Calculate statistics
+        photos_of_user = 0  # You'll need to implement photo tracking
+        
+        context.update({
+            'participations': participations,
+            'photos_of_user': photos_of_user,
+        })
+    
+    return render(request, 'users/dashboard.html', context)
+
+
+@login_required
+def update_privacy(request):
+    """Update user privacy settings"""
+    if request.method == 'POST':
+        user = request.user
+        
+        # Update privacy settings
+        user.blur_requested = 'blur_requested' in request.POST
+        user.remove_requested = 'remove_requested' in request.POST
+        user.image_visibility = request.POST.get('image_visibility', 'PRIVATE')
+        user.save()
+        
+        messages.success(request, 'Privacy settings updated successfully!')
+    
+    return redirect('users:dashboard')

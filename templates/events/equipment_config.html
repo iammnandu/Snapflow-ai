@@ -1,0 +1,21 @@
+{% extends "events/base.html" %}
+{% block title %}Equipment Configuration{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Equipment Configuration</h1>
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+                Equipment List
+            </label>
+            {{ form.equipment }}
+            <p class="text-sm text-gray-500">List your equipment details for this event.</p>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+            Save Configuration
+        </button>
+    </form>
+</div>
+{% endblock %}
