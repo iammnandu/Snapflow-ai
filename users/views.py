@@ -128,6 +128,7 @@ def dashboard(request):
     user_requests = EventAccessRequest.objects.filter(user=user)
     context['user_requests'] = user_requests
     
+    template_name = 'users/dashboard.html'  # Default template
 
     if user.role == 'ORGANIZER':
         # Get organizer's events
@@ -149,6 +150,7 @@ def dashboard(request):
             'total_photographers': total_photographers,
             'pending_requests': pending_requests,
         })
+        template_name = 'users/dashboard_organizer.html'
         
     elif user.role == 'PHOTOGRAPHER':
         # Get photographer's event assignments
@@ -165,6 +167,7 @@ def dashboard(request):
             'total_photos': total_photos,
             'upcoming_events': upcoming_events,
         })
+        template_name = 'users/dashboard_photographer.html'
         
     elif user.role == 'PARTICIPANT':
         # Get events the participant is part of
@@ -177,9 +180,9 @@ def dashboard(request):
             'participations': participations,
             'photos_of_user': photos_of_user,
         })
+        template_name = 'users/dashboard_participant.html'
     
-    return render(request, 'users/dashboard.html', context)
-
+    return render(request, template_name, context)
 
 @login_required
 def update_privacy(request):
@@ -196,3 +199,7 @@ def update_privacy(request):
         messages.success(request, 'Privacy settings updated successfully!')
     
     return redirect('users:dashboard')
+
+
+def testdashboard(request):
+    return render(request, 'users/db_base.html')

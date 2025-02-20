@@ -1,0 +1,310 @@
+{% extends "users/db_base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+      <div class="row">
+        <div class="col-lg-8 mb-4 order-0">
+          <div class="card">
+            <div class="d-flex align-items-end row">
+              <div class="col-sm-7">
+                <div class="card-body">
+                  <h5 class="card-title text-primary">Welcome {{ user.first_name }}! 🎉</h5>
+                  <p class="mb-4">
+                    You have <span class="fw-bold">{{ pending_requests.count }}</span> pending access requests and 
+                    <span class="fw-bold">{{ events.count }}</span> total events.
+                  </p>
+                  <a href="{% url 'events:event_create' %}" class="btn btn-sm btn-primary">Create New Event</a>
+                </div>
+              </div>
+              <div class="col-sm-5 text-center text-sm-left">
+                <div class="card-body pb-0 px-0 px-md-4">
+                  <img
+                    src="{% static 'users/assets/img/illustrations/man-with-laptop-light.png' %}"
+                    height="140"
+                    alt="Event Organizer"
+                    data-app-dark-img="illustrations/man-with-laptop-dark.png"
+                    data-app-light-img="illustrations/man-with-laptop-light.png"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-4 order-1">
+          <div class="row">
+            <div class="col-lg-6 col-md-12 col-6 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <div class="card-title d-flex align-items-start justify-content-between">
+                    <div class="avatar flex-shrink-0">
+                      <img
+                        src="{% static 'users/assets/img/icons/unicons/chart-success.png' %}"
+                        alt="chart success"
+                        class="rounded"
+                      />
+                    </div>
+                    <div class="dropdown">
+                      <button
+                        class="btn p-0"
+                        type="button"
+                        id="cardOpt3"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
+                        <a class="dropdown-item" href="{% url 'events:event_list' %}">View All Events</a>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="fw-semibold d-block mb-1">Total Events</span>
+                  <h3 class="card-title mb-2">{{ events.count }}</h3>
+                  {% if events %}
+                  <small class="text-success fw-semibold"><i class="bx bx-calendar-check"></i> Latest: {{ events.first.name }}</small>
+                  {% else %}
+                  <small class="text-muted fw-semibold">No events yet</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 col-md-12 col-6 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <div class="card-title d-flex align-items-start justify-content-between">
+                    <div class="avatar flex-shrink-0">
+                      <img
+                        src="{% static 'users/assets/img/icons/unicons/wallet-info.png' %}"
+                        alt="Participants"
+                        class="rounded"
+                      />
+                    </div>
+                    <div class="dropdown">
+                      <button
+                        class="btn p-0"
+                        type="button"
+                        id="cardOpt6"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
+                        <a class="dropdown-item" href="">View All Participants</a>
+                      </div>
+                    </div>
+                  </div>
+                  <span>Total Participants</span>
+                  <h3 class="card-title text-nowrap mb-1">{{ total_participants }}</h3>
+                  <small class="text-success fw-semibold"><i class="bx bx-group"></i> Across all events</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Event Management -->
+        <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+          <div class="card">
+            <div class="row row-bordered g-0">
+              <div class="col-md-12">
+                <h5 class="card-header m-0 me-2 pb-3">Your Events</h5>
+                <div class="table-responsive text-nowrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Event Name</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Participants</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                      {% for event in events|slice:":5" %}
+                      <tr>
+                        <td>
+                          <strong>{{ event.name }}</strong>
+                        </td>
+                        <td>{{ event.start_date|date:"M d, Y" }}</td>
+                        <td>
+                          {% if event.status == 'UPCOMING' %}
+                          <span class="badge bg-label-primary">Upcoming</span>
+                          {% elif event.status == 'ACTIVE' %}
+                          <span class="badge bg-label-success">Active</span>
+                          {% elif event.status == 'COMPLETED' %}
+                          <span class="badge bg-label-info">Completed</span>
+                          {% else %}
+                          <span class="badge bg-label-secondary">{{ event.get_status_display }}</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ event.eventparticipant_set.count }}</td>
+                        <td>
+                          <div class="dropdown">
+                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                              <i class="bx bx-dots-vertical-rounded"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                              <a class="dropdown-item" href="{% url 'events:event_detail' event.id %}">
+                                <i class="bx bx-show-alt me-1"></i> View Details
+                              </a>
+                              <a class="dropdown-item" href="">
+                                <i class="bx bx-edit-alt me-1"></i> Edit
+                              </a>
+                              <a class="dropdown-item" href="">
+                                <i class="bx bx-group me-1"></i> Manage Participants
+                              </a>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                        <td colspan="5" class="text-center">No events created yet</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  {% if events.count > 5 %}
+                  <div class="text-center mt-3 mb-3">
+                    <a href="{% url 'events:event_list' %}" class="btn btn-sm btn-outline-primary">View All Events</a>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--/ Event Management -->
+  
+        <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
+          <div class="row">
+            <div class="col-6 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <div class="card-title d-flex align-items-start justify-content-between">
+                    <div class="avatar flex-shrink-0">
+                      <img src="{% static 'users/assets/img/icons/unicons/cc-primary.png' %}" alt="Photographers" class="rounded" />
+                    </div>
+                    <div class="dropdown">
+                      <button
+                        class="btn p-0"
+                        type="button"
+                        id="cardOpt4"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
+                        <a class="dropdown-item" href="">View All Photographers</a>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="d-block mb-1">Photographers</span>
+                  <h3 class="card-title text-nowrap mb-2">{{ total_photographers }}</h3>
+                  <small class="text-primary fw-semibold"><i class="bx bx-camera"></i> In your events</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <div class="card-title d-flex align-items-start justify-content-between">
+                    <div class="avatar flex-shrink-0">
+                      <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Requests" class="rounded" />
+                    </div>
+                    <div class="dropdown">
+                      <button
+                        class="btn p-0"
+                        type="button"
+                        id="cardOpt1"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu" aria-labelledby="cardOpt1">
+                        <a class="dropdown-item" href="{% url 'events:request_access' %}">View All Requests</a>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="fw-semibold d-block mb-1">Pending Requests</span>
+                  <h3 class="card-title mb-2">{{ pending_requests.count }}</h3>
+                  <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Needs review</small>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Access Requests -->
+            <div class="col-12 mb-4">
+              <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                  <h5 class="card-title m-0 me-2">Recent Access Requests</h5>
+                  <div class="dropdown">
+                    <button
+                      class="btn p-0"
+                      type="button"
+                      id="transactionID"
+                      data-bs-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                    >
+                      <i class="bx bx-dots-vertical-rounded"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                      <a class="dropdown-item" href="{% url 'events:request_access' %}">View All Requests</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <ul class="p-0 m-0">
+                    {% for request in pending_requests|slice:":5" %}
+                    <li class="d-flex mb-4 pb-1">
+                      <div class="avatar flex-shrink-0 me-3">
+                        {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="rounded" />
+                        {% else %}
+                        <span class="avatar-initial rounded bg-label-primary">{{ request.user.first_name|first }}{{ request.user.last_name|first }}</span>
+                        {% endif %}
+                      </div>
+                      <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="me-2">
+                          <small class="text-muted d-block mb-1">{{ request.get_request_type_display }}</small>
+                          <h6 class="mb-0">{{ request.user.get_full_name }}</h6>
+                        </div>
+                        <div>
+                          <a href="{% url 'events:review_request' request.id %}" class="btn btn-sm btn-outline-primary">Review</a>
+                        </div>
+                      </div>
+                    </li>
+                    {% empty %}
+                    <li class="text-center p-3">No pending requests</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <!--/ Access Requests -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- / Content -->
+    <div class="content-backdrop fade"></div>
+  </div>
+  <!-- Content wrapper -->
+
+{% endblock content %}
+
+
+
