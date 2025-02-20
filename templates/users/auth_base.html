@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="light-style customizer-hide" dir="ltr" data-theme="theme-default">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    
+    <title>{% block title %}Authentication{% endblock %}</title>
+    
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'users/assets/img/favicon.ico' %}" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="{% static 'users/assets/vendor/fonts/boxicons.css' %}" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{% static 'users/assets/vendor/css/core.css' %}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{% static 'users/assets/vendor/css/theme-default.css' %}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{% static 'users/assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{% static 'users/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="{% static 'users/assets/vendor/css/pages/page-auth.css' %}" />
+
+    <!-- Helpers -->
+    <script src="{% static 'users/assets/vendor/js/helpers.js' %}"></script>
+    <script src="{% static 'users/assets/js/config.js' %}"></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    {% block body_block %}{% endblock %}
+
+    <!-- Core JS -->
+    <script src="{% static 'users/assets/vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static 'users/assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'users/assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'users/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'users/assets/vendor/js/menu.js' %}"></script>
+
+    <!-- Main JS -->
+    <script src="{% static 'users/assets/js/main.js' %}"></script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -61,10 +61,8 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
             })
         return super().form_invalid(form)
 
-# Keep your existing views
-def auth_view(request):
-    """Combined login and registration view"""
-    return render(request, 'users/auth.html')
+
+from django.contrib import messages
 
 def register(request):
     if request.method == 'POST':
@@ -78,8 +76,12 @@ def register(request):
             return redirect('users:complete_profile')
         else:
             messages.error(request, 'Registration failed. Please correct the errors.')
-            return redirect('users:auth')
-    return redirect('users:auth')
+
+    else:
+        form = BasicRegistrationForm()
+
+    return render(request, 'users/auth-register-basic.html', {'form': form})
+
 
 @login_required
 def complete_profile(request):
