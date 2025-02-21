@@ -203,3 +203,23 @@ def update_privacy(request):
 
 def testdashboard(request):
     return render(request, 'users/db_base.html')
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import logout
+from django.views.decorators.csrf import csrf_exempt
+
+@login_required
+@csrf_exempt
+def delete_account(request):
+    if request.method == "POST":
+        user = request.user
+        user.delete()
+        messages.success(request, "Your account has been successfully deleted.")
+        logout(request)
+        return redirect("home:landing") 
+
+    return render(request, "users/delete_account.html")

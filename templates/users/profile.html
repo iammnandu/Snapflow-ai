@@ -1,316 +1,429 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <style>
-        .profile-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-        }
+{% extends "users/db_base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Account Settings /</span> Profile</h4>
+  
+    <div class="row">
+      <div class="col-md-12">
+        <ul class="nav nav-pills flex-column flex-md-row mb-3">
+          <li class="nav-item">
+            <a class="nav-link active" href="javascript:void(0);"><i class="bx bx-user me-1"></i> Account</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages-account-settings-notifications.html"><i class="bx bx-bell me-1"></i> Notifications</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages-account-settings-connections.html"><i class="bx bx-link-alt me-1"></i> Connections</a>
+          </li>
+        </ul>
         
-        .avatar-preview {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .profile-section {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .edit-mode .view-only {
-            display: none;
-        }
-        
-        .view-mode .edit-only {
-            display: none;
-        }
-    </style>
-</head>
-<body class="bg-gray-100">
-    <div class="profile-container">
-        <!-- Profile Header -->
-        <div class="profile-section">
-            <div class="flex items-center justify-between mb-6">
-                <h1 class="text-2xl font-bold">{{ user.get_role_display }} Profile</h1>
-                <button id="editButton" 
-                        class="view-only bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                        onclick="toggleEditMode()">
-                    Edit Profile
-                </button>
+        <div class="card mb-4">
+          <h5 class="card-header">
+            {{ user.get_role_display }} Profile
+            <button id="editButton" 
+                   class="view-only btn btn-primary btn-sm float-end"
+                   onclick="toggleEditMode()">
+              Edit Profile
+            </button>
+          </h5>
+          
+          <!-- Account -->
+          <div class="card-body">
+            <div class="d-flex align-items-start align-items-sm-center gap-4">
+              <img src="{{ user.avatar.url|default:'/static/default-avatar.png' }}" 
+                   alt="user-avatar" class="d-block rounded" height="100" width="100" id="uploadedAvatar" />
+              
+              <div class="button-wrapper edit-only" style="display: none;">
+                <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
+                  <span class="d-none d-sm-block">Upload new photo</span>
+                  <i class="bx bx-upload d-block d-sm-none"></i>
+                  <input type="file" id="upload" name="avatar" class="account-file-input" hidden accept="image/png, image/jpeg" />
+                </label>
+                <p class="text-muted mb-0">Allowed JPG, PNG. Max size of 800K</p>
+              </div>
             </div>
-            
-            <div class="flex flex-col md:flex-row items-start gap-6">
-                <div class="flex flex-col items-center">
-                    <img src="{{ user.avatar.url|default:'/static/default-avatar.png' }}" 
-                         alt="Profile Avatar"
-                         class="avatar-preview mb-3">
-                    <div class="edit-only">
-                        <label class="cursor-pointer bg-gray-200 px-4 py-2 rounded">
-                            Change Avatar
-                            <input type="file" name="avatar" class="hidden" accept="image/*">
-                        </label>
-                    </div>
+          </div>
+          
+          <hr class="my-0" />
+          
+          <div class="card-body">
+            <!-- Edit Mode Form -->
+            <form id="profileForm" method="POST" enctype="multipart/form-data" class="edit-only" style="display: none;" action="{% url 'users:profile_update' %}">
+              {% csrf_token %}
+              
+              <!-- Hidden field for avatar from outside form -->
+              <input type="file" id="hiddenAvatar" name="avatar" style="display: none;">
+              
+              <div class="row">
+                <!-- Common Fields -->
+                <div class="mb-3 col-md-6">
+                  <label for="username" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="username" value="{{ user.username }}" readonly />
                 </div>
                 
-                <div class="flex-1">
-                    <form id="profileForm" method="POST" enctype="multipart/form-data" class="edit-only">
-                        {% csrf_token %}
-                        
-                        <!-- Common Fields -->
-                        <div class="form-group">
-                            <label class="block text-gray-700 mb-2">Username</label>
-                            <input type="text" value="{{ user.username }}" class="w-full px-3 py-2 border rounded" readonly>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="block text-gray-700 mb-2">Email</label>
-                            <input type="email" value="{{ user.email }}" class="w-full px-3 py-2 border rounded" readonly>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="block text-gray-700 mb-2">Phone Number</label>
-                            <input type="tel" name="phone_number" value="{{ user.phone_number }}" 
-                                   class="w-full px-3 py-2 border rounded">
-                        </div>
-                        
-                        {% if user.role == 'ORGANIZER' %}
-                            <!-- Organizer Fields -->
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Company Name</label>
-                                <input type="text" name="company_name" value="{{ user.company_name }}"
-                                       class="w-full px-3 py-2 border rounded">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Website</label>
-                                <input type="url" name="website" value="{{ user.website }}"
-                                       class="w-full px-3 py-2 border rounded">
-                            </div>
-                        
-                        {% elif user.role == 'PHOTOGRAPHER' %}
-                            <!-- Photographer Fields -->
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Portfolio URL</label>
-                                <input type="url" name="portfolio_url" value="{{ user.portfolio_url }}"
-                                       class="w-full px-3 py-2 border rounded">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Photographer Role</label>
-                                <select name="photographer_role" class="w-full px-3 py-2 border rounded">
-                                    {% for value, label in user.PhotographerRoles.choices %}
-                                        <option value="{{ value }}" {% if user.photographer_role == value %}selected{% endif %}>
-                                            {{ label }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Watermark</label>
-                                {% if user.watermark %}
-                                    <img src="{{ user.watermark.url }}" alt="Current Watermark" class="mb-2 max-w-xs">
-                                {% endif %}
-                                <input type="file" name="watermark" accept="image/png" class="w-full">
-                            </div>
-                        
-                        {% elif user.role == 'PARTICIPANT' %}
-                            <!-- Participant Fields -->
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Participant Type</label>
-                                <select name="participant_type" class="w-full px-3 py-2 border rounded">
-                                    {% for value, label in user.ParticipantTypes.choices %}
-                                        <option value="{{ value }}" {% if user.participant_type == value %}selected{% endif %}>
-                                            {{ label }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="block text-gray-700 mb-2">Image Visibility</label>
-                                <select name="image_visibility" class="w-full px-3 py-2 border rounded">
-                                    <option value="PUBLIC" {% if user.image_visibility == 'PUBLIC' %}selected{% endif %}>Public</option>
-                                    <option value="PRIVATE" {% if user.image_visibility == 'PRIVATE' %}selected{% endif %}>Private</option>
-                                    <option value="EVENT_ONLY" {% if user.image_visibility == 'EVENT_ONLY' %}selected{% endif %}>Event Only</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="flex items-center gap-2">
-                                    <input type="checkbox" name="blur_requested" {% if user.blur_requested %}checked{% endif %}>
-                                    Request face blur in photos
-                                </label>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="flex items-center gap-2">
-                                    <input type="checkbox" name="remove_requested" {% if user.remove_requested %}checked{% endif %}>
-                                    Request photo removal
-                                </label>
-                            </div>
-                        {% endif %}
-                        
-                        <div class="flex justify-end gap-4">
-                            <button type="button" 
-                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                                    onclick="toggleEditMode()">
-                                Cancel
-                            </button>
-                            <button type="submit" 
-                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
-                    
-                    <!-- View Mode Content -->
-                    <div class="view-only">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="font-semibold">Username:</p>
-                                <p>{{ user.username }}</p>
-                            </div>
-                            
-                            <div>
-                                <p class="font-semibold">Email:</p>
-                                <p>{{ user.email }}</p>
-                            </div>
-                            
-                            <div>
-                                <p class="font-semibold">Phone:</p>
-                                <p>{{ user.phone_number|default:"Not provided" }}</p>
-                            </div>
-                            
-                            {% if user.role == 'ORGANIZER' %}
-                                <div>
-                                    <p class="font-semibold">Company:</p>
-                                    <p>{{ user.company_name|default:"Not provided" }}</p>
-                                </div>
-                                
-                                <div>
-                                    <p class="font-semibold">Website:</p>
-                                    <p>{{ user.website|default:"Not provided" }}</p>
-                                </div>
-                            
-                            {% elif user.role == 'PHOTOGRAPHER' %}
-                                <div>
-                                    <p class="font-semibold">Portfolio:</p>
-                                    <p>{{ user.portfolio_url|default:"Not provided" }}</p>
-                                </div>
-                                
-                                <div>
-                                    <p class="font-semibold">Role:</p>
-                                    <p>{{ user.get_photographer_role_display }}</p>
-                                </div>
-                                
-                                {% if user.watermark %}
-                                    <div class="col-span-2">
-                                        <p class="font-semibold">Watermark:</p>
-                                        <img src="{{ user.watermark.url }}" alt="Watermark" class="max-w-xs mt-2">
-                                    </div>
-                                {% endif %}
-                            
-                            {% elif user.role == 'PARTICIPANT' %}
-                                <div>
-                                    <p class="font-semibold">Type:</p>
-                                    <p>{{ user.get_participant_type_display }}</p>
-                                </div>
-                                
-                                <div>
-                                    <p class="font-semibold">Image Visibility:</p>
-                                    <p>{{ user.get_image_visibility_display }}</p>
-                                </div>
-                                
-                                <div>
-                                    <p class="font-semibold">Privacy Settings:</p>
-                                    <ul class="list-disc list-inside">
-                                        {% if user.blur_requested %}
-                                            <li>Face blur requested</li>
-                                        {% endif %}
-                                        {% if user.remove_requested %}
-                                            <li>Photo removal requested</li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
+                <div class="mb-3 col-md-6">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" value="{{ user.email }}" readonly />
                 </div>
+                
+                <div class="mb-3 col-md-6">
+                  <label for="phoneNumber" class="form-label">Phone Number</label>
+                  <input type="tel" class="form-control" id="phoneNumber" name="phone_number" value="{{ user.phone_number }}" />
+                </div>
+                
+                {% if user.role == 'ORGANIZER' %}
+                  <!-- Organizer Fields -->
+                  <div class="mb-3 col-md-6">
+                    <label for="companyName" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" id="companyName" name="company_name" value="{{ user.company_name }}" />
+                  </div>
+                  
+                  <div class="mb-3 col-md-6">
+                    <label for="website" class="form-label">Website</label>
+                    <input type="url" class="form-control" id="website" name="website" value="{{ user.website }}" />
+                  </div>
+                
+                {% elif user.role == 'PHOTOGRAPHER' %}
+                  <!-- Photographer Fields -->
+                  <div class="mb-3 col-md-6">
+                    <label for="portfolioUrl" class="form-label">Portfolio URL</label>
+                    <input type="url" class="form-control" id="portfolioUrl" name="portfolio_url" value="{{ user.portfolio_url }}" />
+                  </div>
+                  
+                  <div class="mb-3 col-md-6">
+                    <label for="photographerRole" class="form-label">Photographer Role</label>
+                    <select class="form-select" id="photographerRole" name="photographer_role">
+                      {% for value, label in user.PhotographerRoles.choices %}
+                        <option value="{{ value }}" {% if user.photographer_role == value %}selected{% endif %}>
+                          {{ label }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3 col-md-12">
+                    <label for="watermark" class="form-label">Watermark</label>
+                    {% if user.watermark %}
+                      <div class="mb-2">
+                        <img src="{{ user.watermark.url }}" alt="Current Watermark" class="img-fluid" style="max-width: 200px;">
+                      </div>
+                    {% endif %}
+                    <input type="file" class="form-control" id="watermark" name="watermark" accept="image/png" />
+                    <small class="text-muted">Upload PNG images only</small>
+                  </div>
+                
+                {% elif user.role == 'PARTICIPANT' %}
+                  <!-- Participant Fields -->
+                  <div class="mb-3 col-md-6">
+                    <label for="participantType" class="form-label">Participant Type</label>
+                    <select class="form-select" id="participantType" name="participant_type">
+                      {% for value, label in user.ParticipantTypes.choices %}
+                        <option value="{{ value }}" {% if user.participant_type == value %}selected{% endif %}>
+                          {{ label }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3 col-md-6">
+                    <label for="imageVisibility" class="form-label">Image Visibility</label>
+                    <select class="form-select" id="imageVisibility" name="image_visibility">
+                      <option value="PUBLIC" {% if user.image_visibility == 'PUBLIC' %}selected{% endif %}>Public</option>
+                      <option value="PRIVATE" {% if user.image_visibility == 'PRIVATE' %}selected{% endif %}>Private</option>
+                      <option value="EVENT_ONLY" {% if user.image_visibility == 'EVENT_ONLY' %}selected{% endif %}>Event Only</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3 col-md-12">
+                    <div class="form-check mb-2">
+                      <input class="form-check-input" type="checkbox" id="blurRequested" name="blur_requested" {% if user.blur_requested %}checked{% endif %} />
+                      <label class="form-check-label" for="blurRequested">Request face blur in photos</label>
+                    </div>
+                    
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="removeRequested" name="remove_requested" {% if user.remove_requested %}checked{% endif %} />
+                      <label class="form-check-label" for="removeRequested">Request photo removal</label>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <div class="mt-4">
+                <button type="button" class="btn btn-outline-secondary me-2" onclick="toggleEditMode()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+              </div>
+            </form>
+            
+            <!-- View Mode Content -->
+            <div class="row view-only">
+              <div class="col-md-6 mb-3">
+                <h6 class="fw-semibold">Username:</h6>
+                <p>{{ user.username }}</p>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <h6 class="fw-semibold">Email:</h6>
+                <p>{{ user.email }}</p>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <h6 class="fw-semibold">Phone:</h6>
+                <p>{{ user.phone_number|default:"Not provided" }}</p>
+              </div>
+              
+              {% if user.role == 'ORGANIZER' %}
+                <div class="col-md-6 mb-3">
+                  <h6 class="fw-semibold">Company:</h6>
+                  <p>{{ user.company_name|default:"Not provided" }}</p>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <h6 class="fw-semibold">Website:</h6>
+                  <p>{{ user.website|default:"Not provided" }}</p>
+                </div>
+              
+              {% elif user.role == 'PHOTOGRAPHER' %}
+                <div class="col-md-6 mb-3">
+                  <h6 class="fw-semibold">Portfolio:</h6>
+                  <p>{{ user.portfolio_url|default:"Not provided" }}</p>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <h6 class="fw-semibold">Role:</h6>
+                  <p>{{ user.get_photographer_role_display }}</p>
+                </div>
+                
+                {% if user.watermark %}
+                  <div class="col-md-12 mb-3">
+                    <h6 class="fw-semibold">Watermark:</h6>
+                    <img src="{{ user.watermark.url }}" alt="Watermark" class="img-fluid" style="max-width: 200px;">
+                  </div>
+                {% endif %}
+              
+              {% elif user.role == 'PARTICIPANT' %}
+                <div class="col-md-6 mb-3">
+                  <h6 class="fw-semibold">Type:</h6>
+                  <p>{{ user.get_participant_type_display }}</p>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <h6 class="fw-semibold">Image Visibility:</h6>
+                  <p>{{ user.get_image_visibility_display }}</p>
+                </div>
+                
+                <div class="col-md-12 mb-3">
+                  <h6 class="fw-semibold">Privacy Settings:</h6>
+                  <ul class="ps-3">
+                    {% if user.blur_requested %}
+                      <li>Face blur requested</li>
+                    {% endif %}
+                    {% if user.remove_requested %}
+                      <li>Photo removal requested</li>
+                    {% endif %}
+                    {% if not user.blur_requested and not user.remove_requested %}
+                      <li>No special privacy settings configured</li>
+                    {% endif %}
+                  </ul>
+                </div>
+              {% endif %}
             </div>
+          </div>
         </div>
+      </div>
     </div>
-
-    <script>
-        function toggleEditMode() {
-            const container = document.querySelector('.profile-container');
-            if (container.classList.contains('view-mode')) {
-                container.classList.remove('view-mode');
-                container.classList.add('edit-mode');
-            } else {
-                container.classList.remove('edit-mode');
-                container.classList.add('view-mode');
-            }
+  </div>
+  <div class="card mt-4">
+    <h5 class="card-header">Delete Account</h5>
+    <div class="card-body">
+      <div class="mb-3 col-12 mb-0">
+        <div class="alert alert-danger">
+          <h6 class="alert-heading fw-bold mb-1">Are you sure you want to delete your account?</h6>
+          <p class="mb-0">Once you delete your account, there is no going back. All your data will be permanently erased.</p>
+        </div>
+      </div>
+      <form id="deleteAccountForm" method="POST" action="{% url 'users:delete_account' %}">
+        {% csrf_token %}
+        <div class="form-check mb-3">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            name="confirmDelete"
+            id="confirmDelete"
+            required
+          />
+          <label class="form-check-label" for="confirmDelete">
+            I understand this action is irreversible and confirm I want to delete my account
+          </label>
+        </div>
+        <div class="form-check mb-3">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            name="confirmUnderstand"
+            id="confirmUnderstand"
+            required
+          />
+          <label class="form-check-label" for="confirmUnderstand">
+            I understand all my data, including photos, profiles, and settings will be permanently lost
+          </label>
+        </div>
+        <button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">Delete Account</button>
+        <a href="{% url 'users:profile' %}" class="btn btn-secondary">Cancel</a>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteConfirmModalLabel">Final Confirmation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fw-bold">Are you absolutely sure you want to delete your account?</p>
+          <p>This action cannot be undone. Your account and all associated data will be permanently deleted.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="finalDeleteConfirm">Yes, Delete My Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('finalDeleteConfirm').addEventListener('click', function() {
+        // Check if both checkboxes are checked
+        const confirmDelete = document.getElementById('confirmDelete').checked;
+        const confirmUnderstand = document.getElementById('confirmUnderstand').checked;
+        
+        if (confirmDelete && confirmUnderstand) {
+          document.getElementById('deleteAccountForm').submit();
+        } else {
+          alert('Please confirm both checkboxes before deleting your account.');
+          document.getElementById('deleteConfirmModal').classList.remove('show');
         }
-
-        // Initialize view mode
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('.profile-container').classList.add('view-mode');
-        });
-
-        // Preview avatar image before upload
-        document.querySelector('input[name="avatar"]').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.querySelector('.avatar-preview').src = e.target.result;
-                }
-                reader.readAsDataURL(e.target.files[0]);
+      });
+    });
+  </script>
+  <script>
+    function toggleEditMode() {
+      const viewElements = document.querySelectorAll('.view-only');
+      const editElements = document.querySelectorAll('.edit-only');
+      
+      if (document.querySelector('.container-xxl').classList.contains('view-mode')) {
+        // Switch to edit mode
+        viewElements.forEach(el => el.style.display = 'none');
+        editElements.forEach(el => el.style.display = 'block');
+        document.querySelector('.container-xxl').classList.remove('view-mode');
+        document.querySelector('.container-xxl').classList.add('edit-mode');
+      } else {
+        // Switch to view mode
+        viewElements.forEach(el => el.style.display = 'block');
+        editElements.forEach(el => el.style.display = 'none');
+        document.querySelector('.container-xxl').classList.remove('edit-mode');
+        document.querySelector('.container-xxl').classList.add('view-mode');
+      }
+    }
+  
+    // Initialize view mode
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.querySelector('.container-xxl');
+      const viewElements = document.querySelectorAll('.view-only');
+      const editElements = document.querySelectorAll('.edit-only');
+      
+      // Set initial state
+      container.classList.add('view-mode');
+      viewElements.forEach(el => el.style.display = 'block');
+      editElements.forEach(el => el.style.display = 'none');
+      
+      // Handle avatar file selection outside the form
+      document.getElementById('upload').addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+          // Preview image
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            document.getElementById('uploadedAvatar').src = e.target.result;
+          }
+          reader.readAsDataURL(e.target.files[0]);
+          
+          // Copy selected file to hidden form input
+          const hiddenInput = document.getElementById('hiddenAvatar');
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(e.target.files[0]);
+          hiddenInput.files = dataTransfer.files;
+        }
+      });
+      
+      // Form submission handling
+      document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Create Bootstrap alert for success
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+              ${data.message || 'Profile updated successfully!'}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.card-body').prepend(alertDiv);
+            
+            // Toggle back to view mode after short delay
+            setTimeout(() => {
+              toggleEditMode();
+              location.reload();
+            }, 1500);
+          } else {
+            // Create Bootstrap alert for error with field errors
+            let errorMessages = '';
+            if (data.errors) {
+              for (const field in data.errors) {
+                errorMessages += `<li>${field}: ${data.errors[field].join(', ')}</li>`;
+              }
             }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+              <strong>Error updating profile:</strong>
+              ${errorMessages ? `<ul>${errorMessages}</ul>` : ''}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.card-body').prepend(alertDiv);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Create Bootstrap alert for error
+          const alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+          alertDiv.innerHTML = `
+            An unexpected error occurred. Please try again.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+          document.querySelector('.card-body').prepend(alertDiv);
         });
+      });
+    });
+  </script>
 
-        // Form submission handling
-        document.getElementById('profileForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            fetch('{% url "users:profile" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Profile updated successfully!');
-                    toggleEditMode();
-                    location.reload();
-                } else {
-                    alert('Error updating profile. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating profile. Please try again.');
-            });
-        });
-    </script>
-</body>
-</html>
+{% endblock content %}
