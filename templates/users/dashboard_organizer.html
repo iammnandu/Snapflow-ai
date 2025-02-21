@@ -13,7 +13,7 @@
             <div class="d-flex align-items-end row">
               <div class="col-sm-7">
                 <div class="card-body">
-                  <h5 class="card-title text-primary">Welcome {{ user.first_name }}! 🎉</h5>
+                  <h5 class="card-title text-primary">Welcome {{ user.username }}! 🎉</h5>
                   <p class="mb-4">
                     You have <span class="fw-bold">{{ pending_requests.count }}</span> pending access requests and 
                     <span class="fw-bold">{{ events.count }}</span> total events.
@@ -109,6 +109,155 @@
             </div>
           </div>
         </div>
+
+
+        <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+          <div class="card">
+            <div class="row row-bordered g-0">
+              <div class="col-md-8">
+                <h5 class="card-header m-0 me-2 pb-3">Total Revenue</h5>
+                <div id="totalRevenueChart" class="px-2"></div>
+              </div>
+              <div class="col-md-4">
+                <div class="card-body">
+                  <div class="text-center">
+                    <div class="dropdown">
+                      <button
+                        class="btn btn-sm btn-outline-primary dropdown-toggle"
+                        type="button"
+                        id="growthReportId"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        2022
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="growthReportId">
+                        <a class="dropdown-item" href="javascript:void(0);">2021</a>
+                        <a class="dropdown-item" href="javascript:void(0);">2020</a>
+                        <a class="dropdown-item" href="javascript:void(0);">2019</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="growthChart"></div>
+                <div class="text-center fw-semibold pt-3 mb-2">62% Company Growth</div>
+
+                <div class="d-flex px-xxl-4 px-lg-2 p-4 gap-xxl-3 gap-lg-1 gap-3 justify-content-between">
+                  <div class="d-flex">
+                    <div class="me-2">
+                      <span class="badge bg-label-primary p-2"><i class="bx bx-dollar text-primary"></i></span>
+                    </div>
+                    <div class="d-flex flex-column">
+                      <small>2022</small>
+                      <h6 class="mb-0">$32.5k</h6>
+                    </div>
+                  </div>
+                  <div class="d-flex">
+                    <div class="me-2">
+                      <span class="badge bg-label-info p-2"><i class="bx bx-wallet text-info"></i></span>
+                    </div>
+                    <div class="d-flex flex-column">
+                      <small>2021</small>
+                      <h6 class="mb-0">$41.2k</h6>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--/ Total Revenue -->
+        <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
+            <div class="row">
+              <div class="col-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="card-title d-flex align-items-start justify-content-between">
+                      <div class="avatar flex-shrink-0">
+                        <img src="{% static 'users/assets/img/icons/unicons/cc-primary.png' %}" alt="Photographers" class="rounded" />
+                      </div>
+                      <div class="dropdown">
+                        <button
+                          class="btn p-0"
+                          type="button"
+                          id="cardOpt4"
+                          data-bs-toggle="dropdown"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                        >
+                          <i class="bx bx-dots-vertical-rounded"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
+                          <a class="dropdown-item" href="">View All Photographers</a>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="d-block mb-1">Photographers</span>
+                    <h3 class="card-title text-nowrap mb-2">{{ total_photographers }}</h3>
+                    <small class="text-primary fw-semibold"><i class="bx bx-camera"></i> In your events</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="card-title d-flex align-items-start justify-content-between">
+                      <div class="avatar flex-shrink-0">
+                        <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Requests" class="rounded" />
+                      </div>
+                      <div class="dropdown">
+                        <button
+                          class="btn p-0"
+                          type="button"
+                          id="cardOpt1"
+                          data-bs-toggle="dropdown"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                        >
+                          <i class="bx bx-dots-vertical-rounded"></i>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="cardOpt1">
+                          <a class="dropdown-item" href="{% url 'events:request_access' %}">View All Requests</a>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="fw-semibold d-block mb-1">Pending Requests</span>
+                    <h3 class="card-title mb-2">{{ pending_requests.count }}</h3>
+                    <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Needs review</small>
+                  </div>
+                </div>
+              </div>
+
+                
+              <div class="col-12 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
+                      <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
+                        <div class="card-title">
+                          <h5 class="text-nowrap mb-2">Profile Report</h5>
+                          <span class="badge bg-label-warning rounded-pill">Year 2021</span>
+                        </div>
+                        <div class="mt-sm-auto">
+                          <small class="text-success text-nowrap fw-semibold"
+                            ><i class="bx bx-chevron-up"></i> 68.2%</small
+                          >
+                          <h3 class="mb-0">$84,686k</h3>
+                        </div>
+                      </div>
+                      <div id="profileReportChart"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+
   
         <!-- Event Management -->
         <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
@@ -122,37 +271,38 @@
                       <tr>
                         <th>Event Name</th>
                         <th>Date</th>
+                        <th>Type</th>
                         <th>Status</th>
-                        <th>Participants</th>
-                        <th>Actions</th>
+                        <th>Location</th>
                       </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
                       {% for event in events|slice:":5" %}
                       <tr>
-                        <td>
-                          <strong>{{ event.name }}</strong>
-                        </td>
+                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' event.slug %}" >{{ event.title }}</a></strong></td>
                         <td>{{ event.start_date|date:"M d, Y" }}</td>
+                        <td>{{ event.event_type }}</td>
                         <td>
-                          {% if event.status == 'UPCOMING' %}
-                          <span class="badge bg-label-primary">Upcoming</span>
+                          {% if event.status == 'DRAFT' %}
+                          <span class="badge bg-label-warning me-1">Draft</span>
                           {% elif event.status == 'ACTIVE' %}
-                          <span class="badge bg-label-success">Active</span>
+                          <span class="badge bg-label-primary me-1">Active</span>
                           {% elif event.status == 'COMPLETED' %}
-                          <span class="badge bg-label-info">Completed</span>
+                          <span class="badge bg-label-success me-1">Completed</span>
+                          {% elif event.status == 'CANCELLED' %}
+                          <span class="badge bg-label-info me-1">Cancelled</span>
                           {% else %}
                           <span class="badge bg-label-secondary">{{ event.get_status_display }}</span>
                           {% endif %}
                         </td>
-                        <td>{{ event.eventparticipant_set.count }}</td>
+                        <td>{{ event.location }}</td>
                         <td>
                           <div class="dropdown">
                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                               <i class="bx bx-dots-vertical-rounded"></i>
                             </button>
                             <div class="dropdown-menu">
-                              <a class="dropdown-item" href="{% url 'events:event_detail' event.id %}">
+                              <a class="dropdown-item" href="{% url 'events:event_detail' event.slug %}">
                                 <i class="bx bx-show-alt me-1"></i> View Details
                               </a>
                               <a class="dropdown-item" href="">
@@ -183,67 +333,11 @@
           </div>
         </div>
         <!--/ Event Management -->
+
+        
   
         <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
-          <div class="row">
-            <div class="col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img src="{% static 'users/assets/img/icons/unicons/cc-primary.png' %}" alt="Photographers" class="rounded" />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt4"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                        <a class="dropdown-item" href="">View All Photographers</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="d-block mb-1">Photographers</span>
-                  <h3 class="card-title text-nowrap mb-2">{{ total_photographers }}</h3>
-                  <small class="text-primary fw-semibold"><i class="bx bx-camera"></i> In your events</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Requests" class="rounded" />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt1"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                        <a class="dropdown-item" href="{% url 'events:request_access' %}">View All Requests</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="fw-semibold d-block mb-1">Pending Requests</span>
-                  <h3 class="card-title mb-2">{{ pending_requests.count }}</h3>
-                  <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Needs review</small>
-                </div>
-              </div>
-            </div>
+
   
             <!-- Access Requests -->
             <div class="col-12 mb-4">
@@ -295,14 +389,15 @@
               </div>
             </div>
             <!--/ Access Requests -->
+
+            
           </div>
+          
         </div>
       </div>
     </div>
     <!-- / Content -->
-    <div class="content-backdrop fade"></div>
-  </div>
-  <!-- Content wrapper -->
+
 
 {% endblock content %}
 

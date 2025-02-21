@@ -19,6 +19,8 @@ def landing(request):
 def get_features(request):
     return render(request, 'home/features.html')
 
+def get_maintanence_page(request):
+    return render(request, 'home/under_maintanence.html')
 
 class AboutView(TemplateView):
     template_name = 'home/about.html'

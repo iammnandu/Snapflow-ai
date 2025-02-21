@@ -201,9 +201,6 @@ def update_privacy(request):
     return redirect('users:dashboard')
 
 
-def testdashboard(request):
-    return render(request, 'users/db_base.html')
-
 
 
 from django.contrib.auth.decorators import login_required

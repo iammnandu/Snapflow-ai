@@ -13,7 +13,7 @@
             <div class="d-flex align-items-end row">
               <div class="col-sm-7">
                 <div class="card-body">
-                  <h5 class="card-title text-primary">Welcome {{ user.first_name }}! 📸</h5>
+                  <h5 class="card-title text-primary">Welcome {{ user.username }}! 📸</h5>
                   <p class="mb-4">
                     You have <span class="fw-bold">{{ upcoming_events }}</span> upcoming events and 
                     <span class="fw-bold">{{ total_photos }}</span> photos uploaded.
@@ -127,7 +127,7 @@
                       {% for crew in crew_memberships|slice:":5" %}
                       <tr>
                         <td>
-                          <strong>{{ crew.event.name }}</strong>
+                          <strong>{{ crew.event.title }}</strong>
                         </td>
                         <td>{{ crew.event.start_date|date:"M d, Y" }}</td>
                         <td>{{ crew.get_role_display }}</td>
@@ -269,9 +269,7 @@
       </div>
     </div>
     <!-- / Content -->
-    <div class="content-backdrop fade"></div>
-  </div>
-  <!-- Content wrapper -->
+
 
 {% endblock content %}
 

@@ -1,47 +1,82 @@
-{% extends "events/base.html" %}
-{% block title %}Events{% endblock %}
+{% extends "users/db_base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Events</h1>
-        {% if user.is_authenticated and user.role == 'ORGANIZER' %}
-        <a href="{% url 'events:event_create' %}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-            Create Event
-        </a>
-        {% endif %}
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for event in events %}
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            {% if event.cover_image %}
-            <img src="{{ event.cover_image.url }}" 
-                 alt="{{ event.title }}" 
-                 class="w-full h-48 object-cover">
-            {% else %}
-            <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
-                <i class="fas fa-camera text-4xl text-gray-400"></i>
-            </div>
-            {% endif %}
-            <div class="p-4">
-                <h2 class="text-xl font-semibold mb-2">{{ event.title }}</h2>
-                <p class="text-gray-600 mb-4">{{ event.description|truncatewords:20 }}</p>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-500">
-                        {{ event.start_date|date:"M d, Y" }}
-                    </span>
-                    <a href="{% url 'events:event_dashboard' event.slug %}" 
-                       class="text-blue-600 hover:text-blue-800">
-                        View Details
-                    </a>
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="card">
+            <div class="d-flex align-items-end row">
+                <div class="col-sm-7">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Welcome {{ user.username }}! 🎉</h5>
+                        {% if user.is_authenticated and user.role == 'ORGANIZER' %}
+                        <p class="mb-4">
+                            You have  
+                            <span class="fw-bold">{{ events.count }}</span> total events.
+                        </p>
+                        <a href="{% url 'events:event_create' %}" class="btn btn-sm btn-primary">Create New Event</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-sm-5 text-center text-sm-left">
+                    <div class="card-body pb-0 px-0 px-md-4">
+                        <img
+                            src="{% static 'users/assets/img/illustrations/man-with-laptop-light.png' %}"
+                            height="140"
+                            alt="Event Organizer"
+                            data-app-dark-img="illustrations/man-with-laptop-dark.png"
+                            data-app-light-img="illustrations/man-with-laptop-light.png"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <p class="text-gray-500">No events available.</p>
-        {% endfor %}
     </div>
-</div>
-{% endblock %}
+
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Events /</span> Events List</h4>
+        
+        <!-- Cards -->
+        <div class="row mb-5">        
+            {% for event in events %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    {% if event.logo %}
+                        <img class="card-img-top event-logo" src="{{ event.logo.url }}" alt="{{ event.title }}" />
+                    {% else %}
+                        <img class="card-img-top event-logo" src="{% static 'event_default.jpg' %}" alt="Default Event Logo" />
+                    {% endif %}
+
+                    <div class="card-body">
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        <p class="card-text">
+                            {{ event.description|truncatewords:20 }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary">View Details</a>
+                            <span class="text-muted small">{{ event.start_date|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>        
+            {% empty %}
+                <p class="text-gray-500">No events available.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>  <!-- Closing content-wrapper -->
+<!-- / Content -->
+
+<style>
+    /* Ensuring event logos have a uniform size */
+    .event-logo {
+        width: 100%;  /* Ensures full width */
+        height: 200px; /* Fixed height */
+        object-fit: cover; /* Maintains aspect ratio while covering the area */
+    }
+</style>
+
+{% endblock content %}

@@ -13,7 +13,7 @@
             <div class="d-flex align-items-end row">
               <div class="col-sm-7">
                 <div class="card-body">
-                  <h5 class="card-title text-primary">Welcome {{ user.first_name }}! 👋</h5>
+                  <h5 class="card-title text-primary">Welcome {{ user.username }}! 👋</h5>
                   <p class="mb-4">
                     You are registered to <span class="fw-bold">{{ participations.count }}</span> events and 
                     <span class="fw-bold">{{ photos_of_user }}</span> photos are available for you.
@@ -127,7 +127,7 @@
                       {% for participation in participations|slice:":5" %}
                       <tr>
                         <td>
-                          <strong>{{ participation.event.name }}</strong>
+                          <strong>{{ participation.event.title }}</strong>
                         </td>
                         <td>{{ participation.event.start_date|date:"M d, Y" }}</td>
                         <td>{{ user.get_participant_type_display }}</td>
@@ -291,8 +291,6 @@
       </div>
     </div>
     <!-- / Content -->
-    <div class="content-backdrop fade"></div>
-  </div>
-  <!-- Content wrapper -->
+
 
 {% endblock content %}
