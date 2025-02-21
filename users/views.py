@@ -80,7 +80,7 @@ def register(request):
     else:
         form = BasicRegistrationForm()
 
-    return render(request, 'users/auth-register-basic.html', {'form': form})
+    return render(request, 'users/register.html', {'form': form})
 
 
 @login_required
@@ -222,4 +222,4 @@ def delete_account(request):
         logout(request)
         return redirect("home:landing") 
 
-    return render(request, "users/delete_account.html")
+    return render(request, "users/profile.html")

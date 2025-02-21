@@ -240,74 +240,23 @@
     <div class="card-body">
       <div class="mb-3 col-12 mb-0">
         <div class="alert alert-danger">
-          <h6 class="alert-heading fw-bold mb-1">Are you sure you want to delete your account?</h6>
+          <h6 class="alert-heading fw-bold mb-1">Account Deletion Warning</h6>
           <p class="mb-0">Once you delete your account, there is no going back. All your data will be permanently erased.</p>
         </div>
       </div>
       <form id="deleteAccountForm" method="POST" action="{% url 'users:delete_account' %}">
         {% csrf_token %}
-        <div class="form-check mb-3">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            name="confirmDelete"
-            id="confirmDelete"
-            required
-          />
-          <label class="form-check-label" for="confirmDelete">
-            I understand this action is irreversible and confirm I want to delete my account
-          </label>
-        </div>
-        <div class="form-check mb-3">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            name="confirmUnderstand"
-            id="confirmUnderstand"
-            required
-          />
-          <label class="form-check-label" for="confirmUnderstand">
-            I understand all my data, including photos, profiles, and settings will be permanently lost
-          </label>
-        </div>
-        <button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">Delete Account</button>
-        <a href="{% url 'users:profile' %}" class="btn btn-secondary">Cancel</a>
+        <button type="button" class="btn btn-danger" id="deleteAccountBtn">Delete Account</button>
+        <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
       </form>
-    </div>
-  </div>
-  
-  <!-- Delete Confirmation Modal -->
-  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title" id="deleteConfirmModalLabel">Final Confirmation</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p class="fw-bold">Are you absolutely sure you want to delete your account?</p>
-          <p>This action cannot be undone. Your account and all associated data will be permanently deleted.</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger" id="finalDeleteConfirm">Yes, Delete My Account</button>
-        </div>
-      </div>
     </div>
   </div>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('finalDeleteConfirm').addEventListener('click', function() {
-        // Check if both checkboxes are checked
-        const confirmDelete = document.getElementById('confirmDelete').checked;
-        const confirmUnderstand = document.getElementById('confirmUnderstand').checked;
-        
-        if (confirmDelete && confirmUnderstand) {
+      document.getElementById('deleteAccountBtn').addEventListener('click', function() {
+        if (confirm('WARNING: Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.')) {
           document.getElementById('deleteAccountForm').submit();
-        } else {
-          alert('Please confirm both checkboxes before deleting your account.');
-          document.getElementById('deleteConfirmModal').classList.remove('show');
         }
       });
     });
