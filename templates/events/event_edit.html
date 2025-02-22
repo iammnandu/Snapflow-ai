@@ -1,0 +1,206 @@
+{% extends "users/db_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Events /</span> Edit Event
+    </h4>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card mb-4">
+                <h5 class="card-header">Edit Event - {{ event.title }}</h5>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Basic Details -->
+                        <div class="mb-3 row">
+                            <label for="{{ form.title.id_for_label }}" class="col-md-2 col-form-label">Title</label>
+                            <div class="col-md-10">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="{{ form.title.id_for_label }}"
+                                       name="{{ form.title.name }}"
+                                       value="{{ form.title.value|default:'' }}"
+                                       placeholder="Event Title">
+                                {% if form.title.errors %}
+                                    <div class="text-danger">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="{{ form.event_type.id_for_label }}" class="col-md-2 col-form-label">Event Type</label>
+                            <div class="col-md-10">
+                                <select class="form-select" 
+                                        id="{{ form.event_type.id_for_label }}"
+                                        name="{{ form.event_type.name }}">
+                                    {% for value, label in form.event_type.field.choices %}
+                                        <option value="{{ value }}" {% if form.event_type.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.event_type.errors %}
+                                    <div class="text-danger">{{ form.event_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="{{ form.description.id_for_label }}" class="col-md-2 col-form-label">Description</label>
+                            <div class="col-md-10">
+                                <textarea class="form-control" 
+                                          id="{{ form.description.id_for_label }}"
+                                          name="{{ form.description.name }}"
+                                          rows="4"
+                                          placeholder="Event Description">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Date and Time -->
+                        <div class="mb-3 row">
+                            <label for="{{ form.start_date.id_for_label }}" class="col-md-2 col-form-label">Start Date</label>
+                            <div class="col-md-10">
+                                <input class="form-control"
+                                       type="datetime-local"
+                                       id="{{ form.start_date.id_for_label }}"
+                                       name="{{ form.start_date.name }}"
+                                       value="{{ form.start_date.value|date:'Y-m-d\TH:i'|default:'' }}">
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger">{{ form.start_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="{{ form.end_date.id_for_label }}" class="col-md-2 col-form-label">End Date</label>
+                            <div class="col-md-10">
+                                <input class="form-control"
+                                       type="datetime-local"
+                                       id="{{ form.end_date.id_for_label }}"
+                                       name="{{ form.end_date.name }}"
+                                       value="{{ form.end_date.value|date:'Y-m-d\TH:i'|default:'' }}">
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger">{{ form.end_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="{{ form.timezone.id_for_label }}" class="col-md-2 col-form-label">Timezone</label>
+                            <div class="col-md-10">
+                                <input type="text"
+                                       class="form-control"
+                                       id="{{ form.timezone.id_for_label }}"
+                                       name="{{ form.timezone.name }}"
+                                       value="{{ form.timezone.value|default:'' }}"
+                                       placeholder="UTC">
+                                {% if form.timezone.errors %}
+                                    <div class="text-danger">{{ form.timezone.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="{{ form.location.id_for_label }}" class="col-md-2 col-form-label">Location</label>
+                            <div class="col-md-10">
+                                <input type="text"
+                                       class="form-control"
+                                       id="{{ form.location.id_for_label }}"
+                                       name="{{ form.location.name }}"
+                                       value="{{ form.location.value|default:'' }}"
+                                       placeholder="Event Location">
+                                {% if form.location.errors %}
+                                    <div class="text-danger">{{ form.location.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Privacy Settings -->
+                        <div class="card mb-4">
+                            <h5 class="card-header">Privacy Settings</h5>
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="{{ form.is_public.id_for_label }}"
+                                           name="{{ form.is_public.name }}"
+                                           {% if form.is_public.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                                        Make Event Public
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="{{ form.require_registration.id_for_label }}"
+                                           name="{{ form.require_registration.name }}"
+                                           {% if form.require_registration.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="{{ form.require_registration.id_for_label }}">
+                                        Require Registration
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="card">
+                            <h5 class="card-header">Media Upload</h5>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="{{ form.logo.id_for_label }}" class="form-label">Event Logo</label>
+                                    <input class="form-control"
+                                           type="file"
+                                           id="{{ form.logo.id_for_label }}"
+                                           name="{{ form.logo.name }}">
+                                    {% if event.logo %}
+                                        <small class="text-muted">Current: {{ event.logo.name }}</small>
+                                    {% endif %}
+                                    {% if form.logo.errors %}
+                                        <div class="text-danger">{{ form.logo.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.cover_image.id_for_label }}" class="form-label">Cover Image</label>
+                                    <input class="form-control"
+                                           type="file"
+                                           id="{{ form.cover_image.id_for_label }}"
+                                           name="{{ form.cover_image.name }}">
+                                    {% if event.cover_image %}
+                                        <small class="text-muted">Current: {{ event.cover_image.name }}</small>
+                                    {% endif %}
+                                    {% if form.cover_image.errors %}
+                                        <div class="text-danger">{{ form.cover_image.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-10 offset-md-2">
+                                <button type="submit" class="btn btn-primary me-2">Save Changes</button>
+                                <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

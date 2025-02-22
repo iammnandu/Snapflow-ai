@@ -489,3 +489,25 @@ def reject_request(request, request_id):
         messages.error(request, 'An error occurred while processing the request')
     
     return redirect('events:access_requests')
+
+from django.views.generic.edit import UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.contrib import messages
+
+class EventUpdateView(LoginRequiredMixin, UpdateView):
+    model = Event
+    form_class = EventCreationForm
+    template_name = 'events/event_edit.html'
+    
+    def get_queryset(self):
+        # Ensure users can only edit their own events
+        return Event.objects.filter(organizer=self.request.user)
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Event updated successfully!')
+        return reverse_lazy('events:event_dashboard', kwargs={'slug': self.object.slug})
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response

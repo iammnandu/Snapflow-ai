@@ -25,6 +25,8 @@ urlpatterns = [
     path('<slug:slug>/', views.EventDashboardView.as_view(), name='event_detail'),
 
     path('events/requests/', views.access_requests_list, name='access_requests'),
-path('events/requests/<int:request_id>/approve/', views.approve_request, name='approve_request'),
-path('events/requests/<int:request_id>/reject/', views.reject_request, name='reject_request'),
+    path('events/requests/<int:request_id>/approve/', views.approve_request, name='approve_request'),
+    path('events/requests/<int:request_id>/reject/', views.reject_request, name='reject_request'),
+
+    path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'),
 ]

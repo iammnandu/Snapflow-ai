@@ -103,6 +103,9 @@
                 <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary">
                   <i class="bi bi-people me-2"></i>Manage Crew
                 </a>
+                <a href="{% url 'events:event_edit' event.slug %}" class="btn btn-outline-primary">
+                  <i class="bi bi-people me-2"></i>Edit Event
+                </a>
                 {% endif %}
                 <a onclick="copyToClipboard('{{ event.event_code }}')" class="btn btn-outline-primary">
                     <i class="bi bi-people me-2"></i>Copy Event Code

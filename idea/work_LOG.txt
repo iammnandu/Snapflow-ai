@@ -11,3 +11,5 @@ an api to fetch some good quotes is added to the dashboard of the user.
 8 30pm
 request list template is done
 
+10pm
+event edit option added.
