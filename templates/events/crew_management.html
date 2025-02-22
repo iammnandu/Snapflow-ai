@@ -1,4 +1,178 @@
-{% extends "events/base.html" %}
+{% extends "users/db_base.html" %}
+{% block title %}Crew Management - {{ event.title }}{% endblock %}
+{% block add_nav %}
+
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Invite Crew</div>
+        </a>
+      </li>
+{% endblock add_nav %}
+
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Event /</span> Crew Management
+    </h4>
+
+    <div class="row">
+        <!-- Invite Crew Member Form -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <h5 class="card-header">Invite Crew Member</h5>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Username Field -->
+                        <div class="mb-3">
+                            <label for="{{ crew_form.username.id_for_label }}" class="form-label">
+                                {{ crew_form.username.label }}
+                            </label>
+                            {{ crew_form.username.errors }}
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="{{ crew_form.username.id_for_label }}"
+                                name="{{ crew_form.username.name }}"
+                                placeholder="Enter photographer username"
+                                {% if crew_form.username.value %}value="{{ crew_form.username.value }}"{% endif %}
+                            />
+                            {% if crew_form.username.help_text %}
+                            <div class="form-text">{{ crew_form.username.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Role Field -->
+                        <div class="mb-3">
+                            <label for="{{ crew_form.role.id_for_label }}" class="form-label">
+                                {{ crew_form.role.label }}
+                            </label>
+                            {{ crew_form.role.errors }}
+                            <select 
+                                class="form-select" 
+                                id="{{ crew_form.role.id_for_label }}"
+                                name="{{ crew_form.role.name }}"
+                            >
+                                {% for value, label in crew_form.role.field.choices %}
+                                    <option value="{{ value }}" {% if crew_form.role.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Assigned Area Field -->
+                        <div class="mb-3">
+                            <label for="{{ crew_form.assigned_area.id_for_label }}" class="form-label">
+                                {{ crew_form.assigned_area.label }}
+                            </label>
+                            {{ crew_form.assigned_area.errors }}
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="{{ crew_form.assigned_area.id_for_label }}"
+                                name="{{ crew_form.assigned_area.name }}"
+                                {% if crew_form.assigned_area.value %}value="{{ crew_form.assigned_area.value }}"{% endif %}
+                            />
+                        </div>
+
+                        <!-- Notes Field -->
+                        <div class="mb-3">
+                            <label for="{{ crew_form.notes.id_for_label }}" class="form-label">
+                                {{ crew_form.notes.label }}
+                            </label>
+                            {{ crew_form.notes.errors }}
+                            <textarea
+                                class="form-control"
+                                id="{{ crew_form.notes.id_for_label }}"
+                                name="{{ crew_form.notes.name }}"
+                                rows="3"
+                            >{% if crew_form.notes.value %}{{ crew_form.notes.value }}{% endif %}</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Send Invitation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Crew Members -->
+        <div class="col-md-6">
+            <div class="card">
+                <h5 class="card-header">Current Crew Members</h5>
+                <div class="card-body">
+                    {% if crew_members %}
+                        {% for crew in crew_members %}
+                            <div class="d-flex align-items-center mb-3 pb-1 border-bottom">
+                                <img
+                                    src="{{ crew.member.avatar.url|default:'/static/default-avatar.png' }}"
+                                    alt="{{ crew.member.username }}"
+                                    class="rounded-circle"
+                                    width="40"
+                                    height="40"
+                                />
+                                <div class="ms-3">
+                                    <h6 class="mb-0">{{ crew.member.get_full_name }}</h6>
+                                    <div class="text-muted small">@{{ crew.member.username }}</div>
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary">{{ crew.get_role_display }}</span>
+                                        <span class="badge bg-{% if crew.is_confirmed %}success{% else %}warning{% endif %}">
+                                            {{ crew.is_confirmed|yesno:"Confirmed,Pending" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">No crew members yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+{% comment "" %}{% extends "events/base.html" %}
 {% block title %}Crew Management - {{ event.title }}{% endblock %}
 
 {% block content %}
@@ -49,4 +223,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock %}{% endcomment %}

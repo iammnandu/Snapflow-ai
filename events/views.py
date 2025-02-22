@@ -30,14 +30,18 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     template_name = 'events/event_create.html'
     
     def form_valid(self, form):
-        form.instance.organizer = self.request.user
-        form.instance.status = Event.EventStatus.DRAFT
-        response = super().form_valid(form)
-        
-        # Create default configuration
-        EventConfiguration.objects.create(event=self.object)
-        messages.success(self.request, 'Event created successfully! Complete the setup process.')
-        return response
+        if self.request.user.role != 'ORGANIZER':
+            messages.error(self.request, 'Only organizers can create events.')
+            return redirect('events:event_list')
+        else:
+            form.instance.organizer = self.request.user
+            form.instance.status = Event.EventStatus.DRAFT
+            response = super().form_valid(form)
+            
+            # Create default configuration
+            EventConfiguration.objects.create(event=self.object)
+            messages.success(self.request, 'Event created successfully! Complete the setup process.')
+            return response
 
 class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Event
@@ -81,7 +85,12 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
         })
         return context
 
-# Crew Management Views
+# views.py
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
+from django.urls import reverse
+
 class CrewManagementView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Event
     template_name = 'events/crew_management.html'
@@ -101,23 +110,59 @@ class CrewManagementView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         form = CrewInvitationForm(request.POST)
         
         if form.is_valid():
+            # Create pending crew member
             crew = form.save(commit=False)
             crew.event = event
+            crew.member = form.cleaned_data['user']  # Use the user we found in form validation
+            crew.is_confirmed = False
             crew.save()
-            # Send invitation email here
-            messages.success(request, 'Crew member invited successfully!')
+            
+            # Generate invitation token
+            signer = TimestampSigner()
+            token = signer.sign(str(crew.id))
+            
+            # Generate invitation URL
+            invite_url = request.build_absolute_uri(
+                reverse('events:accept_crew_invitation', kwargs={'token': token})
+            )
+            
+            # Here you would typically send notification to the user
+            # For now, we'll just add a message with the URL
+            messages.success(
+                request, 
+                f'Invitation sent to {crew.member.username}. They can accept it at: {invite_url}'
+            )
+            
             return redirect('events:crew_management', slug=event.slug)
         
-        return self.get(request, *args, **kwargs)
+        # If form is invalid, return to the page with errors
+        context = self.get_context_data()
+        context['crew_form'] = form
+        return self.render_to_response(context)
 
-@login_required
 def accept_crew_invitation(request, token):
-    crew_member = get_object_or_404(EventCrew, invitation_token=token)
-    if request.user.is_photographer:
-        crew_member.is_confirmed = True
-        crew_member.save()
-        messages.success(request, 'You have joined the event crew!')
-    return redirect('events:event_dashboard', slug=crew_member.event.slug)
+    signer = TimestampSigner()
+    try:
+        # Verify token and get crew ID (valid for 7 days)
+        crew_id = signer.unsign(token, max_age=604800)
+        crew = get_object_or_404(EventCrew, id=crew_id, is_confirmed=False)
+        
+        # Verify the invitation is for the logged-in user
+        if request.user != crew.member:
+            messages.error(request, "This invitation is not for you.")
+            return redirect('events:event_list')
+        
+        # Accept invitation
+        crew.is_confirmed = True
+        crew.save()
+        
+        messages.success(request, f"You have joined {crew.event.title} as {crew.get_role_display()}")
+        return redirect('events:event_dashboard', slug=crew.event.slug)
+        
+    except (SignatureExpired, BadSignature):
+        messages.error(request, "This invitation link is invalid or has expired.")
+        return redirect('events:event_list')
+
 
 # Equipment Configuration View
 class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
@@ -236,57 +281,85 @@ class RequestEventAccessView(LoginRequiredMixin, FormView):
         messages.success(self.request, 'Access request sent successfully')
         return super().form_valid(form)
 
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import PermissionDenied
+from django.views.decorators.http import require_http_methods
+import json
+
 @login_required
+@require_http_methods(["POST"])
 def handle_access_request(request, request_id):
-    import json
-    
-    access_request = get_object_or_404(
-        EventAccessRequest, 
-        id=request_id,
-        event__organizer=request.user
-    )
-    
-    # Handle JSON data
-    if request.headers.get('Content-Type') == 'application/json':
-        try:
-            data = json.loads(request.body)
-            action = data.get('action')
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-    else:
-        # Fall back to form data if needed
-        action = request.POST.get('action')
-    
-    if action == 'approve':
-        access_request.status = EventAccessRequest.RequestStatus.APPROVED
+    try:
+        # Get the access request and verify permissions
+        access_request = get_object_or_404(
+            EventAccessRequest,
+            id=request_id
+        )
         
-        # Add user to event based on their role
-        if access_request.request_type == 'PHOTOGRAPHER':
-            EventCrew.objects.create(
-                event=access_request.event,
-                member=access_request.user,
-                role='SECOND',
-                is_confirmed=True
-            )
-        else:
-            EventParticipant.objects.create(
-                event=access_request.event,
-                user=access_request.user,
-                email=access_request.user.email,
-                name=access_request.user.get_full_name(),
-                participant_type='GUEST'
-            )
+        # Check if the user is the event organizer
+        if access_request.event.organizer != request.user:
+            raise PermissionDenied("You don't have permission to handle this request")
         
-        messages.success(request, 'Access request approved')
-    
-    elif action == 'reject':
-        access_request.status = EventAccessRequest.RequestStatus.REJECTED
-        messages.success(request, 'Access request rejected')
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
-    
-    access_request.save()
-    return JsonResponse({'status': 'success'})
+        # Parse the action from JSON data
+        data = json.loads(request.body)
+        action = data.get('action')
+        
+        if action not in ['approve', 'reject']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid action'
+            }, status=400)
+        
+        # Handle approve action
+        if action == 'approve':
+            access_request.status = EventAccessRequest.RequestStatus.APPROVED
+            
+            # Add user to event based on their role
+            if access_request.request_type == 'PHOTOGRAPHER':
+                EventCrew.objects.create(
+                    event=access_request.event,
+                    member=access_request.user,
+                    role='SECOND',
+                    is_confirmed=True
+                )
+            else:
+                EventParticipant.objects.create(
+                    event=access_request.event,
+                    user=access_request.user,
+                    email=access_request.user.email,
+                    name=access_request.user.get_full_name(),
+                    participant_type='GUEST'
+                )
+        
+        # Handle reject action
+        elif action == 'reject':
+            access_request.status = EventAccessRequest.RequestStatus.REJECTED
+        
+        # Save the changes
+        access_request.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Request {action}ed successfully'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except PermissionDenied as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=403)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'An unexpected error occurred'
+        }, status=500)
 
 # events/views.py (Add or update this view)
 
@@ -330,3 +403,89 @@ def request_access(request):
             messages.error(request, 'Invalid event code. Please check and try again.')
     
     return redirect('users:dashboard')
+
+
+
+def access_requests(request):
+    access_requests = EventAccessRequest.objects.filter(
+        event__organizer=request.user
+    ).select_related('user', 'event').order_by('-created_at')
+    
+    return render(request, 'events/request_list.html', {
+        'access_requests': access_requests
+    })
+
+
+
+@login_required
+def access_requests_list(request):
+    # Get all requests for events organized by the user
+    access_requests = EventAccessRequest.objects.filter(
+        event__organizer=request.user
+    ).select_related('user', 'event').order_by('-created_at')
+    
+    return render(request, 'events/request_list.html', {
+        'access_requests': access_requests,
+        'page_title': 'Access Requests'
+    })
+
+@login_required
+@require_http_methods(["POST"])
+def approve_request(request, request_id):
+    try:
+        access_request = get_object_or_404(EventAccessRequest, id=request_id)
+        
+        # Check if the user is the event organizer
+        if access_request.event.organizer != request.user:
+            messages.error(request, "You don't have permission to handle this request")
+            return redirect('events:access_requests')
+        
+        # Handle approve action
+        access_request.status = EventAccessRequest.RequestStatus.APPROVED
+        
+        # Add user to event based on their role
+        if access_request.request_type == 'PHOTOGRAPHER':
+            EventCrew.objects.create(
+                event=access_request.event,
+                member=access_request.user,
+                role='SECOND',
+                is_confirmed=True
+            )
+        else:
+            EventParticipant.objects.create(
+                event=access_request.event,
+                user=access_request.user,
+                email=access_request.user.email,
+                name=access_request.user.get_full_name(),
+                participant_type='GUEST'
+            )
+        
+        access_request.save()
+        messages.success(request, 'Request approved successfully')
+        
+    except Exception as e:
+        messages.error(request, 'An error occurred while processing the request')
+    
+    return redirect('events:access_requests')
+
+@login_required
+@require_http_methods(["POST"])
+def reject_request(request, request_id):
+    try:
+        access_request = get_object_or_404(EventAccessRequest, id=request_id)
+        
+        # Check if the user is the event organizer
+        if access_request.event.organizer != request.user:
+            messages.error(request, "You don't have permission to handle this request")
+            return redirect('events:access_requests')
+        
+        # Handle reject action
+        access_request.status = EventAccessRequest.RequestStatus.REJECTED
+        access_request.save()
+        
+        messages.success(request, 'Request rejected successfully')
+        
+    except Exception as e:
+        messages.error(request, 'An error occurred while processing the request')
+    
+    return redirect('events:access_requests')

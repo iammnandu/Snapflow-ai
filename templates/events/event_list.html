@@ -19,6 +19,19 @@
                         </p>
                         <a href="{% url 'events:event_create' %}" class="btn btn-sm btn-primary">Create New Event</a>
                         {% endif %}
+
+                        {% if user.is_authenticated and user.role == 'PHOTOGRAPHER' %}
+                        <p class="mb-4">
+                            You have access to 
+                            <span class="fw-bold">{{ events.count }}</span> total events.
+                        </p>
+                        {% endif %}
+                        {% if user.is_authenticated and user.role == 'PARTICIPANT' %}
+                        <p class="mb-4">
+                            You have access to 
+                            <span class="fw-bold">{{ events.count }}</span> total events.
+                        </p>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="col-sm-5 text-center text-sm-left">

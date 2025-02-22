@@ -100,7 +100,7 @@ def complete_profile(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile completed successfully!')
-            return redirect('users:profile')
+            return redirect('users:dashboard')
     else:
         form = FormClass(instance=user)
     

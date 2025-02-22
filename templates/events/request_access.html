@@ -1,0 +1,106 @@
+{% extends "users/db_base.html" %}
+{% block title %}Crew Management - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <h5 class="card-header">Request Event Access</h5>
+                <div class="card-body">
+                    <!-- Event Code Form -->
+                    <form method="post" action="{% url 'events:request_access' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="event_code" class="form-label">Event Code</label>
+                            <input
+                                type="text"
+                                class="form-control form-control-lg"
+                                id="event_code"
+                                name="event_code"
+                                placeholder="Enter event code (e.g., ABC123)"
+                                required
+                                pattern="[A-Za-z0-9]+"
+                                maxlength="10"
+                            />
+                            <div class="form-text">
+                                Enter the event code provided by the event organizer.
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Request Access</button>
+                        </div>
+                    </form>
+
+                    <!-- Info Card -->
+                    <div class="alert alert-info mt-4 mb-0">
+                        <h6 class="alert-heading">Important Information</h6>
+                        <ul class="mb-0">
+                            <li>Make sure you have the correct event code</li>
+                            <li>Your current role: {{ request.user.get_role_display }}</li>
+                            <li>You'll be added as a {{ request.user.role|lower }} to the event</li>
+                            <li>The organizer will review your request</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Current Requests -->
+            {% if user.event_access_requests.exists %}
+            <div class="card">
+                <h5 class="card-header">Your Pending Requests</h5>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date Requested</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in user.event_access_requests.all %}
+                                <tr>
+                                    <td>{{ request.event.title }}</td>
+                                    <td>{{ request.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if request.status == 'PENDING' %}warning{% elif request.status == 'APPROVED' %}success{% else %}danger{% endif %}">
+                                            {{ request.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto uppercase event code input
+    const eventCodeInput = document.getElementById('event_code');
+    if (eventCodeInput) {
+        eventCodeInput.addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,13 @@
+22 Feb 2025 
+
+7pm
+now almost all functionalities of the organizer dashboard done. last the request handling section is successfully updated 
+with the new dashboard template.
+
+
+7 45pm
+an api to fetch some good quotes is added to the dashboard of the user.
+
+8 30pm
+request list template is done
+

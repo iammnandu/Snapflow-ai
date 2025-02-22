@@ -31,12 +31,32 @@ class EventConfigurationForm(forms.ModelForm):
             choices=[('jpg', 'JPG'), ('png', 'PNG'), ('heic', 'HEIC')]
         )
 
+# forms.py
+from django import forms
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+
 class CrewInvitationForm(forms.ModelForm):
-    email = forms.EmailField(label=_("Photographer's Email"))
+    username = forms.CharField(
+        label=_("Photographer's Username"),
+        help_text=_("Enter the username of the photographer you want to invite")
+    )
     
     class Meta:
         model = EventCrew
         fields = ['role', 'notes', 'assigned_area']
+        
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        User = get_user_model()
+        
+        try:
+            user = User.objects.get(username=username)
+            self.cleaned_data['user'] = user  # Store the user object for later use
+            return username
+        except User.DoesNotExist:
+            raise ValidationError(_("No photographer found with this username"))
 
 class ParticipantInvitationForm(forms.ModelForm):
     emails = forms.CharField(

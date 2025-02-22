@@ -338,54 +338,116 @@
   
         <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
 
+
+          <script>
+            async function fetchQuote() {
+              try {
+                let response = await fetch("https://qapi.vercel.app/api/random");
+                let data = await response.json();
+                document.getElementById("quote-text").innerText = data.quote;
+                document.getElementById("quote-author").innerText = data.author;
+              } catch (error) {
+                console.error("Error fetching quote:", error);
+              }
+            }
+            
+            window.onload = fetchQuote;
+          </script>
+          
+          <div class="col-12 mb-4">
+            <div class="card bg-primary text-white text-center p-3">
+              <figure class="mb-0">
+                <blockquote class="blockquote">
+                  <p id="quote-text">Loading quote...</p>
+                </blockquote>
+                <figcaption class="blockquote-footer mb-0 text-white">
+                  <span id="quote-author">Unknown</span>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
   
             <!-- Access Requests -->
             <div class="col-12 mb-4">
               <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between">
                   <h5 class="card-title m-0 me-2">Recent Access Requests</h5>
-                  <div class="dropdown">
-                    <button
-                      class="btn p-0"
-                      type="button"
-                      id="transactionID"
-                      data-bs-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="false"
-                    >
-                      <i class="bx bx-dots-vertical-rounded"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
-                      <a class="dropdown-item" href="{% url 'events:request_access' %}">View All Requests</a>
-                    </div>
-                  </div>
+                  <a href="{% url 'events:access_requests' %}" class="btn btn-primary btn-sm">View All</a>
                 </div>
-                <div class="card-body">
-                  <ul class="p-0 m-0">
-                    {% for request in pending_requests|slice:":5" %}
-                    <li class="d-flex mb-4 pb-1">
-                      <div class="avatar flex-shrink-0 me-3">
-                        {% if request.user.avatar %}
-                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="rounded" />
-                        {% else %}
-                        <span class="avatar-initial rounded bg-label-primary">{{ request.user.first_name|first }}{{ request.user.last_name|first }}</span>
-                        {% endif %}
-                      </div>
-                      <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                        <div class="me-2">
-                          <small class="text-muted d-block mb-1">{{ request.get_request_type_display }}</small>
-                          <h6 class="mb-0">{{ request.user.get_full_name }}</h6>
-                        </div>
-                        <div>
-                          <a href="{% url 'events:review_request' request.id %}" class="btn btn-sm btn-outline-primary">Review</a>
-                        </div>
-                      </div>
-                    </li>
-                    {% empty %}
-                    <li class="text-center p-3">No pending requests</li>
-                    {% endfor %}
-                  </ul>
-                </div>
+  <ul class="p-0 m-0">
+    {% for request in pending_requests|slice:":5" %}
+    <li class="d-flex mb-4 pb-1" id="request-{{ request.id }}">
+      <div class="avatar flex-shrink-0 me-3">
+        {% if request.user.avatar %}
+        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="rounded" />
+        {% else %}
+        <span class="avatar-initial rounded bg-label-primary">{{ request.user.username|first }}</span>
+        {% endif %}
+      </div>
+      <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+        <div class="me-2">
+          <small class="text-muted d-block mb-1">{{ request.get_request_type_display }}</small>
+          <h6 class="mb-0">{{ request.user.username }}</h6>
+        </div>
+        <div>
+          <span class="badge bg-label-warning">Pending</span>
+        </div>
+      </div>
+    </li>
+    {% empty %}
+    <li class="text-center p-3">No pending requests</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<!-- JavaScript for the access requests list page -->
+<script>
+function handleRequest(requestId, action) {
+    if (!confirm(`Are you sure you want to ${action} this request?`)) {
+        return;
+    }
+
+    fetch(`{% url 'events:handle_access_request' 0 %}`.replace('0', requestId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update the card to show new status instead of removing it
+            const requestCard = document.getElementById(`request-${requestId}`);
+            const statusBadge = requestCard.querySelector('.badge');
+            const buttonGroup = requestCard.querySelector('.btn-group');
+            
+            // Update badge color and text
+            statusBadge.className = `badge ${action === 'approve' ? 'bg-label-success' : 'bg-label-danger'}`;
+            statusBadge.textContent = action === 'approve' ? 'Approved' : 'Rejected';
+            
+            // Remove action buttons
+            buttonGroup.remove();
+            
+            // Show toast notification
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+            toast.textContent = `Request ${action}ed successfully`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        } else {
+            alert('Error processing request');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error processing request');
+    });
+}
+</script>
               </div>
             </div>
             <!--/ Access Requests -->

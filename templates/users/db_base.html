@@ -117,6 +117,25 @@
           </a>
         </li>
       {% elif user.role == 'PHOTOGRAPHER' %}
+
+
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_list' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-list-check"></i>
+          <div>My Events</div>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'events:request_access_form' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-photo-album"></i>
+          <div>Join Events</div>
+        </a>
+      </li>
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Manage</span>
+      </li>
+
         <li class="menu-item">
           <a href="" class="menu-link">
             <i class="menu-icon tf-icons bx bx-upload"></i>
@@ -129,11 +148,18 @@
             <div>Manage Gallery</div>
           </a>
         </li>
+
       {% elif user.role == 'PARTICIPANT' %}
         <li class="menu-item">
           <a href="" class="menu-link">
             <i class="menu-icon tf-icons bx bx-list-check"></i>
             <div>My Events</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'events:request_access_form' %}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-photo-album"></i>
+            <div>Join Events</div>
           </a>
         </li>
         <li class="menu-item">
@@ -235,12 +261,26 @@
                 <!--/ User -->
               </ul>
             </div>
-          </nav>
+
+          </nav>  
 
           <!-- / Navbar -->
 
-        {% block content %}{% endblock content %}
+          {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
 
+
+
+
+        {% block content %}{% endblock content %}
+          {% comment "" %}
                       <!-- Footer -->
                       <footer class="content-footer footer bg-footer-theme">
                         <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
@@ -273,6 +313,7 @@
                         </div>
                       </footer>
                       <!-- / Footer -->
+                       {% endcomment %}
 
             <div class="content-backdrop fade"></div>
             
