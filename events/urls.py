@@ -29,4 +29,13 @@ urlpatterns = [
     path('events/requests/<int:request_id>/reject/', views.reject_request, name='reject_request'),
 
     path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'),
+
+
+        path('<slug:slug>/gallery/', views.EventGalleryView.as_view(), name='event_gallery'),
+    path('<slug:slug>/upload/', views.UploadPhotosView.as_view(), name='upload_photos'),
+    path('photo/<int:pk>/', views.PhotoDetailView.as_view(), name='photo_detail'),
+    path('photo/<int:pk>/action/', views.PhotoActionView.as_view(), name='photo_action'),
+    path('photo/<int:pk>/delete/', views.DeletePhotoView.as_view(), name='delete_photo'),
+
+    
 ]

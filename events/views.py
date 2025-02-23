@@ -68,20 +68,29 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context['steps'] = ['basic', 'privacy', 'crew', 'theme', 'config']
         return context
 
+from django.db.models import Sum
+
 class EventDashboardView(LoginRequiredMixin, DetailView):
     model = Event
     template_name = 'events/event_dashboard.html'
     context_object_name = 'event'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event = self.get_object()
-        
+        event = self.get_object()  # Get the event instance
+
+        # Annotate photos with total views and likes
+        photos = event.photos.annotate(
+            total_views=Sum('view_count'),
+            total_likes=Sum('like_count') 
+        )
+
         context.update({
             'crew_members': event.crew_members.all(),
             'participants': event.participants.all(),
             'is_organizer': event.organizer == self.request.user,
             'is_crew': event.crew_members.filter(member=self.request.user).exists(),
+            'photos': photos  # Include the annotated photos
         })
         return context
 
@@ -511,3 +520,163 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         return response
+    
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import DetailView, View
+from django.http import JsonResponse
+from django.contrib import messages
+from django.core.paginator import Paginator
+from .models import Event, EventPhoto, PhotoLike, PhotoComment
+
+class EventGalleryView(DetailView):
+    model = Event
+    template_name = 'events/gallery.html'
+    context_object_name = 'event'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.get_object()
+        
+        # Get photos with pagination
+        photos = event.photos.all().order_by('-upload_date')
+        paginator = Paginator(photos, 12)  # Show 12 photos per page
+        page = self.request.GET.get('page')
+        photos = paginator.get_page(page)
+        
+        # Check user permissions
+        can_upload = False
+        if self.request.user.is_authenticated:
+            can_upload = (
+                event.organizer == self.request.user or 
+                event.crew_members.filter(member=self.request.user).exists() or 
+                event.allow_guest_upload
+            )
+        
+        context.update({
+            'photos': photos,
+            'can_upload': can_upload,
+            'can_download': event.configuration.enable_download,
+            'enable_comments': event.configuration.enable_comments,
+            'enable_likes': event.configuration.enable_likes,
+        })
+        return context
+
+class UploadPhotosView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        event = get_object_or_404(Event, slug=slug)
+        
+        # Check permissions
+        if not (event.organizer == request.user or 
+                event.crew_members.filter(member=request.user).exists() or 
+                event.allow_guest_upload):
+            messages.error(request, "You don't have permission to upload photos.")
+            return redirect('events:event_gallery', slug=slug)
+        
+        images = request.FILES.getlist('images')
+        
+        # Validate files
+        for image in images:
+            # Check file size
+            if image.size > event.configuration.max_upload_size:
+                messages.error(request, f"File {image.name} is too large.")
+                continue
+                
+            # Check file extension
+            ext = image.name.split('.')[-1].lower()
+            if ext not in event.configuration.allowed_formats.split(','):
+                messages.error(request, f"File {image.name} has an invalid format.")
+                continue
+            
+            # Create photo
+            photo = EventPhoto.objects.create(
+                event=event,
+                image=image,
+                uploaded_by=request.user
+            )
+        
+        messages.success(request, f"{len(images)} photos uploaded successfully.")
+        return redirect('events:event_gallery', slug=slug)
+
+class PhotoDetailView(DetailView):
+    model = EventPhoto
+    template_name = 'events/photo_detail.html'
+    context_object_name = 'photo'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        photo = self.get_object()
+        
+        # Increment view count
+        photo.view_count += 1
+        photo.save()
+        
+        context['can_download'] = photo.event.configuration.enable_download
+        return context
+
+class PhotoActionView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        photo = get_object_or_404(EventPhoto, pk=pk)
+        action = request.POST.get('action')
+        
+        if action == 'like':
+            like, created = PhotoLike.objects.get_or_create(
+                photo=photo,
+                user=request.user
+            )
+            if not created:
+                like.delete()
+                photo.like_count -= 1
+            else:
+                photo.like_count += 1
+            photo.save()
+            
+        elif action == 'comment':
+            comment = request.POST.get('comment')
+            if comment:
+                PhotoComment.objects.create(
+                    photo=photo,
+                    user=request.user,
+                    comment=comment
+                )
+        
+        return JsonResponse({'status': 'success'})
+
+class DeletePhotoView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        photo = get_object_or_404(EventPhoto, pk=pk)
+        event = photo.event
+        
+        # Check permissions
+        if not (event.organizer == request.user or 
+                event.crew_members.filter(member=request.user, role='LEAD').exists()):
+            messages.error(request, "You don't have permission to delete photos.")
+            return redirect('events:event_gallery', slug=event.slug)
+        
+        photo.delete()
+        messages.success(request, "Photo deleted successfully.")
+        return redirect('events:event_gallery', slug=event.slug)
+    
+
+
+from django.core.exceptions import PermissionDenied
+
+def user_can_access_event(user, event):
+    return (
+        user.is_authenticated and (
+            event.is_public or
+            event.organizer == user or
+            event.crew_members.filter(member=user).exists() or
+            event.participants.filter(user=user, is_registered=True).exists()
+        )
+    )
+
+
+
+def get_object(self, queryset=None):
+    event = super().get_object(queryset)
+    if not user_can_access_event(self.request.user, event):
+        raise PermissionDenied
+    return event

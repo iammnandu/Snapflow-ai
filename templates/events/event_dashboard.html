@@ -1,6 +1,6 @@
 {% extends "users/db_base.html" %}
 {% load static %}
-
+{% load event_filters %}
 {% block add_nav %}
 
       <li class="menu-header small text-uppercase">
@@ -218,35 +218,127 @@
       </div>
     </div>
 
+    {% load static %}
+
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="avatar flex-shrink-0">
-                <img src="{% static 'events/img/picture.png' %}">
-            </div>
-            <div class="dropdown">
-              <button class="btn p-0" type="button" id="photoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-three-dots-vertical"></i>
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="photoDropdown">
-                <li><a class="dropdown-item" href="{% url 'events:event_gallery' event.slug %}">View Gallery</a></li>
-                {% if is_organizer %}
-                <li><a class="dropdown-item" href="#">Upload Photos</a></li>
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="avatar flex-shrink-0">
+                        {% if event.photos.exists %}
+                            <img src="{{ event.photos.first.image.url }}" alt="Latest photo" 
+                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                            <img src="{% static 'events/img/picture.png' %}" alt="No photos">
+                        {% endif %}
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn p-0" type="button" id="photoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="photoDropdown">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="{% url 'events:event_gallery' event.slug %}">
+                                    <i class="bi bi-images me-2"></i>
+                                    View Gallery
+                                </a>
+                            </li>
+                            {% if is_organizer or is_crew %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                                    <i class="bi bi-upload me-2"></i>
+                                    Upload Photos
+                                </a>
+                            </li>
+                            {% if event.photos.exists %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="{% url 'events:event_gallery' event.slug %}?view=manage">
+                                    <i class="bi bi-gear me-2"></i>
+                                    Manage Photos
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                <span class="fw-semibold d-block mb-1">Photos</span>
+                <div class="d-flex align-items-center gap-2">
+                    <h3 class="card-title mb-2">{{ event.photos.count }}</h3>
+
+                </div>
+                {% if event.photos.exists %}
+                <div class="d-flex flex-column gap-1">
+                    <small class="text-muted">
+                        Latest: {{ event.photos.first.upload_date|timesince }} ago by 
+                        {{ event.photos.first.uploaded_by.get_full_name|default:event.photos.first.uploaded_by.username }}
+                    </small>
+                    <small class="text-muted">
+                        <i class="bi bi-eye"></i> {{ event.photos.aggregate.total_views|default:0 }}
+                        {% if event.configuration.enable_likes %}
+                        &nbsp;•&nbsp;
+                        <i class="bi bi-heart"></i> {{ event.photos.aggregate.total_likes|default:0 }}
+                        {% endif %}
+                    </small>
+                </div>
+                {% else %}
+                <div class="text-muted small">
+                    {% if is_organizer or is_crew %}
+                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                        <i class="bi bi-cloud-upload"></i> Upload your first photos
+                    </a>
+                    {% else %}
+                    <span>No photos uploaded yet</span>
+                    {% endif %}
+                </div>
                 {% endif %}
-              </ul>
             </div>
-          </div>
-          <span class="fw-semibold d-block mb-1">Photos</span>
-          <h3 class="card-title mb-2">{{ event.photos.count }}</h3>
-          {% if event.photos.count > 0 %}
-          <small class="text-muted">Last upload: {{ event.photos.latest.created_at|timesince }} ago</small>
-          {% else %}
-          <small class="text-muted">No photos uploaded yet</small>
-          {% endif %}
         </div>
-      </div>
     </div>
+    
+    <!-- Upload Photos Modal -->
+    {% if is_organizer or is_crew %}
+    <div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-labelledby="uploadPhotosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadPhotosModalLabel">Upload Photos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{% url 'events:upload_photos' event.slug %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Select Photos</label>
+                            <input type="file" name="images" multiple class="form-control" 
+                                   accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
+                                   required>
+                            {% if event.configuration %}
+                            <div class="form-text">
+                                Allowed formats: {{ event.configuration.allowed_formats }}
+                                <br>
+                                Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div id="preview-container" class="row g-2">
+                            <!-- Preview images will be inserted here via JavaScript -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload"></i> Upload Photos
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
       <div class="card shadow-sm border-0 h-100">

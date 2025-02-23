@@ -1,45 +1,256 @@
 {% extends "events/base.html" %}
 {% block title %}Gallery - {{ event.title }}{% endblock %}
+{% load static %}
 
 {% block content %}
-<div class="space-y-6">
-    <!-- Gallery Header -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold">{{ event.title }} - Gallery</h1>
-        {% if can_upload %}
-        <div class="mt-4">
-            <form method="post" enctype="multipart/form-data" class="flex items-center space-x-4">
-                {% csrf_token %}
-                <input type="file" name="photos" multiple accept="image/*" class="hidden" id="photo-upload">
-                <label for="photo-upload" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 cursor-pointer">
-                    Upload Photos
-                </label>
-            </form>
-        </div>
-        {% endif %}
-    </div>
+<style>
+    /* static/css/gallery.css */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
 
-    <!-- Photo Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {% for photo in event.photos.all %}
-        <div class="relative group">
-            <img src="{{ photo.image.url }}" 
-                 alt="Event photo" 
-                 class="w-full h-48 object-cover rounded-lg">
-            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center space-x-4">
-                <button class="text-white hover:text-blue-300">
-                    <i class="fas fa-heart"></i>
-                </button>
-                {% if can_download %}
-                <a href="{{ photo.image.url }}" download class="text-white hover:text-blue-300">
-                    <i class="fas fa-download"></i>
-                </a>
-                {% endif %}
+.photo-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.photo-card:hover {
+    transform: translateY(-5px);
+}
+
+.photo-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.photo-card .overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: white;
+}
+
+.preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.preview-image {
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.preview-image img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.preview-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 0.8rem;
+}
+
+.like-btn.active {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+    </style>
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ event.title }}</h5>
+                    <p class="text-muted">{{ event.get_event_type_display }}</p>
+                    
+                    {% if can_upload %}
+                    <form method="POST" action="{% url 'events:upload_photos' event.slug %}" 
+                          enctype="multipart/form-data" class="mb-3">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>Upload Photos</label>
+                            <input type="file" name="images" multiple 
+                                   class="form-control-file" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">
+                            Upload
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <!-- Gallery Stats -->
+                    <div class="mt-4">
+                        <h6>Gallery Stats</h6>
+                        <p>Total Photos: {{ photos.paginator.count }}</p>
+                        {% if event.configuration.enable_download %}
+                        <a href="#" class="btn btn-sm btn-outline-primary">
+                            Download All
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        {% empty %}
-        <p class="text-gray-500 col-span-full text-center py-12">No photos uploaded yet.</p>
-        {% endfor %}
+        
+        <!-- Gallery Grid -->
+        <div class="col-md-9">
+            <div class="row">
+                {% for photo in photos %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <img src="{{ photo.image.url }}" class="card-img-top" 
+                             alt="Event photo" style="object-fit: cover; height: 200px;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if event.configuration.enable_likes %}
+                                    <button class="btn btn-sm btn-outline-primary like-btn" 
+                                            data-photo-id="{{ photo.id }}">
+                                        <i class="fas fa-heart"></i> {{ photo.like_count }}
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'events:photo_detail' photo.id %}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        View
+                                    </a>
+                                </div>
+                                
+                                {% if request.user == event.organizer or request.user in event.crew_members.all %}
+                                <form method="POST" action="{% url 'events:delete_photo' photo.id %}" 
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('Are you sure?')">
+                                        Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No photos have been uploaded yet.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if photos.paginator.num_pages > 1 %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if photos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ photos.previous_page_number }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in photos.paginator.page_range %}
+                    <li class="page-item {% if photos.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if photos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ photos.next_page_number }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
     </div>
 </div>
+<script>
+    // static/js/gallery.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle photo likes
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const photoId = this.dataset.photoId;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/events/photo/${photoId}/action/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: 'action=like'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update like count
+                    const likeCount = parseInt(this.querySelector('span').textContent);
+                    this.querySelector('span').textContent = this.classList.contains('active') 
+                        ? likeCount - 1 : likeCount + 1;
+                    this.classList.toggle('active');
+                }
+            });
+        });
+    });
+
+    // Handle photo uploads with preview
+    const uploadForm = document.getElementById('photo-upload-form');
+    if (uploadForm) {
+        const fileInput = uploadForm.querySelector('input[type="file"]');
+        const previewContainer = document.getElementById('preview-container');
+        
+        fileInput.addEventListener('change', function() {
+            previewContainer.innerHTML = '';
+            
+            [...this.files].forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.createElement('div');
+                        preview.className = 'preview-image';
+                        preview.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview">
+                            <div class="preview-overlay">
+                                <span>${file.name}</span>
+                            </div>
+                        `;
+                        previewContainer.appendChild(preview);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    }
+});
+</script>
+
 {% endblock %}
