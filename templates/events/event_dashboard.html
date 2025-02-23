@@ -132,7 +132,7 @@
                   <img src="{{ event.logo.url }}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
                   {% else %}
                   <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center shadow" style="width: 120px; height: 120px; margin: 0 auto;">
-                    <i class="bi bi-camera text-white" style="font-size: 3rem;"></i>
+                    <img src="{% static 'event_default.jpg' %}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
                   </div>
                   {% endif %}
                 </div>

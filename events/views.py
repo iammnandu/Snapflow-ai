@@ -191,26 +191,6 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, 'Equipment configuration updated!')
         return response
 
-# Event Gallery Views
-class EventGalleryView(DetailView):
-    model = Event
-    template_name = 'events/gallery.html'
-    context_object_name = 'event'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        event = self.get_object()
-        
-        # Add gallery-specific context
-        context.update({
-            'can_upload': self.request.user.is_authenticated and (
-                event.organizer == self.request.user or
-                event.crew_members.filter(member=self.request.user).exists() or
-                event.allow_guest_upload
-            ),
-            'can_download': event.configuration.enable_download,
-        })
-        return context
 
 # Event Access Views
 @login_required
@@ -295,6 +275,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
+from django.db.models import F
 import json
 
 @login_required
@@ -622,16 +603,30 @@ class PhotoActionView(LoginRequiredMixin, View):
         action = request.POST.get('action')
         
         if action == 'like':
-            like, created = PhotoLike.objects.get_or_create(
-                photo=photo,
-                user=request.user
-            )
-            if not created:
+            # Check if user has already liked the photo
+            like = PhotoLike.objects.filter(photo=photo, user=request.user).first()
+            
+            if like:
+                # Unlike the photo
                 like.delete()
-                photo.like_count -= 1
+                photo.like_count = F('like_count') - 1
+                photo.save()
+                liked = False
             else:
-                photo.like_count += 1
-            photo.save()
+                # Like the photo
+                PhotoLike.objects.create(photo=photo, user=request.user)
+                photo.like_count = F('like_count') + 1
+                photo.save()
+                liked = True
+            
+            # Refresh from db to get the updated like count
+            photo.refresh_from_db()
+            
+            return JsonResponse({
+                'status': 'success',
+                'like_count': photo.like_count,
+                'liked': liked
+            })
             
         elif action == 'comment':
             comment = request.POST.get('comment')
@@ -641,8 +636,15 @@ class PhotoActionView(LoginRequiredMixin, View):
                     user=request.user,
                     comment=comment
                 )
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Comment added successfully'
+                })
         
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid action'
+        })
 
 class DeletePhotoView(LoginRequiredMixin, View):
     def post(self, request, pk):

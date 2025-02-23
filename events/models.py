@@ -102,6 +102,9 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         return reverse('events:event_dashboard', kwargs={'slug': self.slug})
+    
+    def liked_by_user(self, user):
+        return self.likes.filter(user=user).exists()
 
 class EventTheme(models.Model):
     name = models.CharField(max_length=100)

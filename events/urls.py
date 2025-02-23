@@ -10,7 +10,6 @@ urlpatterns = [
     path('<slug:slug>/dashboard/', views.EventDashboardView.as_view(), name='event_dashboard'),
     path('<slug:slug>/crew/', views.CrewManagementView.as_view(), name='crew_management'),
     path('<slug:slug>/equipment/', views.EquipmentConfigurationView.as_view(), name='equipment_config'),
-    path('<slug:slug>/gallery/', views.EventGalleryView.as_view(), name='event_gallery'),
     path('<slug:slug>/temp-profile/', views.create_temp_profile, name='create_temp_profile'),
     path('list/', views.EventListView.as_view(), name='event_list'),
     
@@ -31,11 +30,11 @@ urlpatterns = [
     path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'),
 
 
-        path('<slug:slug>/gallery/', views.EventGalleryView.as_view(), name='event_gallery'),
+    path('<slug:slug>/gallery/', views.EventGalleryView.as_view(), name='event_gallery'),
     path('<slug:slug>/upload/', views.UploadPhotosView.as_view(), name='upload_photos'),
     path('photo/<int:pk>/', views.PhotoDetailView.as_view(), name='photo_detail'),
     path('photo/<int:pk>/action/', views.PhotoActionView.as_view(), name='photo_action'),
     path('photo/<int:pk>/delete/', views.DeletePhotoView.as_view(), name='delete_photo'),
 
-    
+
 ]

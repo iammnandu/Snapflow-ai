@@ -13,3 +13,13 @@ request list template is done
 
 10pm
 event edit option added.
+
+
+23 Feb 2025
+
+5pm
+gallery and upload photos set along with likes.
+
+6 30pm
+
+gallery and photo detail template redesigned.
