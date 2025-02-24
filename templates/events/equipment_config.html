@@ -1,21 +1,168 @@
-{% extends "events/base.html" %}
-{% block title %}Equipment Configuration{% endblock %}
+{% extends "users/db_base.html" %}
+{% block title %}Equipment Configuration - Event Management{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Equipment Configuration</h1>
-    <form method="post" class="space-y-6">
-        {% csrf_token %}
-        <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">
-                Equipment List
-            </label>
-            {{ form.equipment }}
-            <p class="text-sm text-gray-500">List your equipment details for this event.</p>
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <h5 class="card-header">Equipment Configuration</h5>
+                <div class="card-body">
+                    <!-- Equipment Form (only for crew members) -->
+                    {% if not is_organizer %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="equipment" class="form-label">Equipment List</label>
+                            {{ form.equipment|safe }}
+                            <div class="form-text">
+                                List your equipment details for this event (cameras, lenses, lighting, etc.)
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Save Configuration</button>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <!-- For organizers: View form in read-only mode -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Organizer View</h6>
+                        <p>As an organizer, you can view but not modify equipment details.</p>
+                    </div>
+                    <form>
+                        <div class="mb-3">
+                            <label for="equipment" class="form-label">Equipment List</label>
+                            {{ form.equipment|safe }}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary">Back to Event</a>
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    <!-- Tips Card -->
+                    <div class="alert alert-info mt-4 mb-0">
+                        <h6 class="alert-heading">Equipment Tips</h6>
+                        <ul class="mb-0">
+                            <li>Include all cameras and lenses you'll be using</li>
+                            <li>Specify any lighting equipment you'll bring</li>
+                            <li>Mention any special gear (drones, stabilizers, etc.)</li>
+                            <li>This information helps event organizers prepare accordingly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- For organizers: View all crew equipment -->
+            {% if is_organizer %}
+            <div class="card mt-4">
+                <h5 class="card-header">Crew Equipment</h5>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Crew Member</th>
+                                    <th>Role</th>
+                                    <th>Equipment</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for crew in all_crew_equipment %}
+                                <tr>
+                                    <td>{{ crew.member.get_full_name|default:crew.member.username }}</td>
+                                    <td>{{ crew.get_role_display }}</td>
+                                    <td>{{ crew.equipment|linebreaksbr }}</td>
+                                    <td>{{ crew.updated_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No crew members have added equipment details yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Current Equipment (for crew members) -->
+            {% if not is_organizer and existing_equipment %}
+            <div class="card">
+                <h5 class="card-header">Your Current Equipment</h5>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Equipment</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in existing_equipment %}
+                                <tr>
+                                    <td>{{ item.event.title }}</td>
+                                    <td>{{ item.equipment|truncatechars:50 }}</td>
+                                    <td>{{ item.updated_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                                <i class="bx bx-dots-vertical-rounded"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="{% url 'events:equipment_config' slug=item.event.slug %}">
+                                                    <i class="bx bx-edit-alt me-1"></i> Edit
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-            Save Configuration
-        </button>
-    </form>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any JavaScript enhancements here
+    const equipmentField = document.getElementById('id_equipment');
+    if (equipmentField) {
+        // Add extra classes for better styling
+        equipmentField.classList.add('form-control');
+        
+        // If it's a textarea, add appropriate height
+        if (equipmentField.tagName === 'TEXTAREA') {
+            equipmentField.setAttribute('rows', '6');
+            equipmentField.setAttribute('placeholder', 'List your equipment here...');
+        }
+        
+        // Make field readonly for organizers
+        {% if is_organizer %}
+        equipmentField.setAttribute('readonly', 'readonly');
+        {% endif %}
+    }
+});
+</script>
 {% endblock %}

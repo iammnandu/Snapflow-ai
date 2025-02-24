@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.db.models import Q
 from django.utils.crypto import get_random_string
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -178,19 +178,91 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
     model = EventCrew
     template_name = 'events/equipment_config.html'
     fields = ['equipment']
-    
+    context_object_name = 'crew'
+   
     def get_object(self):
-        return get_object_or_404(
-            EventCrew,
-            event__slug=self.kwargs['slug'],
-            member=self.request.user
-        )
-    
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        
+        # Check if user is the organizer
+        if event.organizer == self.request.user:
+            # For organizers, we'll just display the page in read-only mode
+            # We'll handle this in get() method
+            self.is_organizer = True
+            # Return any crew member just to have a valid object
+            # (we'll override form handling for organizers)
+            return EventCrew.objects.filter(event=event).first()
+        else:
+            # For crew members, return their specific record
+            self.is_organizer = False
+            return get_object_or_404(
+                EventCrew,
+                event=event,
+                member=self.request.user
+            )
+   
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            if self.object is None:
+                messages.error(request, "No crew members found for this event.")
+                return redirect('events:event_detail', slug=self.kwargs['slug'])
+            
+            context = self.get_context_data(object=self.object)
+            
+            # If user is organizer, make the form read-only
+            if hasattr(self, 'is_organizer') and self.is_organizer:
+                for field in context['form'].fields.values():
+                    field.disabled = True
+                
+            return self.render_to_response(context)
+        except Http404:
+            messages.error(request, "You don't have permission to view this page.")
+            return redirect('events:event_detail', slug=self.kwargs['slug'])
+   
+    def post(self, request, *args, **kwargs):
+        # Get the event
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        
+        # If user is the organizer, they shouldn't be able to update
+        if event.organizer == request.user:
+            messages.warning(request, "As an organizer, you can only view equipment details.")
+            return redirect('events:event_detail', slug=self.kwargs['slug'])
+            
+        return super().post(request, *args, **kwargs)
+   
+    def get_success_url(self):
+        # Redirect back to the event detail page after successful update
+        return reverse('events:event_detail', kwargs={'slug': self.kwargs['slug']})
+   
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, 'Equipment configuration updated!')
         return response
-
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        
+        # Add the event to the context for template use
+        context['event'] = event
+        
+        # Check if user is organizer and add to context
+        context['is_organizer'] = event.organizer == self.request.user
+        
+        # If user is organizer, get all crew members' equipment
+        if context['is_organizer']:
+            context['all_crew_equipment'] = EventCrew.objects.filter(
+                event=event
+            ).select_related('member')
+        else:
+            # Get any existing equipment configurations for this user
+            context['existing_equipment'] = EventCrew.objects.filter(
+                member=self.request.user
+            ).exclude(
+                pk=self.object.pk  # Exclude current one
+            ).select_related('event')
+            
+        return context
 
 # Event Access Views
 @login_required
@@ -222,22 +294,60 @@ def toggle_ai_features(request, slug):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
 
-# Event List Views
 class EventListView(ListView):
     model = Event
     template_name = 'events/event_list.html'
     context_object_name = 'events'
     
     def get_queryset(self):
+        # This method will be used for pagination, we'll override get_context_data instead
+        return Event.objects.none()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         user = self.request.user
+        
+        # Get filter parameters
+        event_type = self.request.GET.get('event_type', '')
+        status = self.request.GET.get('status', '')
+        
+        # Base queryset with filters
+        base_query = Event.objects.all()
+        if event_type:
+            base_query = base_query.filter(event_type=event_type)
+        if status:
+            base_query = base_query.filter(status=status)
+        
         if user.is_authenticated:
-            return Event.objects.filter(
-                Q(organizer=user) |
-                Q(crew_members__member=user) |
-                Q(participants__user=user) |
-                Q(is_public=True)
+            # Registered events: events the user is organizing, part of crew, or participating in
+            registered_events = base_query.filter(
+                Q(organizer=user) | 
+                Q(crew_members__member=user) | 
+                Q(participants__user=user)
             ).distinct()
-        return Event.objects.filter(is_public=True)
+            
+            # Public events: events that are public but user is not related to
+            public_events = base_query.filter(
+                is_public=True
+            ).exclude(
+                Q(organizer=user) | 
+                Q(crew_members__member=user) | 
+                Q(participants__user=user)
+            ).distinct()
+        else:
+            registered_events = Event.objects.none()
+            public_events = base_query.filter(is_public=True)
+        
+        # Add to context
+        context['registered_events'] = registered_events
+        context['public_events'] = public_events
+        context['event_types'] = Event.EventTypes.choices
+        context['event_statuses'] = Event.EventStatus.choices
+        context['selected_type'] = event_type
+        context['selected_status'] = status
+        context['total_events_count'] = registered_events.count() + public_events.count()
+        
+        return context
     
 
 

@@ -15,7 +15,7 @@
                         {% if user.is_authenticated and user.role == 'ORGANIZER' %}
                         <p class="mb-4">
                             You have  
-                            <span class="fw-bold">{{ events.count }}</span> total events.
+                            <span class="fw-bold">{{ total_events_count }}</span> total events.
                         </p>
                         <a href="{% url 'events:event_create' %}" class="btn btn-sm btn-primary">Create New Event</a>
                         {% endif %}
@@ -23,13 +23,13 @@
                         {% if user.is_authenticated and user.role == 'PHOTOGRAPHER' %}
                         <p class="mb-4">
                             You have access to 
-                            <span class="fw-bold">{{ events.count }}</span> total events.
+                            <span class="fw-bold">{{ total_events_count }}</span> total events.
                         </p>
                         {% endif %}
                         {% if user.is_authenticated and user.role == 'PARTICIPANT' %}
                         <p class="mb-4">
                             You have access to 
-                            <span class="fw-bold">{{ events.count }}</span> total events.
+                            <span class="fw-bold">{{ total_events_count }}</span> total events.
                         </p>
                         {% endif %}
                     </div>
@@ -50,35 +50,145 @@
     </div>
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Events /</span> Events List</h4>
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Events /</span> Events List</h4>
+            
+            <!-- Filter Section -->
+            <div class="mb-4">
+                <button
+                    class="btn btn-outline-primary"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#filterCollapse"
+                    aria-expanded="false"
+                    aria-controls="filterCollapse"
+                >
+                    <i class="bx bx-filter-alt me-1"></i> Filter Events
+                </button>
+            </div>
+        </div>
         
-        <!-- Cards -->
-        <div class="row mb-5">        
-            {% for event in events %}
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100">
-                    {% if event.logo %}
-                        <img class="card-img-top event-logo" src="{{ event.logo.url }}" alt="{{ event.title }}" />
-                    {% else %}
-                        <img class="card-img-top event-logo" src="{% static 'event_default.jpg' %}" alt="Default Event Logo" />
-                    {% endif %}
+        <!-- Filter Collapse -->
+        <div class="collapse mb-4" id="filterCollapse">
+            <div class="card p-3">
+                <form method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="eventType" class="form-label">Event Type</label>
+                        <select class="form-select" id="eventType" name="event_type">
+                            <option value="">All Types</option>
+                            {% for type_code, type_name in event_types %}
+                                <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>
+                                    {{ type_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="eventStatus" class="form-label">Event Status</label>
+                        <select class="form-select" id="eventStatus" name="status">
+                            <option value="">All Statuses</option>
+                            {% for status_code, status_name in event_statuses %}
+                                <option value="{{ status_code }}" {% if selected_status == status_code %}selected{% endif %}>
+                                    {{ status_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Registered Events Section -->
+        {% if user.is_authenticated and registered_events %}
+        <div class="mb-4">
+            <h5 class="fw-bold mb-3">Your Events</h5>
+            <div class="row">
+                {% for event in registered_events %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        {% if event.logo %}
+                            <img class="card-img-top event-logo" src="{{ event.logo.url }}" alt="{{ event.title }}" />
+                        {% else %}
+                            <img class="card-img-top event-logo" src="{% static 'event_default.jpg' %}" alt="Default Event Logo" />
+                        {% endif %}
 
-                    <div class="card-body">
-                        <h5 class="card-title">{{ event.title }}</h5>
-                        <p class="card-text">
-                            {{ event.description|truncatewords:20 }}
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary">View Details</a>
-                            <span class="text-muted small">{{ event.start_date|date:"M d, Y" }}</span>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ event.title }}</h5>
+                            <div class="mb-2">
+                                <span class="badge bg-label-{% if event.status == 'ACTIVE' %}success{% elif event.status == 'DRAFT' %}warning{% elif event.status == 'COMPLETED' %}info{% else %}danger{% endif %} me-1">
+                                    {{ event.get_status_display }}
+                                </span>
+                                <span class="badge bg-label-primary">{{ event.get_event_type_display }}</span>
+                            </div>
+                            <p class="card-text">
+                                {{ event.description|truncatewords:20 }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary">View Details</a>
+                                <span class="text-muted small">{{ event.start_date|date:"M d, Y" }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>        
-            {% empty %}
-                <p class="text-gray-500">No events available.</p>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
+        
+        <!-- Public Events Section -->
+        <div>
+            <h5 class="fw-bold mb-3">{% if user.is_authenticated %}Other {% endif %}Public Events</h5>
+            <div class="row">
+                {% for event in public_events %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        {% if event.logo %}
+                            <img class="card-img-top event-logo" src="{{ event.logo.url }}" alt="{{ event.title }}" />
+                        {% else %}
+                            <img class="card-img-top event-logo" src="{% static 'event_default.jpg' %}" alt="Default Event Logo" />
+                        {% endif %}
+
+                        <div class="card-body">
+                            <h5 class="card-title">{{ event.title }}</h5>
+                            <div class="mb-2">
+                                <span class="badge bg-label-{% if event.status == 'ACTIVE' %}success{% elif event.status == 'DRAFT' %}warning{% elif event.status == 'COMPLETED' %}info{% else %}danger{% endif %} me-1">
+                                    {{ event.get_status_display }}
+                                </span>
+                                <span class="badge bg-label-primary">{{ event.get_event_type_display }}</span>
+                            </div>
+                            <p class="card-text">
+                                {{ event.description|truncatewords:20 }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary">View Details</a>
+                                <span class="text-muted small">{{ event.start_date|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>        
+                {% empty %}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="bx bx-calendar-x mb-2" style="font-size: 3rem;"></i>
+                            <p class="text-muted">No public events available.</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Show message when no events at all -->
+        {% if not registered_events and not public_events %}
+        <div class="text-center py-5">
+            <i class="bx bx-calendar-x mb-2" style="font-size: 3rem;"></i>
+            <p class="text-muted">No events found matching your criteria.</p>
+        </div>
+        {% endif %}
     </div>
 </div>  <!-- Closing content-wrapper -->
 <!-- / Content -->

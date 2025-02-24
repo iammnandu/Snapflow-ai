@@ -254,8 +254,11 @@ from django.utils.text import slugify
 import os
 
 def event_photo_path(instance, filename):
-    # Generate path: media/events/<event_id>/photos/<filename>
-    return f'events/{instance.event.id}/photos/{filename}'
+    # Convert event title to a URL-friendly format
+    event_slug = instance.event.slug
+    
+    # Generate path: media/events/<event_id>_<event_slug>/photos/<filename>
+    return f'events/{instance.event.id}_{event_slug}/photos/{filename}'
 
 class EventPhoto(models.Model):
     event = models.ForeignKey('events.Event', on_delete=models.CASCADE, related_name='photos')

@@ -113,7 +113,7 @@
         <li class="menu-item">
           <a href="{% url 'events:event_list' %}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-cog"></i>
-            <div>Manage Events</div>
+            <div>View Events</div>
           </a>
         </li>
       {% elif user.role == 'PHOTOGRAPHER' %}
@@ -151,7 +151,7 @@
 
       {% elif user.role == 'PARTICIPANT' %}
         <li class="menu-item">
-          <a href="" class="menu-link">
+          <a href="{% url 'events:event_list' %}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-list-check"></i>
             <div>My Events</div>
           </a>

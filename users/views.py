@@ -125,7 +125,7 @@ def dashboard(request):
     context = {}
     
     # Common data for all users
-    user_requests = EventAccessRequest.objects.filter(user=user)
+    user_requests = EventAccessRequest.objects.filter(user=user,status='PENDING')
     context['user_requests'] = user_requests
     
     template_name = 'users/dashboard.html'  # Default template

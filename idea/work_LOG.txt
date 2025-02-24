@@ -23,3 +23,13 @@ gallery and upload photos set along with likes.
 6 30pm
 
 gallery and photo detail template redesigned.
+
+
+24 Feb 2025
+
+10 30pm
+Event list page modified and added registered and public event sections. Also added filters.
+
+11 50pm
+Equipment configuration completed
+
