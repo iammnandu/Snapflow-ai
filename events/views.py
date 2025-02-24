@@ -47,26 +47,86 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Event
     template_name = 'events/event_setup.html'
     context_object_name = 'event'
-    
+
     def test_func(self):
         return self.get_object().organizer == self.request.user
-    
+
     def get_form_class(self):
-        setup_step = self.kwargs.get('step', 'basic')
+        setup_step = self.kwargs.get('step', 'privacy')
         form_classes = {
-            'basic': EventCreationForm,
             'privacy': PrivacySettingsForm,
-            'crew': CrewInvitationForm,
             'theme': EventThemeForm,
             'config': EventConfigurationForm,
         }
         return form_classes.get(setup_step)
-    
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        setup_step = self.kwargs.get('step', 'privacy')
+
+        if setup_step in ['privacy', 'config']:
+            event = self.get_object()
+            config, created = EventConfiguration.objects.get_or_create(event=event)
+            kwargs['instance'] = config
+
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['current_step'] = self.kwargs.get('step', 'basic')
-        context['steps'] = ['basic', 'privacy', 'crew', 'theme', 'config']
+        steps = ['privacy', 'theme', 'config']
+        current_step = self.kwargs.get('step', 'privacy')
+
+        if current_step not in steps:
+            current_step = 'privacy'
+
+        current_index = steps.index(current_step)
+        previous_step = steps[current_index - 1] if current_index > 0 else None
+        next_step = steps[current_index + 1] if current_index < len(steps) - 1 else None
+
+        context.update({
+            'current_step': current_step,
+            'steps': steps,
+            'previous_step': previous_step,
+            'next_step': next_step
+        })
         return context
+
+    def form_valid(self, form):
+        setup_step = self.kwargs.get('step', 'privacy')
+        event = self.get_object()
+
+        if setup_step in ['privacy', 'config']:
+            config = form.save(commit=False)
+            config.event = event
+            config.save()
+        elif setup_step == 'theme':
+            form.save()
+
+        steps = ['privacy', 'theme', 'config']
+        current_index = steps.index(setup_step)
+
+        if current_index < len(steps) - 1:
+            next_step = steps[current_index + 1]
+            return redirect('events:event_setup', slug=event.slug, step=next_step)
+        else:
+            return redirect('events:event_detail', slug=event.slug)
+
+    def get_success_url(self):
+        event = self.get_object()
+        steps = ['privacy', 'theme', 'config']
+        current_step = self.kwargs.get('step', 'privacy')
+
+        if current_step not in steps:
+            current_step = 'privacy'
+
+        current_index = steps.index(current_step)
+
+        if current_index < len(steps) - 1:
+            next_step = steps[current_index + 1]
+            return reverse('events:event_setup', kwargs={'slug': event.slug, 'step': next_step})
+        else:
+            return reverse('events:event_detail', kwargs={'slug': event.slug})
+
 
 from django.db.models import Sum
 

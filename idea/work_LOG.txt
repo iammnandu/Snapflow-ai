@@ -41,6 +41,8 @@ Participants list template added
 1am
 photo comment section problem solved
 
+2am
+event setup added
 
 
 
@@ -49,3 +51,7 @@ photo comment section problem solved
 
 Dashboard recent activities card should be updated
 Dashboard AI features toggle is not working
+
+add the missing urls to dashboard
+
+

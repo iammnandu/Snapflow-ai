@@ -2,7 +2,22 @@
 {% block title %}Photo Detail - {{ event.title }}{% endblock %}
 {% load static %}
 {% block add_nav %}
-
+<li class="menu-header small text-uppercase">
+    <span class="menu-header-text">Event Actions</span>
+  </li>
+  <li class="menu-item">
+    <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Dashboard</div>
+    </a>
+  </li>
+  
+  <li class="menu-item">
+    <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Configuration</div>
+    </a>
+  </li>
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Quick Actions</span>
       </li>
