@@ -742,12 +742,36 @@ class UploadPhotosView(LoginRequiredMixin, View):
         messages.success(request, f"{len(images)} photos uploaded successfully.")
         return redirect('events:event_gallery', slug=slug)
 
+
+@login_required
+def photo_comments(request, pk):
+    photo = get_object_or_404(EventPhoto, pk=pk)
+    comments = photo.comments.all()[:10]  # Fetch the 10 most recent comments
+    
+    comments_data = []
+    for comment in comments:
+        comments_data.append({
+            'id': comment.id,
+            'comment': comment.comment,
+            'user_name': comment.user.get_full_name() or comment.user.username,
+            'user_initials': comment.user.get_initials() if hasattr(comment.user, 'get_initials') else '',
+            'profile_picture': comment.user.profile_picture.url if hasattr(comment.user, 'profile_picture') and comment.user.profile_picture else None,
+            'created_at': comment.created_at.strftime('%m/%d/%Y %H:%M'),
+            'can_delete': request.user == comment.user or request.user == photo.event.organizer
+        })
+    
+    return JsonResponse({
+        'status': 'success',
+        'comments': comments_data
+    })
+
+
 class PhotoDetailView(DetailView):
     model = EventPhoto
     template_name = 'events/photo_detail.html'
     context_object_name = 'photo'
     
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         photo = self.get_object()
@@ -757,6 +781,13 @@ class PhotoDetailView(DetailView):
         photo.save()
         
         context['can_download'] = photo.event.configuration.enable_download
+        
+        # Check if user has liked the photo
+        if self.request.user.is_authenticated:
+            context['user_liked'] = PhotoLike.objects.filter(
+                photo=photo, user=self.request.user
+            ).exists()
+        
         return context
 
 class PhotoActionView(LoginRequiredMixin, View):

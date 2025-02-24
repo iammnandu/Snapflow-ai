@@ -39,6 +39,8 @@ urlpatterns = [
     path('photo/<int:pk>/action/', views.PhotoActionView.as_view(), name='photo_action'), #done
     path('photo/<int:pk>/delete/', views.DeletePhotoView.as_view(), name='delete_photo'), #done
 
+    path('photo/<int:pk>/comments/', views.photo_comments, name='photo_comments'), #done
+
 
     
     
