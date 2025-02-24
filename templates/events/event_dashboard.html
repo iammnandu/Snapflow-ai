@@ -21,16 +21,24 @@
       </li>
 
       <li class="menu-item">
-        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Invite Crew</div>
+          <div>View Participants</div>
         </a>
       </li>
+
       {% elif user.role == 'PHOTOGRAPHER' %}
       <li class="menu-item">
         <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cog"></i>
           <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
         </a>
       </li>
       {% endif %}

@@ -5,15 +5,13 @@
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Quick Actions</span>
       </li>
-
-
       <li class="menu-item">
         <a href="{% url 'events:event_gallery' event.slug %} " class="menu-link">
           <i class="menu-icon tf-icons bx bx-dock-top"></i>
           <div>View Gallery</div>
         </a>
       </li>
-
+      {% if user.role == 'ORGANIZER' %}
       <li class="menu-item">
         <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cog"></i>
@@ -22,11 +20,30 @@
       </li>
 
       <li class="menu-item">
-        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Invite Crew</div>
+          <div>View Participants</div>
         </a>
       </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+
+
 {% endblock add_nav %}
 
 
@@ -163,64 +180,3 @@
     {% endif %}
 </div>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-{% comment "" %}{% extends "events/base.html" %}
-{% block title %}Crew Management - {{ event.title }}{% endblock %}
-
-{% block content %}
-<div class="space-y-6">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold mb-4">Invite Crew Member</h2>
-        <form method="post" class="space-y-4">
-            {% csrf_token %}
-            {% for field in crew_form %}
-            <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">
-                    {{ field.label }}
-                </label>
-                {{ field.errors }}
-                {{ field }}
-                {% if field.help_text %}
-                <p class="text-sm text-gray-500">{{ field.help_text }}</p>
-                {% endif %}
-            </div>
-            {% endfor %}
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                Send Invitation
-            </button>
-        </form>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold mb-4">Current Crew Members</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for crew in crew_members %}
-            <div class="border rounded-lg p-4">
-                <div class="flex items-center space-x-4">
-                    <img src="{{ crew.member.avatar.url|default:'/static/default-avatar.png' }}" 
-                         alt="{{ crew.member.username }}" 
-                         class="h-12 w-12 rounded-full">
-                    <div>
-                        <p class="font-semibold">{{ crew.member.get_full_name }}</p>
-                        <p class="text-sm text-gray-500">{{ crew.get_role_display }}</p>
-                        <p class="text-sm {% if crew.is_confirmed %}text-green-600{% else %}text-yellow-600{% endif %}">
-                            {{ crew.is_confirmed|yesno:"Confirmed,Pending" }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-gray-500">No crew members yet.</p>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% endblock %}{% endcomment %}

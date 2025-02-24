@@ -1,0 +1,397 @@
+{% extends "users/db_base.html" %}
+{% block title %}{{ event.title }} - Participants{% endblock %}
+{% load custom_filters %}
+{% block add_nav %}
+
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'events:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+      {% if user.role == 'ORGANIZER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+
+
+{% endblock add_nav %}
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <!-- Event Header -->
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="d-flex align-items-center row">
+                    <div class="col-sm-7">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ event.title }}</h5>
+                            <p class="mb-2">
+                                <i class="bx bx-calendar me-1"></i> 
+                                {{ event.start_date|date:"M d, Y" }} 
+                                {% if event.start_date.date != event.end_date.date %}
+                                - {{ event.end_date|date:"M d, Y" }}
+                                {% endif %}
+                            </p>
+                            <p class="mb-0">
+                                <i class="bx bx-map me-1"></i> {{ event.location }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-sm-5 text-center text-sm-end">
+                        <div class="card-body">
+                            <a href="{% url 'events:event_dashboard' slug=event.slug %}" class="btn btn-outline-primary me-2">
+                                <i class="bx bx-arrow-back me-1"></i> Back to Dashboard
+                            </a>
+                            {% if is_organizer %}
+                            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addParticipantModal">
+                                <i class="bx bx-user-plus me-1"></i> Add Participant
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participant Stats -->
+        <div class="col-12 mb-4">
+            <div class="row">
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1">{{ total_participants }}</h2>
+                            <p class="mb-0">Total Participants</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1">{{ registered_count }}</h2>
+                            <p class="mb-0">Registered</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1">{{ total_participants|default:0|sub:registered_count }}</h2>
+                            <p class="mb-0">Pending</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participants List -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Participants</h5>
+                    <div class="d-flex">
+                        <!-- Filter Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if current_filter %}
+                                    Filter: {{ current_filter }}
+
+                                {% else %}
+                                    Filter by Type
+                                {% endif %}
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                <li><a class="dropdown-item" href="{% url 'events:event_participants' slug=event.slug %}">All Types</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% for type_value, type_name in participant_types %}
+                                <li><a class="dropdown-item" href="{% url 'events:event_participants' slug=event.slug %}?type={{ type_value }}">{{ type_name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Export Button -->
+                        {% if is_organizer %}
+                        <button class="btn btn-outline-primary" id="exportParticipants">
+                            <i class="bx bx-export me-1"></i> Export
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Privacy</th>
+                                    {% if is_organizer %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participant in participants %}
+                                <tr>
+                                    <td>{{ participant.name }}</td>
+                                    <td>{{ participant.email }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if participant.participant_type == 'VIP' %}warning{% elif participant.participant_type == 'SPEAKER' %}info{% elif participant.participant_type == 'PERFORMER' %}success{% else %}secondary{% endif %}">
+                                            {{ participant.get_participant_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if participant.is_registered %}
+                                        <span class="badge bg-success">Registered</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if participant.request_blur %}
+                                        <span class="badge bg-warning">Blur Requested</span>
+                                        {% elif participant.allow_photos %}
+                                        <span class="badge bg-success">Photos Allowed</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Photos Declined</span>
+                                        {% endif %}
+                                    </td>
+                                    {% if is_organizer %}
+                                    <td>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                                <i class="bx bx-dots-vertical-rounded"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editParticipantModal" data-participant-id="{{ participant.id }}">
+                                                    <i class="bx bx-edit-alt me-1"></i> Edit
+                                                </a>
+                                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#resendInviteModal" data-participant-id="{{ participant.id }}">
+                                                    <i class="bx bx-envelope me-1"></i> Resend Invite
+                                                </a>
+                                                <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#removeParticipantModal" data-participant-id="{{ participant.id }}">
+                                                    <i class="bx bx-trash me-1"></i> Remove
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if is_organizer %}6{% else %}5{% endif %}" class="text-center">No participants found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_organizer %}
+<!-- Add Participant Modal -->
+<div class="modal fade" id="addParticipantModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Participant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'events:add_participant' slug=event.slug %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="participant_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="participant_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="participant_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="participant_email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="participant_type" class="form-label">Type</label>
+                        <select class="form-select" id="participant_type" name="participant_type" required>
+                            {% for type_value, type_name in participant_types %}
+                            <option value="{{ type_value }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Participant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Participant Modal -->
+<div class="modal fade" id="editParticipantModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Participant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'events:edit_participant' slug=event.slug participant_id=0 %}" method="post" id="editParticipantForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_participant_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="edit_participant_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_participant_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit_participant_email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_participant_type" class="form-label">Type</label>
+                        <select class="form-select" id="edit_participant_type" name="participant_type" required>
+                            {% for type_value, type_name in participant_types %}
+                            <option value="{{ type_value }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Participant Modal -->
+<div class="modal fade" id="removeParticipantModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Remove Participant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove this participant? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'events:remove_participant' slug=event.slug participant_id=0 %}" method="post" id="removeParticipantForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resend Invite Modal -->
+<div class="modal fade" id="resendInviteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resend Invitation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to resend the invitation to this participant?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'events:resend_invite' slug=event.slug participant_id=0 %}" method="post" id="resendInviteForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Resend Invite</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Edit Participant Modal
+    var editParticipantModal = document.getElementById('editParticipantModal');
+    if (editParticipantModal) {
+        editParticipantModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var participantId = button.getAttribute('data-participant-id');
+            var form = document.getElementById('editParticipantForm');
+            form.action = form.action.replace('/0/', '/' + participantId + '/');
+            
+            // TODO: Fetch participant data via AJAX and populate the form
+            // For now, this is just a placeholder
+        });
+    }
+    
+    // Handle Remove Participant Modal
+    var removeParticipantModal = document.getElementById('removeParticipantModal');
+    if (removeParticipantModal) {
+        removeParticipantModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var participantId = button.getAttribute('data-participant-id');
+            var form = document.getElementById('removeParticipantForm');
+            form.action = form.action.replace('/0/', '/' + participantId + '/');
+        });
+    }
+    
+    // Handle Resend Invite Modal
+    var resendInviteModal = document.getElementById('resendInviteModal');
+    if (resendInviteModal) {
+        resendInviteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var participantId = button.getAttribute('data-participant-id');
+            var form = document.getElementById('resendInviteForm');
+            form.action = form.action.replace('/0/', '/' + participantId + '/');
+        });
+    }
+    
+    // Handle Export Button
+    var exportButton = document.getElementById('exportParticipants');
+    if (exportButton) {
+        exportButton.addEventListener('click', function() {
+            // TODO: Implement export functionality
+            alert('Export functionality will be implemented soon');
+        });
+    }
+});
+</script>
+
+<!-- Template filter for subtraction -->
+{% load custom_filters %}
+{% endblock %}

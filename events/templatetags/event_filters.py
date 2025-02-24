@@ -23,3 +23,10 @@ def filesizeformat(bytes):
         return f"{gb:.1f} GB"
     except:
         return '0 KB'
+
+@register.filter
+def sub(value, arg):
+    try:
+        return int(value) - int(arg)
+    except (ValueError, TypeError):
+        return 0  # Handle errors gracefully

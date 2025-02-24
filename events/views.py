@@ -94,6 +94,57 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
         })
         return context
 
+from django.http import HttpResponseForbidden
+
+class EventParticipantsView(LoginRequiredMixin, DetailView):
+    model = Event
+    template_name = 'events/event_participants.html'
+    context_object_name = 'event'
+    
+    def get_object(self):
+        return get_object_or_404(Event, slug=self.kwargs['slug'])
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event = self.object
+        
+        # Check if user is authorized to view participants
+        is_organizer = event.organizer == self.request.user
+        is_crew = event.crew_members.filter(member=self.request.user).exists()
+        
+        if not (is_organizer or is_crew):
+            return HttpResponseForbidden("You don't have permission to view this page.")
+        
+        # Add user role to context
+        context['is_organizer'] = is_organizer
+        context['is_crew'] = is_crew
+        
+        # Get participants with filtering options
+        participant_type = self.request.GET.get('type', None)
+        
+        participants = event.participants.all()
+        if participant_type:
+            participants = participants.filter(participant_type=participant_type)
+        
+        context['participants'] = participants
+        
+        # Get participant type choices for filter dropdown
+        context['participant_types'] = EventParticipant.ParticipantTypes.choices
+        if participant_type:
+            display_name = dict(EventParticipant.ParticipantTypes.choices).get(participant_type, participant_type)
+        else:
+            display_name = None
+
+        context['current_filter'] = display_name
+
+        
+        # Stats
+        context['total_participants'] = event.participants.count()
+        context['registered_count'] = event.participants.filter(is_registered=True).count()
+        
+        return context
+    
+    
 # views.py
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
@@ -696,10 +747,11 @@ class PhotoDetailView(DetailView):
     template_name = 'events/photo_detail.html'
     context_object_name = 'photo'
     
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         photo = self.get_object()
-        
+        context['event'] = photo.event
         # Increment view count
         photo.view_count += 1
         photo.save()
@@ -792,3 +844,99 @@ def get_object(self, queryset=None):
     if not user_can_access_event(self.request.user, event):
         raise PermissionDenied
     return event
+
+
+
+
+# Additional view classes for events/views.py
+
+from django.views.generic import FormView, View
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.contrib import messages
+from django.utils.crypto import get_random_string
+
+class AddParticipantView(LoginRequiredMixin, FormView):
+    template_name = 'events/event_participants.html'  # Not used directly
+    
+    def post(self, request, *args, **kwargs):
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        
+        # Check if user is authorized
+        if event.organizer != request.user:
+            return HttpResponseForbidden("You don't have permission to add participants.")
+        
+        # Get form data
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        participant_type = request.POST.get('participant_type')
+        
+        # Check if email already exists
+        if EventParticipant.objects.filter(event=event, email=email).exists():
+            messages.error(request, f"A participant with the email {email} already exists.")
+            return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))
+        
+        # Create registration code
+        registration_code = get_random_string(20)
+        
+        # Create the participant
+        participant = EventParticipant.objects.create(
+            event=event,
+            name=name,
+            email=email,
+            participant_type=participant_type,
+            registration_code=registration_code
+        )
+        
+        # TODO: Send invitation email
+        
+        messages.success(request, f"Participant {name} has been added successfully.")
+        return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))
+
+class EditParticipantView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        participant = get_object_or_404(EventParticipant, pk=self.kwargs['participant_id'], event=event)
+        
+        # Check if user is authorized
+        if event.organizer != request.user:
+            return HttpResponseForbidden("You don't have permission to edit participants.")
+        
+        # Update participant details
+        participant.name = request.POST.get('name')
+        participant.email = request.POST.get('email')
+        participant.participant_type = request.POST.get('participant_type')
+        participant.save()
+        
+        messages.success(request, f"Participant {participant.name} has been updated successfully.")
+        return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))
+
+class RemoveParticipantView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        participant = get_object_or_404(EventParticipant, pk=self.kwargs['participant_id'], event=event)
+        
+        # Check if user is authorized
+        if event.organizer != request.user:
+            return HttpResponseForbidden("You don't have permission to remove participants.")
+        
+        # Delete the participant
+        participant_name = participant.name
+        participant.delete()
+        
+        messages.success(request, f"Participant {participant_name} has been removed successfully.")
+        return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))
+
+class ResendParticipantInviteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        event = get_object_or_404(Event, slug=self.kwargs['slug'])
+        participant = get_object_or_404(EventParticipant, pk=self.kwargs['participant_id'], event=event)
+        
+        # Check if user is authorized
+        if event.organizer != request.user:
+            return HttpResponseForbidden("You don't have permission to resend invitations.")
+        
+        # TODO: Resend invitation email
+        
+        messages.success(request, f"Invitation has been resent to {participant.name}.")
+        return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))

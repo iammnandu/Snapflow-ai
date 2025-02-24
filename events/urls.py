@@ -8,8 +8,12 @@ urlpatterns = [
     path('create/', views.EventCreateView.as_view(), name='event_create'), #done
     path('<slug:slug>/setup/<str:step>/', views.EventSetupView.as_view(), name='event_setup'),
     path('<slug:slug>/dashboard/', views.EventDashboardView.as_view(), name='event_dashboard'), #done
+
+
     path('<slug:slug>/crew/', views.CrewManagementView.as_view(), name='crew_management'),
-    path('<slug:slug>/equipment/', views.EquipmentConfigurationView.as_view(), name='equipment_config'),
+    path('<slug:slug>/participants/', views.EventParticipantsView.as_view(), name='event_participants'),
+
+    path('<slug:slug>/equipment/', views.EquipmentConfigurationView.as_view(), name='equipment_config'), #done
     path('<slug:slug>/temp-profile/', views.create_temp_profile, name='create_temp_profile'),
     path('list/', views.EventListView.as_view(), name='event_list'), #done
     
@@ -29,7 +33,6 @@ urlpatterns = [
  
     path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'), #done
 
-
     path('<slug:slug>/gallery/', views.EventGalleryView.as_view(), name='event_gallery'), #done
     path('<slug:slug>/upload/', views.UploadPhotosView.as_view(), name='upload_photos'), #done
     path('photo/<int:pk>/', views.PhotoDetailView.as_view(), name='photo_detail'), #done
@@ -37,4 +40,11 @@ urlpatterns = [
     path('photo/<int:pk>/delete/', views.DeletePhotoView.as_view(), name='delete_photo'), #done
 
 
+    
+    
+# Additional URL patterns for events/urls.py
+path('<slug:slug>/participants/add/', views.AddParticipantView.as_view(), name='add_participant'),
+path('<slug:slug>/participants/<int:participant_id>/edit/', views.EditParticipantView.as_view(), name='edit_participant'),
+path('<slug:slug>/participants/<int:participant_id>/remove/', views.RemoveParticipantView.as_view(), name='remove_participant'),
+path('<slug:slug>/participants/<int:participant_id>/resend-invite/', views.ResendParticipantInviteView.as_view(), name='resend_invite'),
 ]
