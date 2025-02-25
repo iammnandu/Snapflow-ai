@@ -83,6 +83,7 @@
       </li>
 
 {% block content %}
+
 <div class="container-fluid px-4 py-5">
   <!-- Header Card with Event Info -->
   <div class="row mb-4">
@@ -124,29 +125,16 @@
                   <i class="bi bi-images me-2"></i>View Gallery
                 </a>
                 {% if is_organizer %}
-                <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary">
+                <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary me-2">
                   <i class="bi bi-people me-2"></i>Manage Crew
                 </a>
-                <a href="{% url 'events:event_edit' event.slug %}" class="btn btn-outline-primary">
-                  <i class="bi bi-people me-2"></i>Edit Event
+                <a href="{% url 'events:event_edit' event.slug %}" class="btn btn-outline-primary me-2">
+                  <i class="bi bi-pencil me-2"></i>Edit Event
                 </a>
                 {% endif %}
-                <a onclick="copyToClipboard('{{ event.event_code }}')" class="btn btn-outline-primary">
-                    <i class="bi bi-people me-2"></i>Copy Event Code
-                  </a>
-
-
-             
-             <script>
-                 function copyToClipboard(text) {
-                     navigator.clipboard.writeText(text).then(function() {
-                         alert("Event Code copied: " + text);
-                     }).catch(function(error) {
-                         console.error("Error copying text: ", error);
-                     });
-                 }
-             </script>
-             
+                <a href="javascript:void(0);" onclick="copyToClipboard('{{ event.event_code }}')" class="btn btn-outline-primary">
+                  <i class="bi bi-clipboard me-2"></i>Copy Event Code
+                </a>             
               </div>
             </div>
             <div class="col-md-4 bg-light p-4 d-flex flex-column justify-content-center">
@@ -178,8 +166,68 @@
     </div>
   </div>
 
-  <!-- Statistics Cards -->
+  <!-- Photo Carousel Section - Made Smaller -->
   <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
+          <h5 class="mb-0">Photo Highlights</h5>
+          <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-sm btn-outline-primary">View All Photos</a>
+        </div>
+        <div class="card-body">
+          <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+              <div id="eventPhotoCarousel" class="carousel carousel-dark slide carousel-fade" data-bs-ride="carousel">
+                <ol class="carousel-indicators">
+                  {% for photo in event.photos.all|slice:":5" %}
+                    <li data-bs-target="#eventPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %}></li>
+                  {% empty %}
+                    <li data-bs-target="#eventPhotoCarousel" data-bs-slide-to="0" class="active"></li>
+                  {% endfor %}
+                </ol>
+                <div class="carousel-inner rounded">
+                  {% for photo in event.photos.all|slice:":5" %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                      <img class="d-block w-100" src="{{ photo.image.url }}" alt="Event photo {{ forloop.counter }}" style="height: 300px; object-fit: cover;">
+                      <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                        <h5 class="text-white">{{ photo.title|default:"Event Photo" }}</h5>
+                        <p class="text-white">Uploaded by {{ photo.uploaded_by.get_full_name|default:photo.uploaded_by.username }} {{ photo.upload_date|timesince }} ago</p>
+                      </div>
+                    </div>
+                  {% empty %}
+                    <div class="carousel-item active">
+                      <div class="d-flex align-items-center justify-content-center bg-light" style="height: 300px;">
+                        <div class="text-center text-muted">
+                          <i class="bi bi-camera fs-1 mb-3"></i>
+                          <h5>No photos uploaded yet</h5>
+                          {% if is_organizer or is_crew %}
+                          <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                            <i class="bi bi-upload me-2"></i>Upload Photos
+                          </button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                <a class="carousel-control-prev" href="#eventPhotoCarousel" role="button" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#eventPhotoCarousel" role="button" data-bs-slide="next">
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Next</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards in Masonry Layout -->
+  <div class="row mb-4" data-masonry='{"percentPosition": true }'>
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-body">
@@ -204,7 +252,7 @@
           {% if previous_event %}
           <small class="text-{% if crew_members.count > previous_event.crew_members.count %}success{% else %}danger{% endif %} fw-semibold">
             <i class="bi bi-{% if crew_members.count > previous_event.crew_members.count %}arrow-up{% else %}arrow-down{% endif %}-short"></i>
-            {% comment "" %}{{ crew_members.count|add:"-"|add:previous_event.crew_members.count|abs }}{% endcomment %} from last event
+            from last event
           </small>
           {% endif %}
         </div>
@@ -233,16 +281,14 @@
           {% if event.capacity %}
           <div class="progress rounded-pill mt-2" style="height: 8px;">
             <div class="progress-bar bg-success" role="progressbar" 
-                 style="width: {% comment "" %}{{ participants.count|floatformat:0|mul:100|div:event.capacity }}{% endcomment %}%" 
+                 style="width:" 
                  aria-valuenow="{{ participants.count }}" aria-valuemin="0" aria-valuemax="{{ event.capacity }}"></div>
           </div>
-          <small class="mt-1 d-block">{{ participants.count }} of {{ event.capacity }} {% comment "" %}({{ participants.count|floatformat:0|mul:100|div:event.capacity|floatformat:0 }}%){% endcomment %}</small>
+          <small class="mt-1 d-block">{{ participants.count }} of {{ event.capacity }}</small>
           {% endif %}
         </div>
       </div>
     </div>
-
-    {% load static %}
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
@@ -323,55 +369,12 @@
         </div>
     </div>
     
-    <!-- Upload Photos Modal -->
-    {% if is_organizer or is_crew %}
-    <div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-labelledby="uploadPhotosModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadPhotosModalLabel">Upload Photos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Select Photos</label>
-                            <input type="file" name="images" multiple class="form-control" 
-                                   accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
-                                   required>
-                            {% if event.configuration %}
-                            <div class="form-text">
-                                Allowed formats: {{ event.configuration.allowed_formats }}
-                                <br>
-                                Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div id="preview-container" class="row g-2">
-                            <!-- Preview images will be inserted here via JavaScript -->
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-cloud-upload"></i> Upload Photos
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div class="avatar flex-shrink-0">
-              
-                <img src="{% static 'events/img/camera.png' %}">
-            
+              <img src="{% static 'events/img/camera.png' %}">
             </div>
             <div class="dropdown">
               <button class="btn p-0" type="button" id="equipmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -395,152 +398,8 @@
     </div>
   </div>
 
-  <!-- Event Progress & Activities -->
-  <div class="row">
-    <!-- Progress Section -->
-    <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-1 mb-4">
-      <div class="card shadow-sm border-0">
-        <div class="row g-0">
-          <div class="col-md-8">
-            <div class="card-header border-0 bg-transparent">
-              <h5 class="mb-0">Event Preparation Progress</h5>
-            </div>
-            <div class="card-body pt-0">
-              <div class="progress-tracker">
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span>Crew Assignment</span>
-                    <span class="text-{% if crew_status == 'complete' %}success{% else %}muted{% endif %}">
-                      {{ crew_completion_percentage|default:"0" }}%
-                    </span>
-                  </div>
-                  <div class="progress rounded-pill" style="height: 8px;">
-                    <div class="progress-bar bg-primary" role="progressbar" 
-                         style="width: {{ crew_completion_percentage|default:'0' }}%" 
-                         aria-valuenow="{{ crew_completion_percentage|default:'0' }}" 
-                         aria-valuemin="0" aria-valuemax="100"></div>
-                  </div>
-                </div>
-                
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span>Equipment Setup</span>
-                    <span class="text-{% if equipment_status == 'complete' %}success{% else %}muted{% endif %}">
-                      {{ equipment_completion_percentage|default:"0" }}%
-                    </span>
-                  </div>
-                  <div class="progress rounded-pill" style="height: 8px;">
-                    <div class="progress-bar bg-info" role="progressbar" 
-                         style="width: {{ equipment_completion_percentage|default:'0' }}%" 
-                         aria-valuenow="{{ equipment_completion_percentage|default:'0' }}" 
-                         aria-valuemin="0" aria-valuemax="100"></div>
-                  </div>
-                </div>
-                
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span>Participant Registration</span>
-                    <span class="text-{% if registration_status == 'complete' %}success{% else %}muted{% endif %}">
-                      {{ registration_completion_percentage|default:"0" }}%
-                    </span>
-                  </div>
-                  <div class="progress rounded-pill" style="height: 8px;">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                         style="width: {{ registration_completion_percentage|default:'0' }}%" 
-                         aria-valuenow="{{ registration_completion_percentage|default:'0' }}" 
-                         aria-valuemin="0" aria-valuemax="100"></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span>Venue Preparation</span>
-                    <span class="text-{% if venue_status == 'complete' %}success{% else %}muted{% endif %}">
-                      {{ venue_completion_percentage|default:"0" }}%
-                    </span>
-                  </div>
-                  <div class="progress rounded-pill" style="height: 8px;">
-                    <div class="progress-bar bg-warning" role="progressbar" 
-                         style="width: {{ venue_completion_percentage|default:'0' }}%" 
-                         aria-valuenow="{{ venue_completion_percentage|default:'0' }}" 
-                         aria-valuemin="0" aria-valuemax="100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 d-flex align-items-center bg-light">
-            <div class="p-4 text-center w-100">
-              <div class="mb-3">
-                <h6 class="text-muted mb-1">Overall Completion</h6>
-                <div class="d-inline-block position-relative">
-                  <div class="progress-circle" data-percentage="{{ overall_completion_percentage|default:'0' }}">
-                    <svg class="progress-ring" width="120" height="120">
-                      <circle class="progress-ring-circle bg" stroke="#e9ecef" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
-                      <circle class="progress-ring-circle" stroke="{% if overall_completion_percentage > 75 %}#28a745{% elif overall_completion_percentage > 50 %}#17a2b8{% elif overall_completion_percentage > 25 %}#ffc107{% else %}#dc3545{% endif %}" 
-                              stroke-width="8" fill="transparent" r="50" cx="60" cy="60" 
-                              stroke-dasharray="314.16" 
-                              stroke-dashoffset="{% comment "" %}{{ 314.16|sub:314.16|mul:overall_completion_percentage|div:100 }}{% endcomment %}"/>
-                    </svg>
-                    <div class="progress-text">{{ overall_completion_percentage|default:"0" }}%</div>
-                  </div>
-                </div>
-              </div>
-              <p class="text-muted mb-0">{{ days_until_event|default:"0" }} days remaining</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Activities -->
-    <div class="col-12 col-lg-4 order-1 order-md-2 order-lg-2 mb-4">
-      <div class="card shadow-sm border-0">
-        <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
-          <h5 class="mb-0">Recent Activities</h5>
-          <button class="btn btn-sm btn-outline-primary rounded-pill">View All</button>
-        </div>
-        <div class="card-body pt-0">
-          <ul class="timeline timeline-dashed">
-            {% for activity in recent_activities|slice:":5" %}
-            <li class="timeline-item mb-4">
-              <div class="timeline-point timeline-point-indicator"></div>
-              <div class="timeline-event">
-                <div class="d-flex justify-content-between flex-sm-row flex-column mb-sm-0 mb-1">
-                  <h6 class="mb-0">{{ activity.title }}</h6>
-                  <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
-                </div>
-                <p class="mb-0">{{ activity.description }}</p>
-                {% if activity.user %}
-                <div class="d-flex align-items-center mt-2">
-                  <div class="avatar avatar-xs me-2">
-                    {% if activity.user.profile_image %}
-                    <img src="{{ activity.user.profile_image.url }}" alt="{{ activity.user.get_full_name }}" class="rounded-circle">
-                    {% else %}
-                    <span class="avatar-initial rounded-circle bg-primary">{{ activity.user.get_initials }}</span>
-                    {% endif %}
-                  </div>
-                  <small>{{ activity.user.get_full_name }}</small>
-                </div>
-                {% endif %}
-              </div>
-            </li>
-            {% empty %}
-            <li class="text-center py-4">
-              <div class="text-muted">
-                <i class="bi bi-calendar-x mb-2" style="font-size: 2rem;"></i>
-                <p>No recent activities</p>
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Additional Features -->
-  <div class="row">
+  <!-- Additional Features in Masonry Layout -->
+  <div class="row" data-masonry='{"percentPosition": true }'>
     <!-- AI Features -->
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0">
@@ -603,7 +462,6 @@
                 Manage Crew
               </a>
                 {% endif %}
-
             </div>
             <div class="col-6">
               <a href="{% url 'events:equipment_config' event.slug %}" class="btn btn-outline-primary w-100 py-3">
@@ -628,39 +486,90 @@
       </div>
     </div>
   </div>
-</div>
 
-<!-- Share Event Modal -->
-<div class="modal fade" id="shareEventModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Share Event</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="eventShareLink" class="form-label">Event Link</label>
-          <div class="input-group">
-            <input type="text" class="form-control" id="eventShareLink" value="{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" readonly>
-            <button class="btn btn-outline-primary" type="button" onclick="copyShareLink()">
-              <i class="bi bi-clipboard"></i>
-            </button>
+  <!-- Upload Photos Modal -->
+  {% if is_organizer or is_crew %}
+  <div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-labelledby="uploadPhotosModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="uploadPhotosModalLabel">Upload Photos</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="modal-body">
+                      <div class="mb-3">
+                          <label class="form-label">Select Photos</label>
+                          <input type="file" name="images" multiple class="form-control" 
+                                 accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
+                                 required>
+                          {% if event.configuration %}
+                          <div class="form-text">
+                              Allowed formats: {{ event.configuration.allowed_formats }}
+                              <br>
+                              Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
+                          </div>
+                          {% endif %}
+                      </div>
+                      <div id="preview-container" class="row g-2">
+                          <!-- Preview images will be inserted here via JavaScript -->
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary">
+                          <i class="bi bi-cloud-upload"></i> Upload Photos
+                      </button>
+                  </div>
+              </form>
           </div>
+      </div>
+  </div>
+  {% endif %}
+
+  <!-- Share Event Modal (was missing) -->
+  <div class="modal fade" id="shareEventModal" tabindex="-1" aria-labelledby="shareEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shareEventModalLabel">Share Event</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="d-flex justify-content-center gap-3 mt-4">
-          <a href="#" class="btn btn-outline-primary rounded-circle p-2" title="Share on Facebook">
-            <i class="bi bi-facebook fs-5"></i>
-          </a>
-          <a href="#" class="btn btn-outline-info rounded-circle p-2" title="Share on Twitter">
-            <i class="bi bi-twitter-x fs-5"></i>
-          </a>
-          <a href="#" class="btn btn-outline-success rounded-circle p-2" title="Share via WhatsApp">
-            <i class="bi bi-whatsapp fs-5"></i>
-          </a>
-          <a href="#" class="btn btn-outline-secondary rounded-circle p-2" title="Share via Email">
-            <i class="bi bi-envelope fs-5"></i>
-          </a>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Event Link</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="eventLink" value="{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" readonly>
+              <button class="btn btn-outline-secondary" type="button" onclick="copyEventLink()">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Event Code</label>
+            <div class="input-group">
+              <input type="text" class="form-control" value="{{ event.event_code }}" readonly>
+              <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('{{ event.event_code }}')">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+            <small class="text-muted">Share this code with participants to join the event</small>
+          </div>
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" target="_blank" class="btn btn-outline-primary">
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a href="https://twitter.com/intent/tweet?url={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}&text=Join%20me%20at%20{{ event.title|urlencode }}" target="_blank" class="btn btn-outline-primary">
+              <i class="bi bi-twitter"></i>
+            </a>
+            <a href="mailto:?subject=Join%20{{ event.title|urlencode }}&body=Hi,%0A%0AI'd%20like%20to%20invite%20you%20to%20{{ event.title|urlencode }}%20on%20{{ event.start_date|date:'M d, Y' }}.%0A%0AClick%20here%20to%20view%20details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}%0A%0AEvent%20code:%20{{ event.event_code }}" class="btn btn-outline-primary">
+              <i class="bi bi-envelope"></i>
+            </a>
+            <a href="https://wa.me/?text=Join%20me%20at%20{{ event.title|urlencode }}!%20Details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug }}%20Code:%20{{ event.event_code }}" target="_blank" class="btn btn-outline-primary">
+              <i class="bi bi-whatsapp"></i>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -669,43 +578,82 @@
 
 <!-- JavaScript for the dashboard -->
 <script>
-  // Toggle AI Features
-  function toggleAIFeatures(slug) {
-    fetch(`/events/${slug}/ai-features/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      const aiFeatureItems = document.querySelectorAll('.ai-feature-item');
-      if (data.enabled) {
-        aiFeatureItems.forEach(item => item.classList.remove('text-muted'));
-      } else {
-        aiFeatureItems.forEach(item => item.classList.add('text-muted'));
-      }
-    });
-  }
+
+    function toggleAIFeatures(eventSlug) {
+      const aiToggle = document.getElementById("aiToggle");
+      const enabled = aiToggle.checked;
+      
+      fetch(`/events/${eventSlug}/ai-features/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken() // Include CSRF token
+        },
+        body: JSON.stringify({
+          feature: "auto_tagging",  // You may modify this based on the feature being toggled
+          enabled: enabled
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "success") {
+          console.log("AI Features updated successfully!");
+        } else {
+          console.error("Error updating AI Features.");
+        }
+      })
+      .catch(error => console.error("Request failed", error));
+    }
+  
+    function getCSRFToken() {
+      return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+  
   
   // Copy share link to clipboard
-  function copyShareLink() {
-    const shareLink = document.getElementById('eventShareLink');
-    shareLink.select();
-    document.execCommand('copy');
+  function copyToClipboard(text) {
+    // Check if the text is defined and not empty
+    if (!text || text.trim() === '') {
+        alert("No event code available to copy.");
+        return;
+    }
     
-    // Show copy feedback
-    const button = shareLink.nextElementSibling;
-    const originalHTML = button.innerHTML;
-    button.innerHTML = '<i class="bi bi-check"></i>';
-    button.classList.replace('btn-outline-primary', 'btn-success');
+    // Use the newer Clipboard API with fallback
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text)
+            .then(function() {
+                alert("Event Code copied: " + text);
+            })
+            .catch(function(error) {
+                console.error("Error copying text: ", error);
+                // Fallback method
+                fallbackCopyToClipboard(text);
+            });
+    } else {
+        // For browsers that don't support clipboard API
+        fallbackCopyToClipboard(text);
+    }
+}
+
+// Fallback method using temporary element
+function fallbackCopyToClipboard(text) {
+    const tempElement = document.createElement('textarea');
+    tempElement.value = text;
+    tempElement.style.position = 'fixed';  // Avoid scrolling to bottom
+    document.body.appendChild(tempElement);
+    tempElement.select();
     
-    setTimeout(() => {
-      button.innerHTML = originalHTML;
-      button.classList.replace('btn-success', 'btn-outline-primary');
-    }, 2000);
-  }
+    try {
+        document.execCommand('copy');
+        alert("Event Code copied: " + text);
+    } catch (err) {
+        console.error('Fallback: Could not copy text: ', err);
+        alert("Failed to copy event code. Please try again.");
+    }
+    
+    document.body.removeChild(tempElement);
+}
   
   // Custom styles for progress circle
   document.addEventListener('DOMContentLoaded', function() {
@@ -720,6 +668,30 @@
     const offset = circumference - (percentage / 100 * circumference);
     circle.style.strokeDashoffset = offset;
   });
+
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const eventShareLink = document.getElementById("eventShareLink");
+    const copyButton = document.getElementById("copyButton");
+
+    copyButton.addEventListener("click", function() {
+      navigator.clipboard.writeText(eventShareLink.value).then(() => {
+        alert("Event link copied to clipboard!");
+      }).catch(err => {
+        console.error("Failed to copy text: ", err);
+      });
+    });
+
+    // Social Media Share Links
+    const eventUrl = encodeURIComponent(eventShareLink.value);
+
+    document.getElementById("facebookShare").href = `https://www.facebook.com/sharer/sharer.php?u=${eventUrl}`;
+    document.getElementById("twitterShare").href = `https://twitter.com/intent/tweet?url=${eventUrl}&text=Check%20out%20this%20event!`;
+    document.getElementById("whatsappShare").href = `https://api.whatsapp.com/send?text=${eventUrl}`;
+    document.getElementById("emailShare").href = `mailto:?subject=Check%20out%20this%20event&body=${eventUrl}`;
+  });
+
+
 </script>
 
 <style>
@@ -808,79 +780,152 @@
 
 
 
-
-
-
-
-
-
-
-
-{% comment "previous" %}
-
-{% extends "events/base.html" %}
-{% block title %}{{ event.title }} - Dashboard{% endblock %}
-
-{% block content %}
-<div class="space-y-6">
-    <!-- Event Header -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold">{{ event.title }}</h1>
-            <span class="px-3 py-1 rounded-full text-sm 
-                {% if event.status == 'ACTIVE' %}bg-green-100 text-green-800
-                {% elif event.status == 'DRAFT' %}bg-yellow-100 text-yellow-800
-                {% elif event.status == 'COMPLETED' %}bg-blue-100 text-blue-800
-                {% else %}bg-red-100 text-red-800{% endif %}">
-                {{ event.get_status_display }}
-            </span>
-        </div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <p class="text-sm text-gray-500">Date & Time</p>
-                <p>{{ event.start_date|date:"M d, Y h:i A" }}</p>
-            </div>
-            <div>
-                <p class="text-sm text-gray-500">Location</p>
-                <p>{{ event.location }}</p>
-            </div>
-            <div>
-                <p class="text-sm text-gray-500">Type</p>
-                <p>{{ event.get_event_type_display }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold mb-2">Crew Members</h3>
-            <p class="text-3xl font-bold">{{ crew_members.count }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold mb-2">Participants</h3>
-            <p class="text-3xl font-bold">{{ participants.count }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold mb-2">Photos</h3>
-            <p class="text-3xl font-bold">{{ event.photos.count }}</p>
-        </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="flex space-x-4">
-        <a href="{% url 'photos:event_gallery' event.slug %}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-            View Gallery
-        </a>
-        {% if is_organizer %}
-        <a href="{% url 'events:crew_management' event.slug %}" 
-           class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-            Manage Crew
-        </a>
-        {% endif %}
-    </div>
-</div>
-{% endblock %}
+{% comment "" %}
  
-{% endcomment %}
+
+
+
+  <!-- Event Progress & Activities in Masonry Layout -->
+  <div class="row" data-masonry='{"percentPosition": true }'>
+    <!-- Progress Section -->
+    <div class="col-12 col-lg-8 mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="row g-0">
+          <div class="col-md-8">
+            <div class="card-header border-0 bg-transparent">
+              <h5 class="mb-0">Event Preparation Progress</h5>
+            </div>
+            <div class="card-body pt-0">
+              <div class="progress-tracker">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Crew Assignment</span>
+                    <span class="text-{% if crew_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ crew_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: {{ crew_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ crew_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Equipment Setup</span>
+                    <span class="text-{% if equipment_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ equipment_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                         style="width: {{ equipment_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ equipment_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Participant Registration</span>
+                    <span class="text-{% if registration_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ registration_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ registration_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ registration_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Venue Preparation</span>
+                    <span class="text-{% if venue_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ venue_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: {{ venue_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ venue_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 d-flex align-items-center bg-light">
+            <div class="p-4 text-center w-100">
+              <div class="mb-3">
+                <h6 class="text-muted mb-1">Overall Completion</h6>
+                <div class="d-inline-block position-relative">
+                  <div class="progress-circle" data-percentage="{{ overall_completion_percentage|default:'0' }}">
+                    <svg class="progress-ring" width="120" height="120">
+                      <circle class="progress-ring-circle bg" stroke="#e9ecef" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+                      <circle class="progress-ring-circle" stroke="{% if overall_completion_percentage > 75 %}#28a745{% elif overall_completion_percentage > 50 %}#17a2b8{% elif overall_completion_percentage > 25 %}#ffc107{% else %}#dc3545{% endif %}" 
+                              stroke-width="8" fill="transparent" r="50" cx="60" cy="60" 
+                              stroke-dasharray="314.16" 
+                              stroke-dashoffset="{{ 314.16|sub:314.16|mul:overall_completion_percentage|div:100 }}"/>
+                            </svg>
+                            <div class="progress-text">{{ overall_completion_percentage|default:"0" }}%</div>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="text-muted mb-0">{{ days_until_event|default:"0" }} days remaining</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        
+            <!-- Recent Activities -->
+            <div class="col-12 col-lg-4 mb-4">
+              <div class="card shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
+                  <h5 class="mb-0">Recent Activities</h5>
+                  <button class="btn btn-sm btn-outline-primary rounded-pill">View All</button>
+                </div>
+                <div class="card-body pt-0">
+                  <ul class="timeline timeline-dashed">
+                    {% for activity in recent_activities|slice:":5" %}
+                    <li class="timeline-item mb-4">
+                      <div class="timeline-point timeline-point-indicator"></div>
+                      <div class="timeline-event">
+                        <div class="d-flex justify-content-between flex-sm-row flex-column mb-sm-0 mb-1">
+                          <h6 class="mb-0">{{ activity.title }}</h6>
+                          <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                        </div>
+                        <p class="mb-0">{{ activity.description }}</p>
+                        {% if activity.user %}
+                        <div class="d-flex align-items-center mt-2">
+                          <div class="avatar avatar-xs me-2">
+                            {% if activity.user.profile_image %}
+                            <img src="{{ activity.user.profile_image.url }}" alt="{{ activity.user.get_full_name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-primary">{{ activity.user.get_initials }}</span>
+                            {% endif %}
+                          </div>
+                          <small>{{ activity.user.get_full_name }}</small>
+                        </div>
+                        {% endif %}
+                      </div>
+                    </li>
+                    {% empty %}
+                    <li class="text-center py-4">
+                      <div class="text-muted">
+                        <i class="bi bi-calendar-x mb-2" style="font-size: 2rem;"></i>
+                        <p>No recent activities</p>
+                      </div>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+  {% endcomment %}

@@ -218,7 +218,7 @@
                           <i class="bx bx-dots-vertical-rounded"></i>
                         </button>
                         <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                          <a class="dropdown-item" href="{% url 'events:request_access' %}">View All Requests</a>
+                          <a class="dropdown-item" href="{% url 'events:access_requests' %}">View All Requests</a>
                         </div>
                       </div>
                     </div>
@@ -305,10 +305,10 @@
                               <a class="dropdown-item" href="{% url 'events:event_detail' event.slug %}">
                                 <i class="bx bx-show-alt me-1"></i> View Details
                               </a>
-                              <a class="dropdown-item" href="">
+                              <a class="dropdown-item" href="{% url 'events:event_edit' event.slug %}">
                                 <i class="bx bx-edit-alt me-1"></i> Edit
                               </a>
-                              <a class="dropdown-item" href="">
+                              <a class="dropdown-item" href="{% url 'events:event_participants' event.slug %}">
                                 <i class="bx bx-group me-1"></i> Manage Participants
                               </a>
                             </div>
@@ -367,37 +367,48 @@
             </div>
           </div>
   
-            <!-- Access Requests -->
-            <div class="col-12 mb-4">
-              <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                  <h5 class="card-title m-0 me-2">Recent Access Requests</h5>
-                  <a href="{% url 'events:access_requests' %}" class="btn btn-primary btn-sm">View All</a>
-                </div>
-  <ul class="p-0 m-0">
-    {% for request in pending_requests|slice:":5" %}
-    <li class="d-flex mb-4 pb-1" id="request-{{ request.id }}">
-      <div class="avatar flex-shrink-0 me-3">
-        {% if request.user.avatar %}
-        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="rounded" />
-        {% else %}
-        <span class="avatar-initial rounded bg-label-primary">{{ request.user.username|first }}</span>
-        {% endif %}
-      </div>
-      <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-        <div class="me-2">
-          <small class="text-muted d-block mb-1">{{ request.get_request_type_display }}</small>
-          <h6 class="mb-0">{{ request.user.username }}</h6>
-        </div>
-        <div>
-          <span class="badge bg-label-warning">Pending</span>
-        </div>
-      </div>
-    </li>
-    {% empty %}
-    <li class="text-center p-3">No pending requests</li>
-    {% endfor %}
-  </ul>
+<!-- Access Requests -->
+<div class="col-12 mb-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-header d-flex align-items-center justify-content-between border-0 bg-transparent">
+      <h5 class="card-title m-0 me-2">Recent Access Requests</h5>
+      <a href="{% url 'events:access_requests' %}" class="btn btn-primary btn-sm rounded-pill">View All</a>
+    </div>
+    <div class="card-body pt-0">
+      <ul class="list-unstyled p-0 m-0">
+        {% for request in pending_requests|slice:":5" %}
+        <li class="d-flex mb-3 pb-2 border-bottom" id="request-{{ request.id }}">
+          <div class="avatar flex-shrink-0 me-3">
+            {% if request.user.avatar %}
+            <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+            {% else %}
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+              {{ request.user.username|first }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+            <div class="me-2">
+              <small class="text-muted d-block mb-1">{{ request.get_request_type_display }}</small>
+              <h6 class="mb-0">{{ request.user.username }}</h6>
+            </div>
+            <div class="d-flex gap-2">
+              <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Pending</span>
+            </div>
+          </div>
+        </li>
+        {% empty %}
+        <li class="text-center py-4">
+          <div class="text-muted">
+            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+            <p>No pending requests</p>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- JavaScript for the access requests list page -->

@@ -133,6 +133,7 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
     template_name = 'events/event_dashboard.html'
     context_object_name = 'event'
 
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = self.get_object()  # Get the event instance
@@ -148,7 +149,7 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
             'participants': event.participants.all(),
             'is_organizer': event.organizer == self.request.user,
             'is_crew': event.crew_members.filter(member=self.request.user).exists(),
-            'photos': photos  # Include the annotated photos
+            'photos': photos 
         })
         return context
 
@@ -213,42 +214,59 @@ class CrewManagementView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['crew_form'] = CrewInvitationForm()
-        context['crew_members'] = self.object.crew_members.all()
+        context['crew_members'] = self.object.crew_members.all().select_related('member')
         return context
     
     def post(self, request, *args, **kwargs):
         event = self.get_object()
-        form = CrewInvitationForm(request.POST)
+        action = request.POST.get('action', 'invite')
         
-        if form.is_valid():
-            # Create pending crew member
-            crew = form.save(commit=False)
-            crew.event = event
-            crew.member = form.cleaned_data['user']  # Use the user we found in form validation
-            crew.is_confirmed = False
-            crew.save()
-            
-            # Generate invitation token
-            signer = TimestampSigner()
-            token = signer.sign(str(crew.id))
-            
-            # Generate invitation URL
-            invite_url = request.build_absolute_uri(
-                reverse('events:accept_crew_invitation', kwargs={'token': token})
-            )
-            
-            # Here you would typically send notification to the user
-            # For now, we'll just add a message with the URL
-            messages.success(
-                request, 
-                f'Invitation sent to {crew.member.username}. They can accept it at: {invite_url}'
-            )
-            
+        if action == 'delete':
+            # Handle crew member deletion
+            crew_id = request.POST.get('crew_id')
+            if crew_id:
+                try:
+                    crew_member = event.crew_members.get(id=crew_id)
+                    username = crew_member.member.username
+                    crew_member.delete()
+                    messages.success(request, f'Crew member {username} has been removed successfully.')
+                except CrewMember.DoesNotExist:
+                    messages.error(request, 'Crew member not found.')
             return redirect('events:crew_management', slug=event.slug)
+            
+        elif action == 'invite':
+            # Handle crew invitation (existing functionality)
+            form = CrewInvitationForm(request.POST)
+            
+            if form.is_valid():
+                # Create pending crew member
+                crew = form.save(commit=False)
+                crew.event = event
+                crew.member = form.cleaned_data['user']  # Use the user we found in form validation
+                crew.is_confirmed = False
+                crew.save()
+                
+                # Generate invitation token
+                signer = TimestampSigner()
+                token = signer.sign(str(crew.id))
+                
+                # Generate invitation URL
+                invite_url = request.build_absolute_uri(
+                    reverse('events:accept_crew_invitation', kwargs={'token': token})
+                )
+                
+                # Here you would typically send notification to the user
+                # For now, we'll just add a message with the URL
+                messages.success(
+                    request, 
+                    f'Invitation sent to {crew.member.username}. They can accept it at: {invite_url}'
+                )
+                
+                return redirect('events:crew_management', slug=event.slug)
         
-        # If form is invalid, return to the page with errors
+        # If form is invalid or action not recognized, return to the page with errors
         context = self.get_context_data()
-        context['crew_form'] = form
+        context['crew_form'] = form if action == 'invite' else CrewInvitationForm()
         return self.render_to_response(context)
 
 def accept_crew_invitation(request, token):
@@ -382,18 +400,32 @@ def create_temp_profile(request, slug):
         return redirect('photos:event_gallery', slug=slug)
     return render(request, 'events/create_temp_profile.html', {'event': event})
 
-# AI Feature Management
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt  # Temporarily disable CSRF for testing; remove later!
 @login_required
 def toggle_ai_features(request, slug):
-    event = get_object_or_404(Event, slug=slug, organizer=request.user)
-    feature = request.POST.get('feature')
-    enabled = request.POST.get('enabled') == 'true'
+    if request.method != "POST":
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
     
-    if feature in ['face_detection', 'moment_detection', 'auto_tagging']:
-        setattr(event, f'enable_{feature}', enabled)
-        event.save()
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'}, status=400)
+    try:
+        data = json.loads(request.body)
+        feature = data.get('feature')
+        enabled = data.get('enabled', False)
+
+        event = get_object_or_404(Event, slug=slug, organizer=request.user)
+
+        if feature in ['face_detection', 'moment_detection', 'auto_tagging']:
+            setattr(event, f'enable_{feature}', enabled)
+            event.save()
+            return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'error', 'message': 'Invalid feature'}, status=400)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+
 
 class EventListView(ListView):
     model = Event

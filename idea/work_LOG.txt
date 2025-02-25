@@ -45,6 +45,35 @@ photo comment section problem solved
 event setup added
 
 
+2 30am
+photos app created
+
+9pm
+moved the models related to photos to the app photos
+
+10 40pm
+modified event dashboard, request list, crewmanagement templates
+
+
+11 40
+modified event share feature.
+AI features toggle button view corrected on event dashboard.
+event dashboard layout redesigned
+share event upgraded with social media share 
+added photo carousel in dashboard
+
+
+12midnight
+gallery modified
+
+
+
+
+
+
+
+
+
 
 
 =========================      TODOs
@@ -54,4 +83,10 @@ Dashboard AI features toggle is not working
 
 add the missing urls to dashboard
 
+update the missing alert types
 
+add all-Participants and all-photographers page
+
+add the notifications and connections section on the profile page
+
+check the error on crewmanagement view

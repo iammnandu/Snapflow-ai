@@ -1,7 +1,6 @@
 {% extends "users/db_base.html" %}
 {% load static %}
-{% block title %}Crew Management - {{ event.title }}{% endblock %}
-
+{% block title %}Access Requests - Event Management{% endblock %}
 
 {% block content %}
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -38,21 +37,32 @@
           <div class="col-md-8">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="card-title mb-0">{{ request.user.username }}</h5>
+                <h5 class="card-title mb-0">{{ request.user.get_full_name|default:request.user.username }}</h5>
                 <span class="badge bg-label-warning">{{ request.get_request_type_display }}</span>
               </div>
-              <p class="card-text">{{ request.message }}</p>
+              <p class="card-text">{{ request.message|truncatechars:100 }}</p>
               <div class="d-flex justify-content-between align-items-center">
                 <p class="card-text"><small class="text-muted">Requested {{ request.created_at|timesince }} ago</small></p>
-                <div class="btn-group">
-                  <form method="POST" action="{% url 'events:approve_request' request.id %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success btn-sm me-2">Approve</button>
-                  </form>
-                  <form method="POST" action="{% url 'events:reject_request' request.id %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                  </form>
+                <div>
+                  <button 
+                    class="btn btn-outline-primary btn-sm me-2" 
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#userDetails{{ request.id }}"
+                    aria-controls="userDetails{{ request.id }}"
+                  >
+                    <i class="bx bx-user me-1"></i>User Details
+                  </button>
+                  <div class="btn-group">
+                    <form method="POST" action="{% url 'events:approve_request' request.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-success btn-sm me-2">Approve</button>
+                    </form>
+                    <form method="POST" action="{% url 'events:reject_request' request.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
@@ -60,8 +70,181 @@
         </div>
       </div>
     </div>
+    
+    <!-- Offcanvas for User Details -->
+    <div 
+      class="offcanvas offcanvas-end" 
+      tabindex="-1" 
+      id="userDetails{{ request.id }}" 
+      aria-labelledby="userDetailsLabel{{ request.id }}"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="userDetailsLabel{{ request.id }}">User Profile</h5>
+        <button 
+          type="button" 
+          class="btn-close text-reset" 
+          data-bs-dismiss="offcanvas" 
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <div class="text-center mb-4">
+          {% if request.user.avatar %}
+          <img 
+            src="{{ request.user.avatar.url }}" 
+            alt="{{ request.user.username }}" 
+            class="rounded-circle"
+            width="120"
+            height="120"
+            style="object-fit: cover;"
+          />
+          {% else %}
+          <div 
+            class="avatar-initial d-flex align-items-center justify-content-center bg-label-primary rounded-circle mx-auto"
+            style="width: 120px; height: 120px; font-size: 3rem;"
+          >
+            {{ request.user.username|first|upper }}
+          </div>
+          {% endif %}
+          <h4 class="mt-3">{{ request.user.get_full_name|default:request.user.username }}</h4>
+          <p class="text-muted">@{{ request.user.username }}</p>
+        </div>
+        
+        <div class="mb-4">
+          <h6 class="fw-bold">Personal Information</h6>
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Full Name:</div>
+                <div class="col-7">{{ request.user.username|default:"Not provided" }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Email:</div>
+                <div class="col-7">{{ request.user.email }}</div>
+              </div>
+              {% if request.user.phone %}
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Phone:</div>
+                <div class="col-7">{{ request.user.phone }}</div>
+              </div>
+              {% endif %}
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Member Since:</div>
+                <div class="col-7">{{ request.user.date_joined|date:"F j, Y" }}</div>
+              </div>
+              {% if request.user.bio %}
+              <div class="row">
+                <div class="col-12 fw-semibold">Bio:</div>
+                <div class="col-12 mt-1">{{ request.user.bio }}</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <h6 class="fw-bold">Request Details</h6>
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Request Type:</div>
+                <div class="col-7">
+                  <span class="badge bg-label-warning">{{ request.get_request_type_display }}</span>
+                </div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Event:</div>
+                <div class="col-7">{{ request.event.title }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Requested:</div>
+                <div class="col-7">{{ request.created_at|date:"F j, Y - H:i" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-12 fw-semibold">Message:</div>
+                <div class="col-12 mt-1">{{ request.message }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {% if request.user.portfolio_url or request.user.social_links %}
+        <div class="mb-4">
+          <h6 class="fw-bold">Portfolio & Social Media</h6>
+          <div class="card">
+            <div class="card-body">
+              {% if request.user.portfolio_url %}
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Portfolio:</div>
+                <div class="col-7">
+                  <a href="{{ request.user.portfolio_url }}" target="_blank">
+                    {{ request.user.portfolio_url }}
+                    <i class="bx bx-link-external ms-1"></i>
+                  </a>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if request.user.social_links %}
+              <div class="row">
+                <div class="col-5 fw-semibold">Social Media:</div>
+                <div class="col-7">
+                  {% for platform, link in request.user.social_links.items %}
+                  <div>
+                    <i class="bx bxl-{{ platform|lower }} me-1"></i>
+                    <a href="{{ link }}" target="_blank">{{ platform }}</a>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+        <div class="d-grid gap-2">
+          <div class="row">
+            <div class="col-6">
+              <form method="POST" action="{% url 'events:approve_request' request.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success w-100">
+                  <i class="bx bx-check me-1"></i>Approve Request
+                </button>
+              </form>
+            </div>
+            <div class="col-6">
+              <form method="POST" action="{% url 'events:reject_request' request.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger w-100">
+                  <i class="bx bx-x me-1"></i>Reject Request
+                </button>
+              </form>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary" 
+            data-bs-dismiss="offcanvas"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
     {% endif %}
     {% endfor %}
+    
+    {% if not access_requests or not access_requests|dictsortreversed:"status" %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="bx bx-info-circle fs-1 text-muted mb-2"></i>
+          <p class="mb-0">No pending requests at the moment.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
   <!-- Past Requests -->
@@ -93,22 +276,202 @@
           <div class="col-md-8">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="card-title mb-0">{{ request.user.get_full_name }}</h5>
+                <h5 class="card-title mb-0">{{ request.user.get_full_name|default:request.user.username }}</h5>
                 <span class="badge {% if request.status == 'APPROVED' %}bg-label-success{% else %}bg-label-danger{% endif %}">
                   {{ request.get_status_display }}
                 </span>
               </div>
-              <p class="card-text">{{ request.message }}</p>
-              <p class="card-text">
-                <small class="text-muted">{{ request.get_request_type_display }} • Updated {{ request.updated_at|timesince }} ago</small>
-              </p>
+              <p class="card-text">{{ request.message|truncatechars:100 }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <p class="card-text">
+                  <small class="text-muted">{{ request.get_request_type_display }} • Updated {{ request.updated_at|timesince }} ago</small>
+                </p>
+                <button 
+                  class="btn btn-outline-primary btn-sm" 
+                  type="button"
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#userDetails{{ request.id }}"
+                  aria-controls="userDetails{{ request.id }}"
+                >
+                  <i class="bx bx-user me-1"></i>User Details
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    
+    <!-- Offcanvas for User Details (Past Requests) -->
+    <div 
+      class="offcanvas offcanvas-end" 
+      tabindex="-1" 
+      id="userDetails{{ request.id }}" 
+      aria-labelledby="userDetailsLabel{{ request.id }}"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="userDetailsLabel{{ request.id }}">User Profile</h5>
+        <button 
+          type="button" 
+          class="btn-close text-reset" 
+          data-bs-dismiss="offcanvas" 
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <div class="text-center mb-4">
+          {% if request.user.avatar %}
+          <img 
+            src="{{ request.user.avatar.url }}" 
+            alt="{{ request.user.username }}" 
+            class="rounded-circle"
+            width="120"
+            height="120"
+            style="object-fit: cover;"
+          />
+          {% else %}
+          <div 
+            class="avatar-initial d-flex align-items-center justify-content-center bg-label-primary rounded-circle mx-auto"
+            style="width: 120px; height: 120px; font-size: 3rem;"
+          >
+            {{ request.user.username|first|upper }}
+          </div>
+          {% endif %}
+          <h4 class="mt-3">{{ request.user.get_full_name|default:request.user.username }}</h4>
+          <p class="text-muted">@{{ request.user.username }}</p>
+        </div>
+        
+        <div class="mb-4">
+          <h6 class="fw-bold">Personal Information</h6>
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Full Name:</div>
+                <div class="col-7">{{ request.user.get_full_name|default:"Not provided" }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Email:</div>
+                <div class="col-7">{{ request.user.email }}</div>
+              </div>
+              {% if request.user.phone %}
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Phone:</div>
+                <div class="col-7">{{ request.user.phone }}</div>
+              </div>
+              {% endif %}
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Member Since:</div>
+                <div class="col-7">{{ request.user.date_joined|date:"F j, Y" }}</div>
+              </div>
+              {% if request.user.bio %}
+              <div class="row">
+                <div class="col-12 fw-semibold">Bio:</div>
+                <div class="col-12 mt-1">{{ request.user.bio }}</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <h6 class="fw-bold">Request Details</h6>
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Request Type:</div>
+                <div class="col-7">
+                  <span class="badge {% if request.status == 'APPROVED' %}bg-label-success{% else %}bg-label-danger{% endif %}">
+                    {{ request.get_request_type_display }}
+                  </span>
+                </div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Status:</div>
+                <div class="col-7">
+                  <span class="badge {% if request.status == 'APPROVED' %}bg-label-success{% else %}bg-label-danger{% endif %}">
+                    {{ request.get_status_display }}
+                  </span>
+                </div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Event:</div>
+                <div class="col-7">{{ request.event.title }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Requested:</div>
+                <div class="col-7">{{ request.created_at|date:"F j, Y - H:i" }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Updated:</div>
+                <div class="col-7">{{ request.updated_at|date:"F j, Y - H:i" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-12 fw-semibold">Message:</div>
+                <div class="col-12 mt-1">{{ request.message }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {% if request.user.portfolio_url or request.user.social_links %}
+        <div class="mb-4">
+          <h6 class="fw-bold">Portfolio & Social Media</h6>
+          <div class="card">
+            <div class="card-body">
+              {% if request.user.portfolio_url %}
+              <div class="row mb-2">
+                <div class="col-5 fw-semibold">Portfolio:</div>
+                <div class="col-7">
+                  <a href="{{ request.user.portfolio_url }}" target="_blank">
+                    {{ request.user.portfolio_url }}
+                    <i class="bx bx-link-external ms-1"></i>
+                  </a>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if request.user.social_links %}
+              <div class="row">
+                <div class="col-5 fw-semibold">Social Media:</div>
+                <div class="col-7">
+                  {% for platform, link in request.user.social_links.items %}
+                  <div>
+                    <i class="bx bxl-{{ platform|lower }} me-1"></i>
+                    <a href="{{ link }}" target="_blank">{{ platform }}</a>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+        <div class="d-grid">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary" 
+            data-bs-dismiss="offcanvas"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
     {% endif %}
     {% endfor %}
+    
+    {% if not access_requests or access_requests|dictsortreversed:"status" %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="bx bx-history fs-1 text-muted mb-2"></i>
+          <p class="mb-0">No past requests to display.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

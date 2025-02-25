@@ -254,7 +254,7 @@
                 const photoId = this.dataset.photoId;
                 
                 try {
-                    const response = await fetch(`/events/photo/${photoId}/like/`, {
+                    const response = await fetch(`/photos/photo/${photoId}/like/`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -296,7 +296,7 @@
                 if (!comment) return;
                 
                 try {
-                    const response = await fetch(`/events/photo/${photoId}/action/`, {
+                    const response = await fetch(`/photos/photo/${photoId}/action/`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -342,7 +342,7 @@
             if (!commentToDelete) return;
             
             try {
-                const response = await fetch(`/events/comment/${commentToDelete}/delete/`, {
+                const response = await fetch(`/photos/comment/${commentToDelete}/delete/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -380,7 +380,7 @@
         // Function to refresh comments
         async function refreshComments(photoId) {
             try {
-                const response = await fetch(`/events/photo/${photoId}/comments/`);
+                const response = await fetch(`/photos/photo/${photoId}/comments/`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
@@ -421,8 +421,8 @@
             div.innerHTML = `
                 <div class="d-flex">
                     <div class="avatar me-3">
-                        ${comment.profile_picture ? 
-                            `<img src="${comment.profile_picture}" 
+                        ${comment.avatar ? 
+                            `<img src="${comment.avatar}" 
                                  class="rounded-circle" width="32" height="32" alt="Profile picture">` : 
                             `<div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" 
                                  style="width: 32px; height: 32px;">
