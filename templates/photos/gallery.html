@@ -21,7 +21,7 @@
         <span class="menu-header-text">Quick Actions</span>
       </li>
       <li class="menu-item">
-        <a href="{% url 'events:event_gallery' event.slug %} " class="menu-link">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
           <i class="menu-icon tf-icons bx bx-dock-top"></i>
           <div>View Gallery</div>
         </a>
@@ -190,11 +190,11 @@
                                 {{ photo.upload_date|date:"M d, Y" }}
                             </small>
                             <div class="d-flex gap-2">
-                                <a href="{% url 'events:photo_detail' photo.id %}" class="btn btn-primary btn-sm">
+                                <a href="{% url 'photos:photo_detail' photo.id %}" class="btn btn-primary btn-sm">
                                     <i class='bx bx-show'></i>
                                 </a>
                                 {% if request.user == event.organizer or request.user in event.crew_members.all %}
-                                <form method="POST" action="{% url 'events:delete_photo' photo.id %}" class="d-inline">
+                                <form method="POST" action="{% url 'photos:delete_photo' photo.id %}" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm" 
                                             onclick="return confirm('Are you sure you want to delete this photo?')">
@@ -267,7 +267,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{% url 'events:upload_photos' event.slug %}" 
+            <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" 
                   enctype="multipart/form-data" id="upload-form">
                 {% csrf_token %}
                 <div class="modal-body">

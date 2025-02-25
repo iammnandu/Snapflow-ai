@@ -22,7 +22,7 @@
         <span class="menu-header-text">Quick Actions</span>
       </li>
       <li class="menu-item">
-        <a href="{% url 'events:event_gallery' event.slug %} " class="menu-link">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
           <i class="menu-icon tf-icons bx bx-dock-top"></i>
           <div>View Gallery</div>
         </a>
@@ -64,7 +64,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <a href="{% url 'events:event_gallery' photo.event.slug %}" class="btn btn-outline-primary">
+                <a href="{% url 'photos:event_gallery' photo.event.slug %}" class="btn btn-outline-primary">
                     <i class='bx bx-arrow-back me-2'></i>Back to Gallery
                 </a>
                 
@@ -213,7 +213,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <form method="POST" action="{% url 'events:delete_photo' photo.id %}">
+                    <form method="POST" action="{% url 'photos:delete_photo' photo.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">Delete Photo</button>
                     </form>

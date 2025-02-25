@@ -1,29 +1,29 @@
-#events/views.py
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from django.urls import reverse_lazy
 from django.contrib import messages
-from django.http import Http404, JsonResponse
-from django.db.models import Q
+from django.core.exceptions import PermissionDenied
+from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
+from django.db.models import Q, Sum
+from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
+from django.urls import reverse, reverse_lazy
 from django.utils.crypto import get_random_string
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import FormView
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-
+from django.views.decorators.http import require_http_methods
+from django.views.generic import (
+    ListView, DetailView, CreateView, UpdateView, FormView, View
+)
+from django.views.generic.edit import UpdateView
 
 from .models import (
-    Event, EventAccessRequest, EventCrew, EventParticipant, EventConfiguration,
-    EventTheme
+    Event, EventAccessRequest, EventCrew, EventParticipant, EventConfiguration, EventTheme
 )
 from .forms import (
     EventAccessRequestForm, EventCreationForm, EventConfigurationForm, CrewInvitationForm,
     ParticipantInvitationForm, EventThemeForm, PrivacySettingsForm
 )
 
-# Event Creation and Management Views
+
 class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventCreationForm
@@ -128,8 +128,6 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return reverse('events:event_detail', kwargs={'slug': event.slug})
 
 
-from django.db.models import Sum
-
 class EventDashboardView(LoginRequiredMixin, DetailView):
     model = Event
     template_name = 'events/event_dashboard.html'
@@ -154,7 +152,6 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
         })
         return context
 
-from django.http import HttpResponseForbidden
 
 class EventParticipantsView(LoginRequiredMixin, DetailView):
     model = Event
@@ -205,12 +202,6 @@ class EventParticipantsView(LoginRequiredMixin, DetailView):
         return context
     
     
-# views.py
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib import messages
-from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
-from django.urls import reverse
-
 class CrewManagementView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Event
     template_name = 'events/crew_management.html'
@@ -284,7 +275,6 @@ def accept_crew_invitation(request, token):
         return redirect('events:event_list')
 
 
-# Equipment Configuration View
 class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
     model = EventCrew
     template_name = 'events/equipment_config.html'
@@ -375,7 +365,7 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
             
         return context
 
-# Event Access Views
+
 @login_required
 def create_temp_profile(request, slug):
     event = get_object_or_404(Event, slug=slug)
@@ -389,7 +379,7 @@ def create_temp_profile(request, slug):
             registration_code=get_random_string(20)
         )
         messages.success(request, 'Temporary profile created successfully!')
-        return redirect('events:event_gallery', slug=slug)
+        return redirect('photos:event_gallery', slug=slug)
     return render(request, 'events/create_temp_profile.html', {'event': event})
 
 # AI Feature Management
@@ -459,8 +449,6 @@ class EventListView(ListView):
         context['total_events_count'] = registered_events.count() + public_events.count()
         
         return context
-    
-
 
 class RequestEventAccessView(LoginRequiredMixin, FormView):
     template_name = 'events/request_access.html'
@@ -491,13 +479,6 @@ class RequestEventAccessView(LoginRequiredMixin, FormView):
         messages.success(self.request, 'Access request sent successfully')
         return super().form_valid(form)
 
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
-from django.core.exceptions import PermissionDenied
-from django.views.decorators.http import require_http_methods
-from django.db.models import F
-import json
 
 @login_required
 @require_http_methods(["POST"])
@@ -572,8 +553,6 @@ def handle_access_request(request, request_id):
             'message': 'An unexpected error occurred'
         }, status=500)
 
-# events/views.py (Add or update this view)
-
 @login_required
 def request_access(request):
     """Simple form to request access to an event using event code"""
@@ -594,7 +573,7 @@ def request_access(request):
                 
             if EventParticipant.objects.filter(event=event, user=request.user).exists():
                 messages.info(request, 'You are already a participant in this event.')
-                return redirect('events:event_gallery', slug=event.slug)
+                return redirect('photos:event_gallery', slug=event.slug)
             
             # Check if request already exists
             if EventAccessRequest.objects.filter(event=event, user=request.user).exists():
@@ -614,8 +593,6 @@ def request_access(request):
             messages.error(request, 'Invalid event code. Please check and try again.')
     
     return redirect('users:dashboard')
-
-
 
 def access_requests(request):
     access_requests = EventAccessRequest.objects.filter(
@@ -701,10 +678,7 @@ def reject_request(request, request_id):
     
     return redirect('events:access_requests')
 
-from django.views.generic.edit import UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.contrib import messages
+
 
 class EventUpdateView(LoginRequiredMixin, UpdateView):
     model = Event
@@ -724,200 +698,6 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         return response
     
 
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import DetailView, View
-from django.http import JsonResponse
-from django.contrib import messages
-from django.core.paginator import Paginator
-from .models import Event, EventPhoto, PhotoLike, PhotoComment
-
-class EventGalleryView(DetailView):
-    model = Event
-    template_name = 'events/gallery.html'
-    context_object_name = 'event'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        event = self.get_object()
-        
-        # Get photos with pagination
-        photos = event.photos.all().order_by('-upload_date')
-        paginator = Paginator(photos, 12)  # Show 12 photos per page
-        page = self.request.GET.get('page')
-        photos = paginator.get_page(page)
-        
-        # Check user permissions
-        can_upload = False
-        if self.request.user.is_authenticated:
-            can_upload = (
-                event.organizer == self.request.user or 
-                event.crew_members.filter(member=self.request.user).exists() or 
-                event.allow_guest_upload
-            )
-        
-        context.update({
-            'photos': photos,
-            'can_upload': can_upload,
-            'can_download': event.configuration.enable_download,
-            'enable_comments': event.configuration.enable_comments,
-            'enable_likes': event.configuration.enable_likes,
-        })
-        return context
-
-class UploadPhotosView(LoginRequiredMixin, View):
-    def post(self, request, slug):
-        event = get_object_or_404(Event, slug=slug)
-        
-        # Check permissions
-        if not (event.organizer == request.user or 
-                event.crew_members.filter(member=request.user).exists() or 
-                event.allow_guest_upload):
-            messages.error(request, "You don't have permission to upload photos.")
-            return redirect('events:event_gallery', slug=slug)
-        
-        images = request.FILES.getlist('images')
-        
-        # Validate files
-        for image in images:
-            # Check file size
-            if image.size > event.configuration.max_upload_size:
-                messages.error(request, f"File {image.name} is too large.")
-                continue
-                
-            # Check file extension
-            ext = image.name.split('.')[-1].lower()
-            if ext not in event.configuration.allowed_formats.split(','):
-                messages.error(request, f"File {image.name} has an invalid format.")
-                continue
-            
-            # Create photo
-            photo = EventPhoto.objects.create(
-                event=event,
-                image=image,
-                uploaded_by=request.user
-            )
-        
-        messages.success(request, f"{len(images)} photos uploaded successfully.")
-        return redirect('events:event_gallery', slug=slug)
-
-
-@login_required
-def photo_comments(request, pk):
-    photo = get_object_or_404(EventPhoto, pk=pk)
-    comments = photo.comments.all()[:10]  # Fetch the 10 most recent comments
-    
-    comments_data = []
-    for comment in comments:
-        comments_data.append({
-            'id': comment.id,
-            'comment': comment.comment,
-            'user_name': comment.user.get_full_name() or comment.user.username,
-            'user_initials': comment.user.get_initials() if hasattr(comment.user, 'get_initials') else '',
-            'profile_picture': comment.user.profile_picture.url if hasattr(comment.user, 'profile_picture') and comment.user.profile_picture else None,
-            'created_at': comment.created_at.strftime('%m/%d/%Y %H:%M'),
-            'can_delete': request.user == comment.user or request.user == photo.event.organizer
-        })
-    
-    return JsonResponse({
-        'status': 'success',
-        'comments': comments_data
-    })
-
-
-class PhotoDetailView(DetailView):
-    model = EventPhoto
-    template_name = 'events/photo_detail.html'
-    context_object_name = 'photo'
-    
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        photo = self.get_object()
-        context['event'] = photo.event
-        # Increment view count
-        photo.view_count += 1
-        photo.save()
-        
-        context['can_download'] = photo.event.configuration.enable_download
-        
-        # Check if user has liked the photo
-        if self.request.user.is_authenticated:
-            context['user_liked'] = PhotoLike.objects.filter(
-                photo=photo, user=self.request.user
-            ).exists()
-        
-        return context
-
-class PhotoActionView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        photo = get_object_or_404(EventPhoto, pk=pk)
-        action = request.POST.get('action')
-        
-        if action == 'like':
-            # Check if user has already liked the photo
-            like = PhotoLike.objects.filter(photo=photo, user=request.user).first()
-            
-            if like:
-                # Unlike the photo
-                like.delete()
-                photo.like_count = F('like_count') - 1
-                photo.save()
-                liked = False
-            else:
-                # Like the photo
-                PhotoLike.objects.create(photo=photo, user=request.user)
-                photo.like_count = F('like_count') + 1
-                photo.save()
-                liked = True
-            
-            # Refresh from db to get the updated like count
-            photo.refresh_from_db()
-            
-            return JsonResponse({
-                'status': 'success',
-                'like_count': photo.like_count,
-                'liked': liked
-            })
-            
-        elif action == 'comment':
-            comment = request.POST.get('comment')
-            if comment:
-                PhotoComment.objects.create(
-                    photo=photo,
-                    user=request.user,
-                    comment=comment
-                )
-                return JsonResponse({
-                    'status': 'success',
-                    'message': 'Comment added successfully'
-                })
-        
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid action'
-        })
-
-class DeletePhotoView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        photo = get_object_or_404(EventPhoto, pk=pk)
-        event = photo.event
-        
-        # Check permissions
-        if not (event.organizer == request.user or 
-                event.crew_members.filter(member=request.user, role='LEAD').exists()):
-            messages.error(request, "You don't have permission to delete photos.")
-            return redirect('events:event_gallery', slug=event.slug)
-        
-        photo.delete()
-        messages.success(request, "Photo deleted successfully.")
-        return redirect('events:event_gallery', slug=event.slug)
-    
-
-
-from django.core.exceptions import PermissionDenied
-
 def user_can_access_event(user, event):
     return (
         user.is_authenticated and (
@@ -928,24 +708,11 @@ def user_can_access_event(user, event):
         )
     )
 
-
-
 def get_object(self, queryset=None):
     event = super().get_object(queryset)
     if not user_can_access_event(self.request.user, event):
         raise PermissionDenied
     return event
-
-
-
-
-# Additional view classes for events/views.py
-
-from django.views.generic import FormView, View
-from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
-from django.contrib import messages
-from django.utils.crypto import get_random_string
 
 class AddParticipantView(LoginRequiredMixin, FormView):
     template_name = 'events/event_participants.html'  # Not used directly

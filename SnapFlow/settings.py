@@ -160,7 +160,7 @@ LOGOUT_REDIRECT_URL = 'users:login'
 LOGIN_URL = 'users:login'
 
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 load_dotenv()
 
