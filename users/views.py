@@ -126,7 +126,7 @@ def dashboard(request):
     context = {}
     
     # Common data for all users
-    user_requests = EventAccessRequest.objects.filter(user=user,status='PENDING')
+    user_requests = EventAccessRequest.objects.filter(user=user, status='PENDING')
     context['user_requests'] = user_requests
     
     template_name = 'users/dashboard.html'  # Default template
@@ -157,16 +157,64 @@ def dashboard(request):
         # Get photographer's event assignments
         crew_memberships = EventCrew.objects.filter(member=user)
         
+        # to calculate monthly photo data
+        monthly_photo_data = []
+        current_year = timezone.now().year
+
+        # Get monthly counts for the current year
+        for month in range(1, 13):
+            count = EventPhoto.objects.filter(
+                uploaded_by=user,
+                upload_date__year=current_year,
+                upload_date__month=month
+            ).count()
+            monthly_photo_data.append(count)
+
         # Calculate statistics
         total_photos = EventPhoto.objects.filter(uploaded_by=user).count()
         upcoming_events = crew_memberships.filter(
             event__start_date__gt=timezone.now()
         ).count()
         
+        # Calculate monthly photos
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        monthly_photos = EventPhoto.objects.filter(
+            uploaded_by=user,
+            upload_date__month=current_month,
+            upload_date__year=current_year
+        ).count()
+        
+        # Calculate yearly photos
+        yearly_photos = EventPhoto.objects.filter(
+            uploaded_by=user,
+            upload_date__year=current_year
+        ).count()
+        
+        # Calculate last year's photos for comparison
+        last_year_photos = EventPhoto.objects.filter(
+            uploaded_by=user,
+            upload_date__year=current_year-1
+        ).count()
+        
+        # Calculate growth percentage
+        growth_percentage = 0
+        if last_year_photos > 0:
+            growth_percentage = int((yearly_photos - last_year_photos) / last_year_photos * 100)
+        
+        # Get total events the photographer has worked on
+        total_events = EventCrew.objects.filter(member=user).values('event').distinct().count()
+        
         context.update({
             'crew_memberships': crew_memberships,
             'total_photos': total_photos,
             'upcoming_events': upcoming_events,
+            'monthly_photos': monthly_photos,
+            'yearly_photos': yearly_photos,
+            'last_year_photos': last_year_photos,
+            'growth_percentage': growth_percentage,
+            'total_events': total_events,
+            'monthly_photo_data': monthly_photo_data,
         })
         template_name = 'users/dashboard_photographer.html'
         

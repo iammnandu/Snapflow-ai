@@ -75,7 +75,9 @@ footer added
 
 request list for photographer is done
 
-
+2pm
+photographer dashboard updated
+photographer stats graph implemented
 
 
 

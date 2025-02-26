@@ -2,314 +2,525 @@
 {% load static %}
 
 {% block content %}
-
-
 <!-- Content wrapper -->
 <div class="content-wrapper">
-    <!-- Content -->
-    <div class="container-xxl flex-grow-1 container-p-y">
-      <div class="row">
-        <div class="col-lg-8 mb-4 order-0">
-          <div class="card">
-            <div class="d-flex align-items-end row">
-              <div class="col-sm-7">
-                <div class="card-body">
-                  <h5 class="card-title text-primary">Welcome {{ user.username }}! 📸</h5>
-                  <p class="mb-4">
-                    You have <span class="fw-bold">{{ upcoming_events }}</span> upcoming events and 
-                    <span class="fw-bold">{{ total_photos }}</span> photos uploaded.
-                  </p>
-                  <a href="" class="btn btn-sm btn-primary">Upload Photos</a>
-                </div>
+  <!-- Content -->
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Masonry layout container -->
+    <div class="masonry-grid">
+      <!-- Welcome Card - Full width on top -->
+      <div class="masonry-item masonry-item-wide">
+        <div class="card">
+          <div class="d-flex align-items-end row">
+            <div class="col-sm-7">
+              <div class="card-body">
+                <h5 class="card-title text-primary">Welcome {{ user.username }}! 📸</h5>
+                <p class="mb-4">
+                  You have <span class="fw-bold">{{ upcoming_events }}</span> upcoming events and 
+                  <span class="fw-bold">{{ total_photos }}</span> photos uploaded.
+                </p>
+                <a href="" class="btn btn-sm btn-primary">Upload Photos</a>
               </div>
-              <div class="col-sm-5 text-center text-sm-left">
-                <div class="card-body pb-0 px-0 px-md-4">
-                  <img
-                    src="{% static 'users/assets/img/illustrations/man-with-laptop-light.png' %}"
-                    height="140"
-                    alt="Photographer"
-                    data-app-dark-img="illustrations/man-with-laptop-light.png-dark.png"
-                    data-app-light-img="illustrations/man-with-laptop-light.png-light.png"
-                  />
-                </div>
+            </div>
+            <div class="col-sm-5 text-center text-sm-left">
+              <div class="card-body pb-0 px-0 px-md-4">
+                <img
+                  src="{% static 'users/assets/img/illustrations/man-with-laptop-light.png' %}"
+                  height="140"
+                  alt="Photographer"
+                  data-app-dark-img="illustrations/man-with-laptop-light.png-dark.png"
+                  data-app-light-img="illustrations/man-with-laptop-light.png-light.png"
+                />
               </div>
             </div>
           </div>
         </div>
-        
-        <div class="col-lg-4 col-md-4 order-1">
-          <div class="row">
-            
-            <div class="col-lg-6 col-md-12 col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img
-                        src="{% static 'users/assets/img/icons/unicons/chart-success.png' %}"
-                        alt="chart success"
-                        class="rounded"
-                      />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt3"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                        <a class="dropdown-item" href="">View All Photos</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="fw-semibold d-block mb-1">Total Photos</span>
-                  <h3 class="card-title mb-2">{{ total_photos }}</h3>
-                  <small class="text-success fw-semibold"><i class="bx bx-image"></i> Across all events</small>
+      </div>
+
+      <!-- Stats Cards - 2 in a row -->
+      <div class="masonry-item">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title d-flex align-items-start justify-content-between">
+              <div class="avatar flex-shrink-0">
+                <img
+                  src="{% static 'users/assets/img/icons/unicons/chart-success.png' %}"
+                  alt="chart success"
+                  class="rounded"
+                />
+              </div>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="cardOpt3"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
+                  <a class="dropdown-item" href="">View All Photos</a>
                 </div>
               </div>
             </div>
-            <div class="col-lg-6 col-md-12 col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img
-                        src="{% static 'users/assets/img/icons/unicons/wallet-info.png' %}"
-                        alt="Events"
-                        class="rounded"
-                      />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt6"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                        <a class="dropdown-item" href="{% url 'events:event_list' %}">View All Events</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span>Upcoming Events</span>
-                  <h3 class="card-title text-nowrap mb-1">{{ upcoming_events }}</h3>
-                  <small class="text-success fw-semibold"><i class="bx bx-calendar-event"></i> Scheduled</small>
+            <span class="fw-semibold d-block mb-1">Total Photos</span>
+            <h3 class="card-title mb-2">{{ total_photos }}</h3>
+            <small class="text-success fw-semibold"><i class="bx bx-image"></i> Across all events</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="masonry-item">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title d-flex align-items-start justify-content-between">
+              <div class="avatar flex-shrink-0">
+                <img
+                  src="{% static 'users/assets/img/icons/unicons/wallet-info.png' %}"
+                  alt="Events"
+                  class="rounded"
+                />
+              </div>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="cardOpt6"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
+                  <a class="dropdown-item" href="{% url 'events:event_list' %}">View All Events</a>
                 </div>
+              </div>
+            </div>
+            <span>Upcoming Events</span>
+            <h3 class="card-title text-nowrap mb-1">{{ upcoming_events }}</h3>
+            <small class="text-success fw-semibold"><i class="bx bx-calendar-event"></i> Scheduled</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Photos Card -->
+      <div class="masonry-item">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title d-flex align-items-start justify-content-between">
+              <div class="avatar flex-shrink-0">
+                <img src="{% static 'users/assets/img/icons/unicons/cc-primary.png' %}" alt="Photos" class="rounded" />
+              </div>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="cardOpt4"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
+                  <a class="dropdown-item" href="">View Recent Photos</a>
+                </div>
+              </div>
+            </div>
+            <span class="d-block mb-1">This Month</span>
+            <h3 class="card-title text-nowrap mb-2">{{ monthly_photos|default:0 }}</h3>
+            <small class="text-primary fw-semibold"><i class="bx bx-camera"></i> Photos uploaded</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Access Requests Card -->
+      <div class="masonry-item">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title d-flex align-items-start justify-content-between">
+              <div class="avatar flex-shrink-0">
+                <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Access Requests" class="rounded" />
+              </div>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="cardOpt1"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="cardOpt1">
+                  <a class="dropdown-item" href="{% url 'events:access_requests' %}">View Your Requests</a>
+                </div>
+              </div>
+            </div>
+            <span class="fw-semibold d-block mb-1">Access Requests</span>
+            <h3 class="card-title mb-2">{{ user_requests.count }}</h3>
+            <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Pending approvals</small>
+          </div>
+        </div>
+      </div>
+
+<!-- Photography Stats Card -->
+<div class="masonry-item">
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
+        <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
+          <div class="card-title">
+            <h5 class="text-nowrap mb-2">Photography Stats</h5>
+            <span class="badge bg-label-warning rounded-pill">{{ user.get_photographer_role_display }}</span>
+          </div>
+          <div class="mt-sm-auto">
+            <small class="text-success text-nowrap fw-semibold">
+              <i class="bx bx-chevron-up"></i> {{ total_events }} Events
+            </small>
+            <h3 class="mb-0">{{ total_photos }} Photos</h3>
+          </div>
+        </div>
+        <div id="photographyStatsChart"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quote Card -->
+<div class="masonry-item">
+  <div class="card bg-primary text-white p-3 d-flex align-items-center justify-content-center" style="height: 100%;">
+    <figure class="mb-0 text-center">
+      <blockquote class="blockquote">
+        <p id="quote-text" class="text-center">Loading quote...</p>
+      </blockquote>
+      <figcaption class="blockquote-footer mb-0 text-white text-center">
+        <span id="quote-author">Unknown</span>
+      </figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- Modified Revenue/Performance Card - Full width -->
+<div class="masonry-item masonry-item-wide">
+  <div class="card">
+    <div class="row row-bordered g-0">
+      <div class="col-md-8">
+        <h5 class="card-header m-0 me-2 pb-3">Photography Performance</h5>
+        <div id="photographyPerformanceChart" class="px-2"></div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-body">
+          <div class="text-center">
+            <div class="dropdown">
+              <button
+                class="btn btn-sm btn-outline-primary dropdown-toggle"
+                type="button"
+                id="timeRangeId"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                This Year
+              </button>
+              <div class="dropdown-menu dropdown-menu-end" aria-labelledby="timeRangeId">
+                <a class="dropdown-item" href="javascript:void(0);">Last 6 Months</a>
+                <a class="dropdown-item" href="javascript:void(0);">Last 3 Months</a>
+                <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
               </div>
             </div>
           </div>
         </div>
+        <div id="growthChart"></div>
+        <div class="text-center fw-semibold pt-3 mb-2">{{ growth_percentage }}% Portfolio Growth</div>
+        <div class="d-flex px-xxl-4 px-lg-2 p-4 gap-xxl-3 gap-lg-1 gap-3 justify-content-between">
+          <div class="d-flex">
+            <div class="me-2">
+              <span class="badge bg-label-primary p-2"><i class="bx bx-camera text-primary"></i></span>
+            </div>
+            <div class="d-flex flex-column">
+              <small>This Year</small>
+              <h6 class="mb-0">{{ yearly_photos }}</h6>
+            </div>
+          </div>
+          <div class="d-flex">
+            <div class="me-2">
+              <span class="badge bg-label-info p-2"><i class="bx bx-images text-info"></i></span>
+            </div>
+            <div class="d-flex flex-column">
+              <small>Last Year</small>
+              <h6 class="mb-0">{{ last_year_photos }}</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  
-
-
-                <!-- Event Assignments -->
-                <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
-                  <div class="card">
-                    <div class="row row-bordered g-0">
-                      <div class="col-md-12">
-                        <h5 class="card-header m-0 me-2 pb-3">Your Event Assignments</h5>
-                        <div class="table-responsive text-nowrap">
-                          <table class="table">
-                            <thead>
-                              <tr>
-                                <th>Event Name</th>
-                                <th>Date</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody class="table-border-bottom-0">
-                              {% for crew in crew_memberships|slice:":5" %}
-                              <tr>
-                                <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' crew.event.slug %}" >{{ crew.event.title }}</a></strong></td>
-                                <td>{{ crew.event.start_date|date:"M d, Y" }}</td>
-                                <td>{{ crew.get_role_display }}</td>
-                                <td>
-                                  {% if crew.event.status == 'UPCOMING' %}
-                                  <span class="badge bg-label-primary">Upcoming</span>
-                                  {% elif crew.event.status == 'ACTIVE' %}
-                                  <span class="badge bg-label-success">Active</span>
-                                  {% elif crew.event.status == 'COMPLETED' %}
-                                  <span class="badge bg-label-info">Completed</span>
-                                  {% else %}
-                                  <span class="badge bg-label-secondary">{{ crew.event.get_status_display }}</span>
-                                  {% endif %}
-                                </td>
-                                <td>{{ event.location }}</td>
-                                <td>
-                                  <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                      <i class="bx bx-dots-vertical-rounded"></i>
-                                    </button>
-                                    <div class="dropdown-menu">
-                                      <a class="dropdown-item" href="{% url 'events:event_detail' crew.event.slug %}">
-                                        <i class="bx bx-show-alt me-1"></i> View Event
-                                      </a>
-                                      <a class="dropdown-item" href="{% url 'photos:upload_photos' crew.event.slug %}">
-                                        <i class="bx bx-edit-alt me-1"></i> Upload Photos
-                                      </a>
-                                      <a class="dropdown-item" href="{% url 'photos:event_gallery' crew.event.slug %}">
-                                        <i class="bx bx-group me-1"></i> View Photos
-                                      </a>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                              {% empty %}
-                              <tr>
-                                <td colspan="5" class="text-center">No events created yet</td>
-                              </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
-                          {% if events.count > 5 %}
-                          <div class="text-center mt-3 mb-3">
-                            <a href="{% url 'events:event_list' %}" class="btn btn-sm btn-outline-primary">View All Events</a>
+      <!-- Event Assignments - Full width -->
+      <div class="masonry-item masonry-item-wide">
+        <div class="card">
+          <div class="row row-bordered g-0">
+            <div class="col-md-12">
+              <h5 class="card-header m-0 me-2 pb-3">Your Event Assignments</h5>
+              <div class="table-responsive text-nowrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Event Name</th>
+                      <th>Date</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Location</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="table-border-bottom-0">
+                    {% for crew in crew_memberships|slice:":5" %}
+                    <tr>
+                      <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' crew.event.slug %}">{{ crew.event.title }}</a></strong></td>
+                      <td>{{ crew.event.start_date|date:"M d, Y" }}</td>
+                      <td>{{ crew.get_role_display }}</td>
+                      <td>
+                        {% if crew.event.status == 'UPCOMING' %}
+                        <span class="badge bg-label-primary">Upcoming</span>
+                        {% elif crew.event.status == 'ACTIVE' %}
+                        <span class="badge bg-label-success">Active</span>
+                        {% elif crew.event.status == 'COMPLETED' %}
+                        <span class="badge bg-label-info">Completed</span>
+                        {% else %}
+                        <span class="badge bg-label-secondary">{{ crew.event.get_status_display }}</span>
+                        {% endif %}
+                      </td>
+                      <td>{{ crew.event.location }}</td>
+                      <td>
+                        <div class="dropdown">
+                          <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                          </button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'events:event_detail' crew.event.slug %}">
+                              <i class="bx bx-show-alt me-1"></i> View Event
+                            </a>
+                            <a class="dropdown-item" href="{% url 'photos:upload_photos' crew.event.slug %}">
+                              <i class="bx bx-edit-alt me-1"></i> Upload Photos
+                            </a>
+                            <a class="dropdown-item" href="{% url 'photos:event_gallery' crew.event.slug %}">
+                              <i class="bx bx-group me-1"></i> View Photos
+                            </a>
                           </div>
-                          {% endif %}
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="6" class="text-center">No events assigned yet</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                {% if crew_memberships.count > 5 %}
+                <div class="text-center mt-3 mb-3">
+                  <a href="{% url 'events:event_list' %}" class="btn btn-sm btn-outline-primary">View All Events</a>
                 </div>
-                <!--/ Event Assignments -->
-
-
-
-
-        <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
-          <div class="row">
-            <div class="col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img src="{% static 'users/assets/img/icons/unicons/cc-primary.png' %}" alt="Photos" class="rounded" />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt4"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                        <a class="dropdown-item" href="">View Recent Photos</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="d-block mb-1">This Month</span>
-                  <h3 class="card-title text-nowrap mb-2">{{ monthly_photos|default:0 }}</h3>
-                  <small class="text-primary fw-semibold"><i class="bx bx-camera"></i> Photos uploaded</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Access Requests" class="rounded" />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt1"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                        <a class="dropdown-item" href="{% url 'events:request_access' %}">View Your Requests</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="fw-semibold d-block mb-1">Access Requests</span>
-                  <h3 class="card-title mb-2">{{ user_requests.count }}</h3>
-                  <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Pending approvals</small>
-                </div>
-              </div>
-            </div>
-
-            
-            <!-- Photography Stats -->
-            <div class="col-12 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
-                    <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
-                      <div class="card-title">
-                        <h5 class="text-nowrap mb-2">Photography Stats</h5>
-                        <span class="badge bg-label-warning rounded-pill">{{ user.get_photographer_role_display }}</span>
-                      </div>
-                      <div class="mt-sm-auto">
-                        <small class="text-success text-nowrap fw-semibold">
-                          <i class="bx bx-chevron-up"></i> {{ total_events|default:0 }} Events
-                        </small>
-                        <h3 class="mb-0">{{ total_photos|default:0 }} Photos</h3>
-                      </div>
-                    </div>
-                    <div id="photographyStatsChart"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!--/ Photography Stats -->
-
-
-            <script>
-              async function fetchQuote() {
-                try {
-                  let response = await fetch("https://qapi.vercel.app/api/random");
-                  let data = await response.json();
-                  document.getElementById("quote-text").innerText = data.quote;
-                  document.getElementById("quote-author").innerText = data.author;
-                } catch (error) {
-                  console.error("Error fetching quote:", error);
-                }
-              }
-              
-              window.onload = fetchQuote;
-            </script>
-            
-            <div class="col-12 mb-4">
-              <div class="card bg-primary text-white text-center p-3">
-                <figure class="mb-0">
-                  <blockquote class="blockquote">
-                    <p id="quote-text">Loading quote...</p>
-                  </blockquote>
-                  <figcaption class="blockquote-footer mb-0 text-white">
-                    <span id="quote-author">Unknown</span>
-                  </figcaption>
-                </figure>
+                {% endif %}
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- / Content -->
+  </div>
+  <!-- / Content -->
+</div>
 
+<!-- Add CSS for Masonry Layout -->
+<style>
+  .masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 1.5rem;
+    grid-auto-flow: dense;
+  }
+  
+  .masonry-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .masonry-item-wide {
+    grid-column: 1 / -1;
+  }
+  
+  .card {
+    height: 100%;
+    margin-bottom: 0;
+  }
+  
+  @media (max-width: 767px) {
+    .masonry-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .masonry-item-wide {
+      grid-column: auto;
+    }
+  }
+</style>
 
+<!-- Scripts for Charts -->
+<script>
+  // Fetch random photography quote
+  async function fetchQuote() {
+    try {
+      let response = await fetch("https://qapi.vercel.app/api/random?category=photography");
+      let data = await response.json();
+      document.getElementById("quote-text").innerText = data.quote;
+      document.getElementById("quote-author").innerText = data.author;
+    } catch (error) {
+      console.error("Error fetching quote:", error);
+      // Fallback quote
+      document.getElementById("quote-text").innerText = "Photography is the story I fail to put into words.";
+      document.getElementById("quote-author").innerText = "Destin Sparks";
+    }
+  }
+  
+  // Initialize all charts when DOM content is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    fetchQuote();
+    initPhotographyStatsChart();
+    initPerformanceChart();
+    initGrowthChart();
+  });
+  
+// Photography Stats Chart
+function initPhotographyStatsChart() {
+  if (typeof ApexCharts !== 'undefined' && document.getElementById('photographyStatsChart')) {
+    const options = {
+      series: [{{ monthly_photos }}],
+      chart: {
+        height: 100,
+        type: 'radialBar',
+        sparkline: {
+          enabled: true
+        }
+      },
+      colors: ['#696cff'],
+      plotOptions: {
+        radialBar: {
+          hollow: {
+            size: '60%'
+          },
+          track: {
+            background: '#f1f1f1'
+          },
+          dataLabels: {
+            show: false
+          }
+        }
+      }
+    };
+   
+    new ApexCharts(document.getElementById('photographyStatsChart'), options).render();
+  }
+}
+  
+// Photography Performance Chart
+function initPerformanceChart() {
+
+  if (typeof ApexCharts !== 'undefined' && document.getElementById('photographyPerformanceChart')) {
+    // Fetch monthly photos data
+    // We'll use a JavaScript solution since Django can't directly provide month-by-month data without additional context variables
+    
+    {% comment %}
+    // In a production environment, you would want to pass this data from the view
+    // For example:
+    // const monthlyPhotoData = {{ monthly_photo_data|safe }};
+    {% endcomment %}
+    
+    // This is a placeholder - you should replace this with actual data from the backend
+    const options = {
+      series: [{
+        name: 'Photos Uploaded',
+        data: {{ monthly_photo_data|safe }}
+      }],
+      chart: {
+        height: 350,
+        type: 'bar',
+        toolbar: {
+          show: false
+        }
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: '55%',
+          borderRadius: 4
+        },
+      },
+      dataLabels: {
+        enabled: false
+      },
+      colors: ['#696cff'],
+      stroke: {
+        show: true,
+        width: 2,
+        colors: ['transparent']
+      },
+      xaxis: {
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      },
+      yaxis: {
+        title: {
+          text: 'Photos'
+        }
+      },
+      fill: {
+        opacity: 1
+      },
+      tooltip: {
+        y: {
+          formatter: function (val) {
+            return val + " photos"
+          }
+        }
+      }
+    };
+   
+    new ApexCharts(document.getElementById('photographyPerformanceChart'), options).render();
+  }
+}
+  
+// Growth Chart
+function initGrowthChart() {
+  if (typeof ApexCharts !== 'undefined' && document.getElementById('growthChart')) {
+    const options = {
+      series: [{{ growth_percentage|default:0 }}],
+      chart: {
+        height: 230,
+        type: 'radialBar',
+      },
+      plotOptions: {
+        radialBar: {
+          hollow: {
+            size: '65%',
+          },
+          dataLabels: {
+            show: false
+          }
+        }
+      },
+      colors: ['#696cff'],
+      labels: ['Growth']
+    };
+   
+    new ApexCharts(document.getElementById('growthChart'), options).render();
+  }
+}
+</script>
 {% endblock content %}
-
-
-
