@@ -11,13 +11,14 @@
   <div>Event Dashboard</div>
   </a>
 </li>
-
+{% if user.role == 'ORGANIZER' or user.role == 'PHOTOGRAPHER' %}
 <li class="menu-item">
   <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
   <i class="menu-icon tf-icons bx bx-dock-top"></i>
   <div>Event Configuration</div>
   </a>
 </li>
+{% endif %}
 
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Quick Actions</span>

@@ -128,11 +128,26 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return reverse('events:event_detail', kwargs={'slug': event.slug})
 
 
+from django.shortcuts import render
+from django.views.generic import DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Sum
+
 class EventDashboardView(LoginRequiredMixin, DetailView):
     model = Event
     template_name = 'events/event_dashboard.html'
     context_object_name = 'event'
 
+    def get_template_names(self):
+        """Dynamically choose the template based on user role."""
+        event = self.get_object()
+        
+        # Check if the current user is a participant in EventParticipant model
+        is_participant = event.participants.filter(user=self.request.user).exists()
+        
+        if is_participant:
+            return ['events/event_dashboard_participant.html']
+        return ['events/event_dashboard.html']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -141,15 +156,19 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
         # Annotate photos with total views and likes
         photos = event.photos.annotate(
             total_views=Sum('view_count'),
-            total_likes=Sum('like_count') 
+            total_likes=Sum('like_count')
         )
+
+        # Check if the user is in EventParticipant
+        is_participant = event.participants.filter(user=self.request.user).exists()
 
         context.update({
             'crew_members': event.crew_members.all(),
             'participants': event.participants.all(),
             'is_organizer': event.organizer == self.request.user,
             'is_crew': event.crew_members.filter(member=self.request.user).exists(),
-            'photos': photos 
+            'is_participant': is_participant,  # Pass participant status
+            'photos': photos
         })
         return context
 

@@ -19,15 +19,40 @@
 
                     <!-- Display Django Messages -->
                     {% if messages %}
-                    <div class="container mt-3">
+                    <div class="messages-container">
                         {% for message in messages %}
-                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
+                            {% if message.tags %}
+                                {% with message_tags=message.tags.split %}
+                                    {% if 'error' in message_tags %}
+                                        <div class="alert alert-danger alert-dismissible" role="alert">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    {% elif 'success' in message_tags %}
+                                        <div class="alert alert-success alert-dismissible" role="alert">
+                                            <i class="bi bi-check-circle-fill me-2"></i>
+                                    {% elif 'warning' in message_tags %}
+                                        <div class="alert alert-warning alert-dismissible" role="alert">
+                                            <i class="bi bi-exclamation-circle me-2"></i>
+                                    {% elif 'info' in message_tags %}
+                                        <div class="alert alert-info alert-dismissible" role="alert">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+                                    {% elif 'debug' in message_tags %}
+                                        <div class="alert alert-secondary alert-dismissible" role="alert">
+                                            <i class="bi bi-bug-fill me-2"></i>
+                                    {% else %}
+                                        <div class="alert alert-primary alert-dismissible" role="alert">
+                                            <i class="bi bi-bell-fill me-2"></i>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <div class="alert alert-primary alert-dismissible" role="alert">
+                                    <i class="bi bi-bell-fill me-2"></i>
+                            {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
                         {% endfor %}
                     </div>
-                    {% endif %}
+                {% endif %}
 
                     <form method="POST" enctype="multipart/form-data" class="mb-3">
                         {% csrf_token %}

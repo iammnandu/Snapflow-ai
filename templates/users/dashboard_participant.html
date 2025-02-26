@@ -7,9 +7,11 @@
 <div class="content-wrapper">
     <!-- Content -->
     <div class="container-xxl flex-grow-1 container-p-y">
-      <div class="row">
-        <div class="col-lg-8 mb-4 order-0">
-          <div class="card">
+      <!-- Cards Layout -->
+      <div class="row" id="masonry-grid">
+        <!-- Welcome Card -->
+        <div class="col-12 mb-4">
+          <div class="card h-100">
             <div class="d-flex align-items-end row">
               <div class="col-sm-7">
                 <div class="card-body">
@@ -27,135 +29,401 @@
                     src="{% static 'users/assets/img/illustrations/man-with-laptop-light.png' %}"
                     height="140"
                     alt="Participant"
-                    data-app-dark-img="illustrations/man-with-laptop-light.png-dark.png"
-                    data-app-light-img="illustrations/man-with-laptop-light.png-light.png"
+                    data-app-dark-img="illustrations/man-with-laptop-dark.png"
+                    data-app-light-img="illustrations/man-with-laptop-light.png"
                   />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-lg-4 col-md-4 order-1">
-          <div class="row">
-            <div class="col-lg-6 col-md-12 col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img
-                        src="{% static 'users/assets/img/icons/unicons/chart-success.png' %}"
-                        alt="chart success"
-                        class="rounded"
-                      />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt3"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                        <a class="dropdown-item" href="">View All Photos</a>
-                      </div>
-                    </div>
+        
+        <!-- Stats Cards Row -->
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="card-title d-flex align-items-start justify-content-between">
+                <div class="avatar flex-shrink-0">
+                  <img
+                    src="{% static 'users/assets/img/icons/unicons/chart-success.png' %}"
+                    alt="chart success"
+                    class="rounded"
+                  />
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    id="cardOpt3"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
+                    <a class="dropdown-item" href="">View All Photos</a>
                   </div>
-                  <span class="fw-semibold d-block mb-1">Your Photos</span>
-                  <h3 class="card-title mb-2">{{ photos_of_user }}</h3>
-                  <small class="text-success fw-semibold"><i class="bx bx-image"></i> Across all events</small>
                 </div>
               </div>
+              <span class="fw-semibold d-block mb-1">Your Photos</span>
+              <h3 class="card-title mb-2">{{ photos_of_user }}</h3>
+              <small class="text-success fw-semibold"><i class="bx bx-image"></i> Across all events</small>
             </div>
-            <div class="col-lg-6 col-md-12 col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img
-                        src="{% static 'users/assets/img/icons/unicons/wallet-info.png' %}"
-                        alt="Events"
-                        class="rounded"
-                      />
+          </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="card-title d-flex align-items-start justify-content-between">
+                <div class="avatar flex-shrink-0">
+                  <img
+                    src="{% static 'users/assets/img/icons/unicons/wallet-info.png' %}"
+                    alt="Events"
+                    class="rounded"
+                  />
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    id="cardOpt6"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
+                    <a class="dropdown-item" href="{% url 'events:event_list' %}">View All Events</a>
+                  </div>
+                </div>
+              </div>
+              <span>Your Events</span>
+              <h3 class="card-title text-nowrap mb-1">{{ participations.count }}</h3>
+              <small class="text-success fw-semibold"><i class="bx bx-calendar-event"></i> Registered</small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="card-title d-flex align-items-start justify-content-between">
+                <div class="avatar flex-shrink-0">
+                  <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Access Requests" class="rounded" />
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    id="cardOpt1"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt1">
+                    <a class="dropdown-item" href="{% url 'events:access_requests' %}">View Your Requests</a>
+                  </div>
+                </div>
+              </div>
+              <span class="fw-semibold d-block mb-1">Access Requests</span>
+              <h3 class="card-title mb-2">{{ user_requests.count }}</h3>
+              <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Pending approval</small>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Privacy Settings Form Card -->
+        <div class="col-lg-6 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Privacy Settings</h5>
+            </div>
+            <div class="card-body">
+              <form action="{% url 'users:update_privacy' %}" method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label class="form-label d-block">Image Visibility</label>
+                  <div class="btn-group" role="group" aria-label="Visibility options">
+                    <input type="radio" class="btn-check" name="image_visibility" id="visibility-public" value="PUBLIC" {% if user.image_visibility == 'PUBLIC' %}checked{% endif %} autocomplete="off">
+                    <label class="btn btn-outline-primary" for="visibility-public">Public</label>
+                    
+                    <input type="radio" class="btn-check" name="image_visibility" id="visibility-limited" value="LIMITED" {% if user.image_visibility == 'LIMITED' %}checked{% endif %} autocomplete="off">
+                    <label class="btn btn-outline-primary" for="visibility-limited">Limited</label>
+                    
+                    <input type="radio" class="btn-check" name="image_visibility" id="visibility-private" value="PRIVATE" {% if user.image_visibility == 'PRIVATE' %}checked{% endif %} autocomplete="off">
+                    <label class="btn btn-outline-primary" for="visibility-private">Private</label>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="blur-requested" name="blur_requested" {% if user.blur_requested %}checked{% endif %}>
+                    <label class="form-check-label" for="blur-requested">Request face blurring in all photos</label>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="remove-requested" name="remove_requested" {% if user.remove_requested %}checked{% endif %}>
+                    <label class="form-check-label" for="remove-requested">Request photo removal (all photos with you)</label>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="badge bg-label-{{ user.image_visibility|lower }} me-1">Current: {{ user.get_image_visibility_display }}</span>
+                    {% if user.blur_requested %}
+                    <span class="badge bg-label-primary me-1">Blur requested</span>
+                    {% endif %}
+                    {% if user.remove_requested %}
+                    <span class="badge bg-label-danger me-1">Removal requested</span>
+                    {% endif %}
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Privacy Stats Card -->
+        <div class="col-lg-6 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
+                <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
+                  <div class="card-title">
+                    <h5 class="text-nowrap mb-2">Privacy Settings</h5>
+                    <span class="badge bg-label-{{ user.image_visibility|lower }}">{{ user.get_image_visibility_display }}</span>
+                  </div>
+                  <div class="mt-sm-auto">
+                    <div class="mb-2">
+                      <span class="badge bg-label-secondary me-1">
+                        <i class="bx bx-check me-1"></i> Verified: {{ user.is_verified|yesno:"Yes,No" }}
+                      </span>
                     </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt6"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                        <a class="dropdown-item" href="">View All Events</a>
-                      </div>
+                    <div>
+                      <span class="badge bg-label-danger me-1">
+                        <i class="bx bx-trash me-1"></i> Removal: {{ user.remove_requested|yesno:"Requested,Not Requested" }}
+                      </span>
                     </div>
                   </div>
-                  <span>Your Events</span>
-                  <h3 class="card-title text-nowrap mb-1">{{ participations.count }}</h3>
-                  <small class="text-success fw-semibold"><i class="bx bx-calendar-event"></i> Registered</small>
+                </div>
+                <div class="text-center">
+                  <div class="avatar avatar-xl">
+                    {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle">
+                    {% else %}
+                    <div class="avatar-initial rounded-circle bg-label-primary">
+                      <i class="bx bx-user fs-2"></i>
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="mt-3">
+                    <p class="mb-0">{{ user.get_participant_type_display }}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-  
-        <!-- Events Participation -->
-        <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+        
+        <!-- Recent Activity Card -->
+        <div class="col-lg-6 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h5 class="card-title m-0 me-2">Recent Activity</h5>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="activityOpt"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="activityOpt">
+                  <a class="dropdown-item" href="">View All Activity</a>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="p-0 m-0">
+                {% for activity in user_activities|slice:":5" %}
+                <li class="d-flex mb-4 pb-1">
+                  <div class="avatar flex-shrink-0 me-3">
+                    <span class="avatar-initial rounded bg-label-primary">
+                      <i class="bx {% if activity.type == 'EVENT' %}bx-calendar{% elif activity.type == 'PHOTO' %}bx-image{% else %}bx-bell{% endif %}"></i>
+                    </span>
+                  </div>
+                  <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="me-2">
+                      <small class="text-muted d-block mb-1">{{ activity.get_type_display }}</small>
+                      <h6 class="mb-0">{{ activity.description }}</h6>
+                    </div>
+                    <div class="user-progress d-flex align-items-center gap-1">
+                      <small class="fw-semibold">{{ activity.created_at|timesince }} ago</small>
+                    </div>
+                  </div>
+                </li>
+                {% empty %}
+                <li class="text-center py-4">No recent activity</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Upcoming Events -->
+        <div class="col-lg-6 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h5 class="card-title m-0 me-2">Upcoming Events</h5>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="upcomingEventsMenu"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="upcomingEventsMenu">
+                  <a class="dropdown-item" href="{% url 'events:event_list' %}?status=upcoming">View All Upcoming</a>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="p-0 m-0">
+                {% for participation in upcoming_events|slice:":4" %}
+                <li class="d-flex mb-3">
+                  <div class="avatar flex-shrink-0 me-3">
+                    <span class="avatar-initial rounded bg-label-success">
+                      <i class="bx bx-calendar"></i>
+                    </span>
+                  </div>
+                  <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="me-2">
+                      <h6 class="mb-0">{{ participation.event.title }}</h6>
+                      <small class="text-muted">{{ participation.event.location }}</small>
+                    </div>
+                    <div class="user-progress d-flex align-items-center gap-2">
+                      <span class="badge bg-label-primary me-1">{{ participation.event.start_date|date:"M d, Y" }}</span>
+                    </div>
+                  </div>
+                </li>
+                {% empty %}
+                <li class="text-center py-4">No upcoming events</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Featured Photos -->
+        <div class="col-lg-6 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h5 class="card-title m-0 me-2">Your Featured Photos</h5>
+              <div class="dropdown">
+                <button
+                  class="btn p-0"
+                  type="button"
+                  id="photosMenu"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="photosMenu">
+                  <a class="dropdown-item" href="">View All Photos</a>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row g-2">
+                {% for photo in featured_photos|slice:":6" %}
+                <div class="col-md-4 col-sm-6">
+                  <div class="position-relative">
+                    <img 
+                      src="{{ photo.image.url }}" 
+                      alt="{{ photo.caption|default:'Photo' }}" 
+                      class="img-fluid rounded"
+                      style="height: 100px; object-fit: cover; width: 100%;"
+                    >
+                    <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-black bg-opacity-50 rounded-bottom">
+                      <small class="text-white">{{ photo.event.title|truncatechars:10 }}</small>
+                    </div>
+                  </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-4">No photos available</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Event Assignments Table - Full width -->
+        <div class="col-12 mb-4">
           <div class="card">
-            <div class="row row-bordered g-0">
+            <div class="row g-0">
               <div class="col-md-12">
-                <h5 class="card-header m-0 me-2 pb-3">Your Event Participation</h5>
+                <h5 class="card-header m-0 me-2 pb-3">Your Event Assignments</h5>
                 <div class="table-responsive text-nowrap">
                   <table class="table">
                     <thead>
                       <tr>
                         <th>Event Name</th>
                         <th>Date</th>
-                        <th>Type</th>
+                        <th>Role</th>
                         <th>Status</th>
+                        <th>Location</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
                       {% for participation in participations|slice:":5" %}
                       <tr>
-                        <td>
-                          <strong>{{ participation.event.title }}</strong>
-                        </td>
+                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' participation.event.slug %}">{{ participation.event.title }}</a></strong></td>
                         <td>{{ participation.event.start_date|date:"M d, Y" }}</td>
-                        <td>{{ user.get_participant_type_display }}</td>
+                        <td>{{ participation.participant_type }}</td>
                         <td>
                           {% if participation.event.status == 'UPCOMING' %}
-                          <span class="badge bg-label-primary">Upcoming</span>
+                          <span class="badge bg-label-primary me-1">Upcoming</span>
                           {% elif participation.event.status == 'ACTIVE' %}
-                          <span class="badge bg-label-success">Active</span>
+                          <span class="badge bg-label-success me-1">Active</span>
                           {% elif participation.event.status == 'COMPLETED' %}
-                          <span class="badge bg-label-info">Completed</span>
+                          <span class="badge bg-label-info me-1">Completed</span>
                           {% else %}
-                          <span class="badge bg-label-secondary">{{ participation.event.get_status_display }}</span>
+                          <span class="badge bg-label-secondary me-1">{{ participation.event.get_status_display }}</span>
                           {% endif %}
                         </td>
+                        <td>{{ participation.event.location }}</td>
                         <td>
                           <div class="dropdown">
                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                               <i class="bx bx-dots-vertical-rounded"></i>
                             </button>
                             <div class="dropdown-menu">
-                              <a class="dropdown-item" href="">
+                              <a class="dropdown-item" href="{% url 'events:event_detail' participation.event.slug %}">
                                 <i class="bx bx-show-alt me-1"></i> View Event
                               </a>
-                              <a class="dropdown-item" href="">
-                                <i class="bx bx-images me-1"></i> Browse Photos
+                              <a class="dropdown-item" href="{% url 'photos:event_gallery' participation.event.slug %}">
+                                <i class="bx bx-group me-1"></i> View Photos
                               </a>
-                              <a class="dropdown-item" href="">
-                                <i class="bx bx-cog me-1"></i> Privacy Settings
+                              <a class="dropdown-item" href="{% url 'events:event_participants' participation.event.slug %}">
+                                <i class="bx bx-user-check me-1"></i> View Participants
                               </a>
                             </div>
                           </div>
@@ -163,14 +431,14 @@
                       </tr>
                       {% empty %}
                       <tr>
-                        <td colspan="5" class="text-center">You haven't joined any events yet</td>
+                        <td colspan="6" class="text-center">No events registered yet</td>
                       </tr>
                       {% endfor %}
                     </tbody>
                   </table>
                   {% if participations.count > 5 %}
                   <div class="text-center mt-3 mb-3">
-                    <a href="" class="btn btn-sm btn-outline-primary">View All Events</a>
+                    <a href="{% url 'events:event_list' %}" class="btn btn-sm btn-outline-primary">View All Events</a>
                   </div>
                   {% endif %}
                 </div>
@@ -178,119 +446,34 @@
             </div>
           </div>
         </div>
-        <!--/ Events Participation -->
-  
-        <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
-          <div class="row">
-            <div class="col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img src="{% static 'users/assets/img/icons/unicons/cc-primary.png' %}" alt="Privacy" class="rounded" />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt4"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                        <a class="dropdown-item" href="">Privacy Settings</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="d-block mb-1">Privacy Requests</span>
-                  <h3 class="card-title text-nowrap mb-2">{{ user.blur_requested|yesno:"1,0" }}</h3>
-                  <small class="text-primary fw-semibold">
-                    <i class="bx bx-low-vision"></i> 
-                    {% if user.blur_requested %}Blur requested{% else %}No blur requested{% endif %}
-                  </small>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                      <img src="{% static 'users/assets/img/icons/unicons/paypal.png' %}" alt="Access Requests" class="rounded" />
-                    </div>
-                    <div class="dropdown">
-                      <button
-                        class="btn p-0"
-                        type="button"
-                        id="cardOpt1"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                      </button>
-                      <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                        <a class="dropdown-item" href="">View Your Requests</a>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="fw-semibold d-block mb-1">Access Requests</span>
-                  <h3 class="card-title mb-2">{{ user_requests.count }}</h3>
-                  <small class="text-warning fw-semibold"><i class="bx bx-timer"></i> Pending approval</small>
-                </div>
-              </div>
-            </div>
-  
-            <!-- Privacy Stats -->
-            <div class="col-12 mb-4">
-              <div class="card">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
-                    <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
-                      <div class="card-title">
-                        <h5 class="text-nowrap mb-2">Privacy Settings</h5>
-                        <span class="badge bg-label-{{ user.image_visibility|lower }}">{{ user.get_image_visibility_display }}</span>
-                      </div>
-                      <div class="mt-sm-auto">
-                        <div class="mb-2">
-                          <span class="badge bg-label-secondary me-1">
-                            <i class="bx bx-check me-1"></i> Verified: {{ user.is_verified|yesno:"Yes,No" }}
-                          </span>
-                        </div>
-                        <div>
-                          <span class="badge bg-label-danger me-1">
-                            <i class="bx bx-trash me-1"></i> Removal: {{ user.remove_requested|yesno:"Requested,Not Requested" }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="text-center">
-                      <div class="avatar avatar-xl">
-                        {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle">
-                        {% else %}
-                        <div class="avatar-initial rounded-circle bg-label-primary">
-                          <i class="bx bx-user fs-2"></i>
-                        </div>
-                        {% endif %}
-                      </div>
-                      <div class="mt-3">
-                        <p class="mb-0">{{ user.get_participant_type_display }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!--/ Privacy Stats -->
-          </div>
-        </div>
+        
       </div>
+      <!-- / Cards Layout -->
     </div>
     <!-- / Content -->
+  </div>
 
 
-{% endblock content %}
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // If you want to keep the cards at equal height in each row
+    const cardBodyElements = document.querySelectorAll('.card-body');
+    let maxHeight = 0;
+    
+    // Find the tallest card in each row
+    cardBodyElements.forEach(element => {
+      const height = element.offsetHeight;
+      if (height > maxHeight) {
+        maxHeight = height;
+      }
+    });
+    
+    // Optional: Set a minimum height for all cards if needed
+    // cardBodyElements.forEach(element => {
+    //   element.style.minHeight = maxHeight + 'px';
+    // });
+  });
+</script>
+{% endblock %}

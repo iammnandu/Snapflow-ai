@@ -79,9 +79,15 @@ request list for photographer is done
 photographer dashboard updated
 photographer stats graph implemented
 
+2 15pm
+updated the django message templates
 
+3pm 
+participant dashboard updated : masonary layout added
 
-
+3 30pm
+seperate event dashboard for event is implemented.
+also added many other quick actions
 
 
 

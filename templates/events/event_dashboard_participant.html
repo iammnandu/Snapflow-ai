@@ -1,0 +1,788 @@
+{% extends "users/db_base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block add_nav %}
+<li class="menu-header small text-uppercase">
+  <span class="menu-header-text">Event Actions</span>
+</li>
+<li class="menu-item">
+  <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+  <i class="menu-icon tf-icons bx bx-dock-top"></i>
+  <div>Event Dashboard</div>
+  </a>
+</li>
+{% if user.role == 'ORGANIZER' or user.role == 'PHOTOGRAPHER' %}
+<li class="menu-item">
+  <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+  <i class="menu-icon tf-icons bx bx-dock-top"></i>
+  <div>Event Configuration</div>
+  </a>
+</li>
+{% endif %}
+
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+      {% if user.role == 'ORGANIZER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+
+
+{% endblock add_nav %}
+
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Account</span>
+      </li>
+
+
+      <li class="menu-item">
+        <a href="{% url 'users:profile' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Profile</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'users:profile_update' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Edit Profile</div>
+        </a>
+      </li>
+
+{% block content %}
+
+<div class="container-fluid px-4 py-5">
+    <!-- Header Card with Event Info -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
+          <div class="card-body p-0">
+            <div class="row g-0">
+              <div class="col-md-8 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h1 class="card-title text-primary mb-0">{{ event.title }}</h1>
+                  <span class="badge rounded-pill px-3 py-2 
+                    {% if event.status == 'ACTIVE' %}bg-success{% elif event.status == 'DRAFT' %}bg-warning text-dark
+                    {% elif event.status == 'COMPLETED' %}bg-info{% else %}bg-danger{% endif %}">
+                    {{ event.get_status_display }}
+                  </span>
+                </div>
+                <div class="row mt-4">
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <p class="text-muted mb-1"><i class="bi bi-calendar-event me-2"></i>Date & Time</p>
+                      <p class="fw-bold">{{ event.start_date|date:"M d, Y h:i A" }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <p class="text-muted mb-1"><i class="bi bi-geo-alt me-2"></i>Location</p>
+                      <p class="fw-bold">{{ event.location }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="mb-3">
+                      <p class="text-muted mb-1"><i class="bi bi-tag me-2"></i>Type</p>
+                      <p class="fw-bold">{{ event.get_event_type_display }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-primary me-2">
+                    <i class="bi bi-images me-2"></i>View Gallery
+                  </a>
+                  <a href="#" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareEventModal">
+                    <i class="bi bi-share me-2"></i>Share Event
+                  </a>
+                </div>
+              </div>
+              <div class="col-md-4 bg-light p-4 d-flex flex-column justify-content-center">
+                <div class="text-center">
+                  <div class="avatar mb-3">
+                    {% if event.logo %}
+                    <img src="{{ event.logo.url }}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center shadow" style="width: 120px; height: 120px; margin: 0 auto;">
+                      <img src="{% static 'event_default.jpg' %}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="mb-3">
+                    <span class="badge rounded-pill px-3 py-2 {% if event.is_public %}bg-success{% else %}bg-secondary{% endif %} mb-2">
+                      {{ event.is_public|yesno:"Public,Private" }}
+                    </span>
+                    {% if event.days_until > 0 %}
+                    <div class="mt-2">
+                      <span class="badge bg-info text-dark">{{ event.days_until }} days until event</span>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Photo Carousel Section -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
+            <h5 class="mb-0">Photo Highlights</h5>
+            <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-sm btn-outline-primary">View All Photos</a>
+          </div>
+          <div class="card-body">
+            <div class="row justify-content-center">
+              <div class="col-lg-8 col-md-10">
+                <div id="eventPhotoCarousel" class="carousel carousel-dark slide carousel-fade" data-bs-ride="carousel">
+                  <ol class="carousel-indicators">
+                    {% for photo in event.photos.all|slice:":5" %}
+                      <li data-bs-target="#eventPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %}></li>
+                    {% empty %}
+                      <li data-bs-target="#eventPhotoCarousel" data-bs-slide-to="0" class="active"></li>
+                    {% endfor %}
+                  </ol>
+                  <div class="carousel-inner rounded">
+                    {% for photo in event.photos.all|slice:":5" %}
+                      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img class="d-block w-100" src="{{ photo.image.url }}" alt="Event photo {{ forloop.counter }}" style="height: 300px; object-fit: cover;">
+                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                          <h5 class="text-white">{{ photo.title|default:"Event Photo" }}</h5>
+                          <p class="text-white">Uploaded by {{ photo.uploaded_by.get_full_name|default:photo.uploaded_by.username }} {{ photo.upload_date|timesince }} ago</p>
+                        </div>
+                      </div>
+                    {% empty %}
+                      <div class="carousel-item active">
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height: 300px;">
+                          <div class="text-center text-muted">
+                            <i class="bi bi-camera fs-1 mb-3"></i>
+                            <h5>No photos uploaded yet</h5>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                  <a class="carousel-control-prev" href="#eventPhotoCarousel" role="button" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#eventPhotoCarousel" role="button" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Event Information Cards -->
+    <div class="row mb-4">
+      <!-- Event Details -->
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header border-0 bg-transparent">
+            <h5 class="mb-0">Event Details</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-info-circle me-2"></i>Description</h6>
+              <p>{{ event.description }}</p>
+            </div>
+            
+            <div class="mb-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-newspaper me-2"></i>Important Information</h6>
+              <div class="alert alert-light border">
+                {% if event.important_info %}
+                  {{ event.important_info|linebreaks }}
+                {% else %}
+                  <p class="mb-0">No special instructions provided for this event.</p>
+                {% endif %}
+              </div>
+            </div>
+            
+            {% if event.schedule %}
+            <div class="mb-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-clock me-2"></i>Event Schedule</h6>
+              <div class="schedule-timeline">
+                {{ event.schedule|linebreaks }}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Organizer Contact -->
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header border-0 bg-transparent">
+            <h5 class="mb-0">Organizer Contact</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-4">
+              <div class="flex-shrink-0">
+                {% if event.organizer.avatar %}
+                <img src="{{ event.organizer.avatar.url }}" alt="{{ event.organizer.get_full_name }}" class="rounded-circle" width="64" height="64">
+                {% else %}
+                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 64px; height: 64px;">
+                  <i class="bi bi-person-fill fs-4"></i>
+                </div>
+                {% endif %}
+              </div>
+              <div class="ms-3">
+                <h5 class="mb-1">{{ event.organizer.get_full_name|default:event.organizer.username }}</h5>
+                <span class="text-muted">Event Organizer</span>
+              </div>
+            </div>
+            
+            {% if event.contact_info %}
+            <div class="mb-3">
+              <h6 class="text-muted mb-2">Contact Information</h6>
+              <ul class="list-unstyled">
+                {% if event.contact_email %}
+                <li class="mb-2">
+                  <i class="bi bi-envelope me-2"></i>
+                  <a href="mailto:{{ event.contact_email }}">{{ event.contact_email }}</a>
+                </li>
+                {% endif %}
+                {% if event.contact_phone %}
+                <li class="mb-2">
+                  <i class="bi bi-telephone me-2"></i>
+                  <a href="tel:{{ event.contact_phone }}">{{ event.contact_phone }}</a>
+                </li>
+                {% endif %}
+              </ul>
+            </div>
+            {% endif %}
+            
+            <a href="#" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#contactOrganizerModal">
+              <i class="bi bi-chat-dots me-2"></i>Send Message
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Quick Links -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header border-0 bg-transparent">
+            <h5 class="mb-0">Quick Actions</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-outline-primary w-100 py-3">
+                  <i class="bi bi-images mb-2 d-block" style="font-size: 1.5rem;"></i>
+                  Photo Gallery
+                </a>
+              </div>
+              
+              <div class="col-6 col-md-3">
+                <a href="#" class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#locationModal">
+                  <i class="bi bi-geo-alt mb-2 d-block" style="font-size: 1.5rem;"></i>
+                  View Location
+                </a>
+              </div>
+              
+              <div class="col-6 col-md-3">
+                <a href="#" class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#shareEventModal">
+                  <i class="bi bi-share mb-2 d-block" style="font-size: 1.5rem;"></i>
+                  Share Event
+                </a>
+              </div>
+              
+              <div class="col-6 col-md-3">
+                <a href="" class="btn btn-outline-primary w-100 py-3">
+                  <i class="bi bi-calendar-plus mb-2 d-block" style="font-size: 1.5rem;"></i>
+                  Add to Calendar
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Map & Additional Information (optional based on event) -->
+    {% if event.location_lat and event.location_lng %}
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header border-0 bg-transparent">
+            <h5 class="mb-0">Event Location</h5>
+          </div>
+          <div class="card-body p-0">
+            <div id="eventMap" style="height: 300px;"></div>
+          </div>
+          <div class="card-footer bg-transparent">
+            <a href="https://maps.google.com/?q={{ event.location_lat }},{{ event.location_lng }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-map me-2"></i>Open in Google Maps
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Contact Organizer Modal -->
+    <div class="modal fade" id="contactOrganizerModal" tabindex="-1" aria-labelledby="contactOrganizerModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="contactOrganizerModalLabel">Contact Organizer</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form action="" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="messageSubject" class="form-label">Subject</label>
+                <input type="text" class="form-control" id="messageSubject" name="subject" required>
+              </div>
+              <div class="mb-3">
+                <label for="messageContent" class="form-label">Message</label>
+                <textarea class="form-control" id="messageContent" name="message" rows="4" required></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Send Message</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Share Event Modal -->
+    <div class="modal fade" id="shareEventModal" tabindex="-1" aria-labelledby="shareEventModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="shareEventModalLabel">Share Event</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Event Link</label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="eventLink" value="{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" readonly>
+                <button class="btn btn-outline-secondary" type="button" onclick="copyEventLink()">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Event Code</label>
+              <div class="input-group">
+                <input type="text" class="form-control" value="{{ event.event_code }}" readonly>
+                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('{{ event.event_code }}')">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <small class="text-muted">Share this code with others to join the event</small>
+            </div>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+              <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" target="_blank" class="btn btn-outline-primary">
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a href="https://twitter.com/intent/tweet?url={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}&text=Join%20me%20at%20{{ event.title|urlencode }}" target="_blank" class="btn btn-outline-primary">
+                <i class="bi bi-twitter"></i>
+              </a>
+              <a href="mailto:?subject=Join%20{{ event.title|urlencode }}&body=Hi,%0A%0AI'd%20like%20to%20invite%20you%20to%20{{ event.title|urlencode }}%20on%20{{ event.start_date|date:'M d, Y' }}.%0A%0AClick%20here%20to%20view%20details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}%0A%0AEvent%20code:%20{{ event.event_code }}" class="btn btn-outline-primary">
+                <i class="bi bi-envelope"></i>
+              </a>
+              <a href="https://wa.me/?text={{ 'Join me at ' | add:event.title | add:'! Details: ' | add:request.build_absolute_uri | add:' Code: ' | add:event.event_code | urlencode }}" 
+                 target="_blank" class="btn btn-outline-primary">
+                <i class="bi bi-whatsapp"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Location Map Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="locationModalLabel">Event Location</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            {% if event.location_lat and event.location_lng %}
+            <div id="modalMap" style="height: 400px;"></div>
+            {% else %}
+            <div class="p-4 text-center">
+              <p class="mb-0">{{ event.location }}</p>
+              <p class="text-muted mt-2">Detailed map location not available</p>
+            </div>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <a href="https://maps.google.com/?q={{ event.location_lat|default:event.location }},{{ event.location_lng|default:'' }}" target="_blank" class="btn btn-outline-primary">
+              <i class="bi bi-map me-2"></i>Open in Google Maps
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript for the dashboard -->
+  <script>
+    // Copy event link to clipboard
+    function copyEventLink() {
+      const eventLink = document.getElementById('eventLink');
+      eventLink.select();
+      document.execCommand('copy');
+      
+      // Show toast or alert
+      const toast = new bootstrap.Toast(document.getElementById('linkCopiedToast'));
+      toast.show();
+    }
+    
+    // Copy text to clipboard
+    function copyToClipboard(text) {
+      const tempInput = document.createElement('input');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      
+      // Show toast or alert
+      const toast = new bootstrap.Toast(document.getElementById('codeCopiedToast'));
+      toast.show();
+    }
+    
+    {% if event.location_lat and event.location_lng %}
+    // Initialize map if coordinates are available
+    document.addEventListener('DOMContentLoaded', function() {
+      // Main map
+      if (document.getElementById('eventMap')) {
+        const map = L.map('eventMap').setView([{{ event.location_lat }}, {{ event.location_lng }}], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([{{ event.location_lat }}, {{ event.location_lng }}]).addTo(map)
+          .bindPopup('{{ event.location }}').openPopup();
+      }
+      
+      // Modal map
+      const locationModal = document.getElementById('locationModal');
+      if (locationModal) {
+        locationModal.addEventListener('shown.bs.modal', function () {
+          const modalMap = L.map('modalMap').setView([{{ event.location_lat }}, {{ event.location_lng }}], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(modalMap);
+          L.marker([{{ event.location_lat }}, {{ event.location_lng }}]).addTo(modalMap)
+            .bindPopup('{{ event.location }}').openPopup();
+            
+          setTimeout(function() {
+            modalMap.invalidateSize();
+          }, 100);
+        });
+      }
+    });
+    {% endif %}
+  </script>
+  
+  <!-- Toast notifications -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="linkCopiedToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Link Copied</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        Event link copied to clipboard!
+      </div>
+    </div>
+    
+    <div id="codeCopiedToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Code Copied</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        Event code copied to clipboard!
+      </div>
+    </div>
+  </div>
+
+
+
+<style>
+  /* Timeline styles */
+  .timeline {
+    list-style: none;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  
+  .timeline-dashed:before {
+    content: '';
+    position: absolute;
+    left: 0.19rem;
+    width: 1px;
+    height: 100%;
+    border-left: 1px dashed #d9dee3;
+  }
+  
+  .timeline-point {
+    position: absolute;
+    left: -9px;
+  }
+  
+  .timeline-point-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    margin-top: 0.125rem;
+  }
+  
+  /* AI Feature styles */
+  .ai-feature-item {
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  
+  .ai-feature-item:not(.text-muted):hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+    border-color: rgba(var(--bs-primary-rgb), 0.1);
+  }
+  
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary);
+    font-size: 1.25rem;
+  }
+  
+  .text-muted .feature-icon {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #6c757d;
+  }
+  
+  /* Progress circle */
+  .progress-circle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .progress-ring-circle {
+    transition: stroke-dashoffset 0.5s ease;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    stroke-linecap: round;
+  }
+</style>
+{% endblock %}
+
+
+
+{% comment "" %}
+ 
+
+
+
+  <!-- Event Progress & Activities in Masonry Layout -->
+  <div class="row" data-masonry='{"percentPosition": true }'>
+    <!-- Progress Section -->
+    <div class="col-12 col-lg-8 mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="row g-0">
+          <div class="col-md-8">
+            <div class="card-header border-0 bg-transparent">
+              <h5 class="mb-0">Event Preparation Progress</h5>
+            </div>
+            <div class="card-body pt-0">
+              <div class="progress-tracker">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Crew Assignment</span>
+                    <span class="text-{% if crew_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ crew_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: {{ crew_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ crew_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Equipment Setup</span>
+                    <span class="text-{% if equipment_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ equipment_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                         style="width: {{ equipment_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ equipment_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Participant Registration</span>
+                    <span class="text-{% if registration_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ registration_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ registration_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ registration_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>Venue Preparation</span>
+                    <span class="text-{% if venue_status == 'complete' %}success{% else %}muted{% endif %}">
+                      {{ venue_completion_percentage|default:"0" }}%
+                    </span>
+                  </div>
+                  <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: {{ venue_completion_percentage|default:'0' }}%" 
+                         aria-valuenow="{{ venue_completion_percentage|default:'0' }}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 d-flex align-items-center bg-light">
+            <div class="p-4 text-center w-100">
+              <div class="mb-3">
+                <h6 class="text-muted mb-1">Overall Completion</h6>
+                <div class="d-inline-block position-relative">
+                  <div class="progress-circle" data-percentage="{{ overall_completion_percentage|default:'0' }}">
+                    <svg class="progress-ring" width="120" height="120">
+                      <circle class="progress-ring-circle bg" stroke="#e9ecef" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+                      <circle class="progress-ring-circle" stroke="{% if overall_completion_percentage > 75 %}#28a745{% elif overall_completion_percentage > 50 %}#17a2b8{% elif overall_completion_percentage > 25 %}#ffc107{% else %}#dc3545{% endif %}" 
+                              stroke-width="8" fill="transparent" r="50" cx="60" cy="60" 
+                              stroke-dasharray="314.16" 
+                              stroke-dashoffset="{{ 314.16|sub:314.16|mul:overall_completion_percentage|div:100 }}"/>
+                            </svg>
+                            <div class="progress-text">{{ overall_completion_percentage|default:"0" }}%</div>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="text-muted mb-0">{{ days_until_event|default:"0" }} days remaining</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        
+            <!-- Recent Activities -->
+            <div class="col-12 col-lg-4 mb-4">
+              <div class="card shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
+                  <h5 class="mb-0">Recent Activities</h5>
+                  <button class="btn btn-sm btn-outline-primary rounded-pill">View All</button>
+                </div>
+                <div class="card-body pt-0">
+                  <ul class="timeline timeline-dashed">
+                    {% for activity in recent_activities|slice:":5" %}
+                    <li class="timeline-item mb-4">
+                      <div class="timeline-point timeline-point-indicator"></div>
+                      <div class="timeline-event">
+                        <div class="d-flex justify-content-between flex-sm-row flex-column mb-sm-0 mb-1">
+                          <h6 class="mb-0">{{ activity.title }}</h6>
+                          <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                        </div>
+                        <p class="mb-0">{{ activity.description }}</p>
+                        {% if activity.user %}
+                        <div class="d-flex align-items-center mt-2">
+                          <div class="avatar avatar-xs me-2">
+                            {% if activity.user.profile_image %}
+                            <img src="{{ activity.user.profile_image.url }}" alt="{{ activity.user.get_full_name }}" class="rounded-circle">
+                            {% else %}
+                            <span class="avatar-initial rounded-circle bg-primary">{{ activity.user.get_initials }}</span>
+                            {% endif %}
+                          </div>
+                          <small>{{ activity.user.get_full_name }}</small>
+                        </div>
+                        {% endif %}
+                      </div>
+                    </li>
+                    {% empty %}
+                    <li class="text-center py-4">
+                      <div class="text-muted">
+                        <i class="bi bi-calendar-x mb-2" style="font-size: 2rem;"></i>
+                        <p>No recent activities</p>
+                      </div>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+  {% endcomment %}
