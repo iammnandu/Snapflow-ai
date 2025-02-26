@@ -455,26 +455,31 @@
         </div>
         <div class="card-body">
           <div class="row g-3">
+            {% if user.role == 'ORGANIZER' %}
             <div class="col-6">
-                {% if user.role == 'ORGANIZER' %}
+                
                     <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary w-100 py-3">
                 <i class="bi bi-people-fill mb-2 d-block" style="font-size: 1.5rem;"></i>
                 Manage Crew
               </a>
-                {% endif %}
+              
+                
             </div>
-            <div class="col-6">
-              <a href="{% url 'events:equipment_config' event.slug %}" class="btn btn-outline-primary w-100 py-3">
-                <i class="bi bi-tools mb-2 d-block" style="font-size: 1.5rem;"></i>
-                Equipment
-              </a>
-            </div>
+
             <div class="col-6">
               <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-outline-primary w-100 py-3">
                 <i class="bi bi-images mb-2 d-block" style="font-size: 1.5rem;"></i>
                 Gallery
               </a>
             </div>
+            {% endif %}
+            <div class="col-6">
+              <a href="{% url 'events:equipment_config' event.slug %}" class="btn btn-outline-primary w-100 py-3">
+                <i class="bi bi-tools mb-2 d-block" style="font-size: 1.5rem;"></i>
+                Equipment
+              </a>
+            </div>
+
             <div class="col-6">
               <a href="#" class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#shareEventModal">
                 <i class="bi bi-share mb-2 d-block" style="font-size: 1.5rem;"></i>
@@ -566,9 +571,11 @@
             <a href="mailto:?subject=Join%20{{ event.title|urlencode }}&body=Hi,%0A%0AI'd%20like%20to%20invite%20you%20to%20{{ event.title|urlencode }}%20on%20{{ event.start_date|date:'M d, Y' }}.%0A%0AClick%20here%20to%20view%20details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}%0A%0AEvent%20code:%20{{ event.event_code }}" class="btn btn-outline-primary">
               <i class="bi bi-envelope"></i>
             </a>
-            <a href="https://wa.me/?text=Join%20me%20at%20{{ event.title|urlencode }}!%20Details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug }}%20Code:%20{{ event.event_code }}" target="_blank" class="btn btn-outline-primary">
-              <i class="bi bi-whatsapp"></i>
-            </a>
+            <a href="https://wa.me/?text={{ 'Join me at ' | add:event.title | add:'! Details: ' | add:request.build_absolute_uri | add:' Code: ' | add:event.event_code | urlencode }}" 
+            target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-whatsapp"></i>
+         </a>
+         
           </div>
         </div>
       </div>

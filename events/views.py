@@ -626,28 +626,85 @@ def request_access(request):
     
     return redirect('users:dashboard')
 
-def access_requests(request):
-    access_requests = EventAccessRequest.objects.filter(
-        event__organizer=request.user
-    ).select_related('user', 'event').order_by('-created_at')
+@login_required
+def cancel_access_request(request, request_id):
+    """
+    View to cancel a user's own event access request
+    """
+    try:
+        # Get the access request, ensuring it belongs to the current user
+        access_request = EventAccessRequest.objects.get(
+            id=request_id,
+            user=request.user
+        )
+        
+        # Only allow cancellation if the request is still pending
+        if access_request.status == EventAccessRequest.RequestStatus.PENDING:
+            # Store event info for the message
+            event_name = access_request.event.name if hasattr(access_request.event, 'name') else "this event"
+            request_type = access_request.get_request_type_display() if hasattr(access_request, 'get_request_type_display') else access_request.request_type
+            
+            # Delete the request
+            access_request.delete()
+            
+            messages.success(
+                request, 
+                f"Your {request_type} request for {event_name} has been cancelled."
+            )
+        else:
+            messages.error(
+                request,
+                "This request cannot be cancelled because it has already been processed."
+            )
+            
+    except EventAccessRequest.DoesNotExist:
+        messages.error(
+            request,
+            "The request you're trying to cancel does not exist or doesn't belong to you."
+        )
     
-    return render(request, 'events/request_list.html', {
-        'access_requests': access_requests
-    })
-
-
+    # Redirect back to the access requests list
+    return redirect('events:access_requests')
 
 @login_required
 def access_requests_list(request):
-    # Get all requests for events organized by the user
-    access_requests = EventAccessRequest.objects.filter(
-        event__organizer=request.user
+    # First check if any of the events exist
+    organized_events = Event.objects.filter(organizer=request.user).exists()
+    
+    # Get requests for events that definitely exist
+    organized_requests = EventAccessRequest.objects.filter(
+        event__organizer=request.user,
+        event__isnull=False  # Ensure event exists
     ).select_related('user', 'event').order_by('-created_at')
     
-    return render(request, 'events/request_list.html', {
-        'access_requests': access_requests,
+    # Get user requests where the event definitely exists
+    user_requests = EventAccessRequest.objects.filter(
+        user=request.user,
+        event__isnull=False  # Ensure event exists
+    ).select_related('user', 'event').order_by('-created_at')
+    
+    # Separate photographer and participant requests
+    photographer_requests = user_requests.filter(request_type='PHOTOGRAPHER')
+    participant_requests = user_requests.filter(request_type='PARTICIPANT')
+    
+    # Determine user roles
+    is_organizer = organized_events  # Using the direct event query result
+    is_photographer = photographer_requests.exists()
+    is_participant = participant_requests.exists()
+    
+    context = {
+        'organized_requests': organized_requests,
+        'photographer_requests': photographer_requests,
+        'participant_requests': participant_requests,
+        'is_organizer': is_organizer,
+        'is_photographer': is_photographer,
+        'is_participant': is_participant,
         'page_title': 'Access Requests'
-    })
+    }
+    
+    return render(request, 'events/request_list.html', context)
+
+
 
 @login_required
 @require_http_methods(["POST"])

@@ -96,7 +96,7 @@
                         <i class="bx bx-dots-vertical-rounded"></i>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                        <a class="dropdown-item" href="">View All Events</a>
+                        <a class="dropdown-item" href="{% url 'events:event_list' %}">View All Events</a>
                       </div>
                     </div>
                   </div>
@@ -108,81 +108,86 @@
             </div>
           </div>
         </div>
+
   
-        <!-- Assigned Events -->
-        <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
-          <div class="card">
-            <div class="row row-bordered g-0">
-              <div class="col-md-12">
-                <h5 class="card-header m-0 me-2 pb-3">Your Event Assignments</h5>
-                <div class="table-responsive text-nowrap">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>Event Name</th>
-                        <th>Date</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody class="table-border-bottom-0">
-                      {% for crew in crew_memberships|slice:":5" %}
-                      <tr>
-                        <td>
-                          <strong>{{ crew.event.title }}</strong>
-                        </td>
-                        <td>{{ crew.event.start_date|date:"M d, Y" }}</td>
-                        <td>{{ crew.get_role_display }}</td>
-                        <td>
-                          {% if crew.event.status == 'UPCOMING' %}
-                          <span class="badge bg-label-primary">Upcoming</span>
-                          {% elif crew.event.status == 'ACTIVE' %}
-                          <span class="badge bg-label-success">Active</span>
-                          {% elif crew.event.status == 'COMPLETED' %}
-                          <span class="badge bg-label-info">Completed</span>
-                          {% else %}
-                          <span class="badge bg-label-secondary">{{ crew.event.get_status_display }}</span>
-                          {% endif %}
-                        </td>
-                        <td>
-                          <div class="dropdown">
-                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                              <i class="bx bx-dots-vertical-rounded"></i>
-                            </button>
-                            <div class="dropdown-menu">
-                              <a class="dropdown-item" href="">
-                                <i class="bx bx-show-alt me-1"></i> View Event
-                              </a>
-                              <a class="dropdown-item" href="">
-                                <i class="bx bx-upload me-1"></i> Upload Photos
-                              </a>
-                              <a class="dropdown-item" href="">
-                                <i class="bx bx-images me-1"></i> View Photos
-                              </a>
-                            </div>
+
+
+                <!-- Event Assignments -->
+                <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+                  <div class="card">
+                    <div class="row row-bordered g-0">
+                      <div class="col-md-12">
+                        <h5 class="card-header m-0 me-2 pb-3">Your Event Assignments</h5>
+                        <div class="table-responsive text-nowrap">
+                          <table class="table">
+                            <thead>
+                              <tr>
+                                <th>Event Name</th>
+                                <th>Date</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody class="table-border-bottom-0">
+                              {% for crew in crew_memberships|slice:":5" %}
+                              <tr>
+                                <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' crew.event.slug %}" >{{ crew.event.title }}</a></strong></td>
+                                <td>{{ crew.event.start_date|date:"M d, Y" }}</td>
+                                <td>{{ crew.get_role_display }}</td>
+                                <td>
+                                  {% if crew.event.status == 'UPCOMING' %}
+                                  <span class="badge bg-label-primary">Upcoming</span>
+                                  {% elif crew.event.status == 'ACTIVE' %}
+                                  <span class="badge bg-label-success">Active</span>
+                                  {% elif crew.event.status == 'COMPLETED' %}
+                                  <span class="badge bg-label-info">Completed</span>
+                                  {% else %}
+                                  <span class="badge bg-label-secondary">{{ crew.event.get_status_display }}</span>
+                                  {% endif %}
+                                </td>
+                                <td>{{ event.location }}</td>
+                                <td>
+                                  <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                      <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                      <a class="dropdown-item" href="{% url 'events:event_detail' crew.event.slug %}">
+                                        <i class="bx bx-show-alt me-1"></i> View Event
+                                      </a>
+                                      <a class="dropdown-item" href="{% url 'photos:upload_photos' crew.event.slug %}">
+                                        <i class="bx bx-edit-alt me-1"></i> Upload Photos
+                                      </a>
+                                      <a class="dropdown-item" href="{% url 'photos:event_gallery' crew.event.slug %}">
+                                        <i class="bx bx-group me-1"></i> View Photos
+                                      </a>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                              {% empty %}
+                              <tr>
+                                <td colspan="5" class="text-center">No events created yet</td>
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                          {% if events.count > 5 %}
+                          <div class="text-center mt-3 mb-3">
+                            <a href="{% url 'events:event_list' %}" class="btn btn-sm btn-outline-primary">View All Events</a>
                           </div>
-                        </td>
-                      </tr>
-                      {% empty %}
-                      <tr>
-                        <td colspan="5" class="text-center">No event assignments yet</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                  {% if crew_memberships.count > 5 %}
-                  <div class="text-center mt-3 mb-3">
-                    <a href="{% url 'events:assigned_events' %}" class="btn btn-sm btn-outline-primary">View All Assignments</a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  {% endif %}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!--/ Assigned Events -->
-  
+                <!--/ Event Assignments -->
+
+
+
+
         <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
           <div class="row">
             <div class="col-6 mb-4">

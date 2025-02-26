@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.utils import timezone
 
 
+from photos.models import EventPhoto
 from events.models import Event, EventAccessRequest, EventCrew, EventParticipant
 
 from .forms import BasicRegistrationForm, OrganizerProfileForm, ParticipantProfileForm, PhotographerProfileForm
@@ -157,7 +158,7 @@ def dashboard(request):
         crew_memberships = EventCrew.objects.filter(member=user)
         
         # Calculate statistics
-        total_photos = 0  # Implement photo tracking later
+        total_photos = EventPhoto.objects.filter(uploaded_by=user).count()
         upcoming_events = crew_memberships.filter(
             event__start_date__gt=timezone.now()
         ).count()
