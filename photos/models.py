@@ -1,8 +1,7 @@
+# models.py (updated)
+import os
 from django.db import models
 from django.conf import settings
-from django.utils.text import slugify
-import os
-from events.models import EventParticipant
 
 def event_photo_path(instance, filename):
     # Convert event title to a URL-friendly format
@@ -23,6 +22,7 @@ class EventPhoto(models.Model):
     quality_score = models.FloatField(null=True, blank=True)
     detected_faces = models.JSONField(null=True, blank=True)
     scene_tags = models.JSONField(null=True, blank=True)
+    enhanced_image = models.ImageField(upload_to=event_photo_path, null=True, blank=True)
     
     # Engagement metrics
     view_count = models.IntegerField(default=0)
@@ -30,16 +30,36 @@ class EventPhoto(models.Model):
     
     class Meta:
         ordering = ['-upload_date']
+        indexes = [
+            models.Index(fields=['event']),
+            models.Index(fields=['uploaded_by']),
+            models.Index(fields=['processed']),
+        ]
 
     def __str__(self):
         return f"Photo {self.id} from {self.event.title}"
 
     def delete(self, *args, **kwargs):
-        # Delete the image file when the model instance is deleted
+        # Delete the image files when the model instance is deleted
         if self.image:
             if os.path.isfile(self.image.path):
                 os.remove(self.image.path)
+                
+        if self.enhanced_image:
+            if os.path.isfile(self.enhanced_image.path):
+                os.remove(self.enhanced_image.path)
+                
         super().delete(*args, **kwargs)
+    
+    def get_tags(self):
+        """Get formatted tags for display"""
+        if not self.scene_tags:
+            return []
+        return self.scene_tags
+    
+    def has_enhanced_version(self):
+        """Check if an enhanced version exists"""
+        return bool(self.enhanced_image)
 
 class PhotoLike(models.Model):
     photo = models.ForeignKey(EventPhoto, on_delete=models.CASCADE, related_name='likes')
@@ -49,6 +69,7 @@ class PhotoLike(models.Model):
     class Meta:
         unique_together = ('photo', 'user')
         indexes = [
+            models.Index(fields=['photo']),
             models.Index(fields=['user']),
         ]
     def __str__(self):
@@ -69,3 +90,36 @@ class PhotoComment(models.Model):
     
     def __str__(self):
         return f"Comment by {self.user.username} on photo {self.photo.id}"
+
+class UserPhotoMatch(models.Model):
+    """Matches users to photos they appear in"""
+    photo = models.ForeignKey(EventPhoto, on_delete=models.CASCADE, related_name='user_matches')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='photo_appearances')
+    confidence_score = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('photo', 'user')
+        indexes = [
+            models.Index(fields=['photo']),
+            models.Index(fields=['user']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} in photo {self.photo.id} ({self.confidence_score}%)"
+
+class UserGallery(models.Model):
+    """Gallery of photos where a user appears"""
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='personal_gallery')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username}'s personal gallery"
+    
+    def get_photos(self):
+        """Get all photos where this user appears"""
+        return EventPhoto.objects.filter(user_matches__user=self.user).order_by('-upload_date')
+    
+    @property
+    def photo_count(self):
+        return self.get_photos().count()

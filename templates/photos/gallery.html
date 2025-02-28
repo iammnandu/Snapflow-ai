@@ -1,474 +1,248 @@
+<!-- photos/templates/photos/gallery.html -->
 {% extends "users/db_base.html" %}
 {% load static %}
-{% block add_nav %}
-<li class="menu-header small text-uppercase">
-    <span class="menu-header-text">Event Actions</span>
-  </li>
-  <li class="menu-item">
-    <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
-    <i class="menu-icon tf-icons bx bx-dock-top"></i>
-    <div>Event Dashboard</div>
-    </a>
-  </li>
-  
-  <li class="menu-item">
-    <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-dock-top"></i>
-    <div>Event Configuration</div>
-    </a>
-  </li>
-      <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Quick Actions</span>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
-          <i class="menu-icon tf-icons bx bx-dock-top"></i>
-          <div>View Gallery</div>
-        </a>
-      </li>
-      {% if user.role == 'ORGANIZER' %}
-      <li class="menu-item">
-        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Manage Crew</div>
-        </a>
-      </li>
 
-      <li class="menu-item">
-        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>View Participants</div>
-        </a>
-      </li>
+{% block title %}{{ event.title }} Gallery{% endblock %}
 
-      {% elif user.role == 'PHOTOGRAPHER' %}
-      <li class="menu-item">
-        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Equipments</div>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>View Participants</div>
-        </a>
-      </li>
-      {% endif %}
-
-{% endblock add_nav %}
 {% block content %}
-
-<style>
-    .photo-card {
-        break-inside: avoid;
-        margin-bottom: 1.5rem;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
-    
-    .photo-card:hover {
-        transform: translateY(-4px);
-    }
-    
-    .photo-card .card-img-wrapper {
-        position: relative;
-        padding-top: 100%;
-        overflow: hidden;
-    }
-    
-    .photo-card .card-img-top {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .photo-card .card-body {
-        padding: 1rem;
-        background: white;
-    }
-    
-    .like-btn {
-        transition: all 0.2s;
-    }
-    
-    .like-btn.liked {
-        background-color: #dc3545;
-        color: white;
-        border-color: #dc3545;
-    }
-    
-    .like-btn.liked i {
-        color: white;
-    }
-    
-    .masonry-grid {
-        column-count: 3;
-        column-gap: 1.5rem;
-        padding: 1.5rem;
-    }
-    
-    @media (max-width: 992px) {
-        .masonry-grid {
-            column-count: 2;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .masonry-grid {
-            column-count: 1;
-        }
-    }
-    
-    .empty-state {
-        background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-        border-radius: 16px;
-        padding: 3rem 2rem;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-top: 2rem;
-    }
-    
-    .empty-state i {
-        font-size: 4rem;
-        color: #adb5bd;
-        margin-bottom: 1.5rem;
-        display: block;
-    }
-    
-    .empty-state h4 {
-        margin-bottom: 1rem;
-        color: #495057;
-    }
-    
-    .empty-state p {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    .carousel-inner {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    
-    .photo-carousel {
-        margin-bottom: 2rem;
-    }
-    
-    .photo-carousel .carousel-item img {
-        height: 400px;
-        object-fit: cover;
-    }
-    
-    .photo-carousel .carousel-caption {
-        background-color: rgba(0,0,0,0.5);
-        border-radius: 8px;
-        padding: 10px;
-        max-width: 80%;
-        margin: 0 auto;
-    }
-</style>
-
-<div class="container-fluid">
-    <div class="row g-4">
-        <!-- Sidebar remains the same -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-4">
-                        <i class='bx bx-camera fs-3 me-2'></i>
-                        <h5 class="card-title mb-0">{{ event.title }}</h5>
-                    </div>
-                    <p class="text-muted">{{ event.get_event_type_display }}</p>
-                    
-                    {% if can_upload %}
-                    <button type="button" class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
-                        <i class='bx bx-upload me-2'></i>Upload Photos
-                    </button>
-                    {% endif %}
-                    
-                    <!-- Gallery Stats -->
-                    <div class="card bg-light border-0">
-                        <div class="card-body">
-                            <h6 class="mb-3">Gallery Stats</h6>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Total Photos</span>
-                                <span class="fw-bold">{{ photos.paginator.count }}</span>
-                            </div>
-                            {% if event.configuration.enable_download and photos.paginator.count > 0 %}
-                            <a href="#" class="btn btn-outline-primary btn-sm w-100">
-                                <i class='bx bx-download me-2'></i>Download All
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col md:flex-row justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold mb-2">{{ event.title }} Gallery</h1>
+            <p class="text-gray-600">{{ photos.paginator.count }} photos</p>
         </div>
         
-        <!-- Updated Gallery Grid -->
-        <div class="col-md-9">
-            {% if photos %}
-                <!-- Photo Carousel for featured photos -->
-                <div class="photo-carousel">
-                    <div id="eventPhotoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                            {% for photo in photos|slice:":5" %}
-                                <button type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
-                                        {% if forloop.first %}class="active"{% endif %} aria-current="true" 
-                                        aria-label="Photo {{ forloop.counter }}"></button>
-                            {% endfor %}
-                        </div>
-                        <div class="carousel-inner">
-                            {% for photo in photos|slice:":5" %}
-                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                    <img src="{{ photo.image.url }}" class="d-block w-100" alt="Featured photo">
-                                    <div class="carousel-caption d-none d-md-block">
-                                        <h5>{{ event.title }} - Photo {{ forloop.counter }}</h5>
-                                        <p>Uploaded on {{ photo.upload_date|date:"M d, Y" }}</p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="masonry-grid">
-                    {% for photo in photos %}
-                    <div class="photo-card">
-                        <div class="card-img-wrapper">
-                            <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
-                            {% if event.configuration.enable_likes %}
-                            <button class="btn btn-sm btn-light like-btn position-absolute top-0 end-0 m-2 {% if photo.liked_by_user %}liked{% endif %}" 
-                                    data-photo-id="{{ photo.id }}"
-                                    data-liked="{{ photo.liked_by_user|yesno:'true,false' }}">
-                                <i class='bx {% if photo.liked_by_user %}bxs-heart{% else %}bx-heart{% endif %}'></i>
-                                <span class="like-count">{{ photo.like_count }}</span>
-                            </button>
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small class="text-muted">
-                                    {{ photo.upload_date|date:"M d, Y" }}
-                                </small>
-                                <div class="d-flex gap-2">
-                                    <a href="{% url 'photos:photo_detail' photo.id %}" class="btn btn-primary btn-sm">
-                                        <i class='bx bx-show'></i>
-                                    </a>
-                                    {% if request.user == event.organizer or request.user in event.crew_members.all %}
-                                    <form method="POST" action="{% url 'photos:delete_photo' photo.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
-                                                onclick="return confirm('Are you sure you want to delete this photo?')">
-                                            <i class='bx bx-trash'></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <!-- Improved Empty State -->
-                <div class="empty-state">
-                    <i class='bx bx-images'></i>
-                    <h4>No Photos Yet</h4>
-                    <p>This gallery is waiting for its first moments to be captured. Bring this event to life with your photos!</p>
-                    {% if can_upload %}
-                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
-                        <i class='bx bx-upload me-2'></i>Upload Your First Photo
-                    </button>
-                    {% else %}
-                    <p class="mt-3">Check back soon for updates from the event team.</p>
-                    {% endif %}
-                </div>
+        <div class="flex flex-col md:flex-row gap-4 mt-4 md:mt-0">
+            {% if can_upload %}
+            <button id="uploadBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                <i class="fas fa-upload mr-2"></i> Upload Photos
+            </button>
             {% endif %}
             
-            <!-- Pagination remains the same -->
-            {% if photos.paginator.num_pages > 1 %}
-            <nav class="mt-4" aria-label="Gallery navigation">
-                <ul class="pagination justify-content-center">
-                    {% if photos.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ photos.previous_page_number }}">
-                            <i class='bx bx-chevron-left'></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for num in photos.paginator.page_range %}
-                    <li class="page-item {% if photos.number == num %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                    {% endfor %}
-                    
-                    {% if photos.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ photos.next_page_number }}">
-                            <i class='bx bx-chevron-right'></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
+            <div class="flex flex-col md:flex-row gap-2">
+                <!-- Tag filter dropdown -->
+                <div class="relative">
+                    <select id="tagFilter" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option value="">All Photos</option>
+                        {% for tag in available_tags %}
+                        <option value="{{ tag }}" {% if current_tag == tag %}selected{% endif %}>{{ tag|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Sort options dropdown -->
+                <div class="relative">
+                    <select id="sortOptions" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                        <option value="quality" {% if current_sort == 'quality' %}selected{% endif %}>Highest Quality</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if photos %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {% for photo in photos %}
+        <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+            <a href="{% url 'photos:photo_detail' photo.id %}" class="block relative">
+                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:'Event photo' }}" class="w-full h-64 object-cover">
+                
+                {% if photo.quality_score and photo.quality_score < 0.5 and photo.has_enhanced_version %}
+                <div class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    Enhanced Available
+                </div>
+                {% endif %}
+                
+                {% if photo.scene_tags %}
+                <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+                    <div class="flex flex-wrap gap-1">
+                        {% for tag in photo.get_tags|slice:":3" %}
+                        <span class="text-white text-xs bg-gray-800/50 px-2 py-1 rounded">{{ tag }}</span>
+                        {% endfor %}
+                        {% if photo.get_tags|length > 3 %}
+                        <span class="text-white text-xs bg-gray-800/50 px-2 py-1 rounded">+{{ photo.get_tags|length|add:"-3" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if photo.detected_faces %}
+                <div class="absolute top-2 left-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    {{ photo.detected_faces|length }} {% if photo.detected_faces|length == 1 %}Person{% else %}People{% endif %}
+                </div>
+                {% endif %}
+            </a>
+            
+            <div class="p-3">
+                <div class="flex justify-between items-center text-sm text-gray-600">
+                    <span>
+                        <i class="far fa-eye mr-1"></i> {{ photo.view_count }}
+                    </span>
+                    <span>
+                        <i class="far fa-heart mr-1"></i> {{ photo.like_count }}
+                    </span>
+                    <span title="Uploaded on {{ photo.upload_date|date:'M d, Y' }}">
+                        {{ photo.upload_date|date:'M d' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if photos.has_other_pages %}
+    <div class="flex justify-center mt-8">
+        <div class="inline-flex rounded-md shadow-sm">
+            {% if photos.has_previous %}
+            <a href="?page={{ photos.previous_page_number }}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
+                Previous
+            </a>
+            {% endif %}
+            
+            {% for i in photos.paginator.page_range %}
+                {% if photos.number == i %}
+                <span class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-gray-300">
+                    {{ i }}
+                </span>
+                {% elif i > photos.number|add:'-3' and i < photos.number|add:'3' %}
+                <a href="?page={{ i }}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">
+                    {{ i }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if photos.has_next %}
+            <a href="?page={{ photos.next_page_number }}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
+                Next
+            </a>
             {% endif %}
         </div>
     </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="text-center py-12">
+        <div class="mb-4">
+            <i class="far fa-images text-5xl text-gray-400"></i>
+        </div>
+        <h3 class="text-xl font-medium text-gray-600 mb-2">No photos yet</h3>
+        {% if can_upload %}
+        <p class="text-gray-500">Upload the first photos to this event gallery!</p>
+        {% else %}
+        <p class="text-gray-500">The organizer hasn't uploaded any photos yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
-<!-- Upload Photos Modal remains the same -->
+<!-- Upload Modal -->
 {% if can_upload %}
-<div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class='bx bx-upload me-2'></i>Upload Photos
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" 
-                  enctype="multipart/form-data" id="upload-form">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="upload-zone mb-3">
-                        <input type="file" name="images" multiple class="form-control" 
-                               accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
-                               required>
-                        {% if event.configuration %}
-                        <div class="form-text">
-                            <i class='bx bx-info-circle me-1'></i>
-                            Allowed formats: {{ event.configuration.allowed_formats|join:", " }}
-                            <br>
-                            Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div id="preview-container" class="row g-3">
-                        <!-- Preview images will be inserted here -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class='bx bx-cloud-upload me-2'></i>Upload Photos
-                    </button>
-                </div>
-            </form>
+<div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Upload Photos</h3>
+            <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+        
+        <form method="post" action="{% url 'photos:upload_photos' event.slug %}" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="dropArea">
+                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                <p class="mb-2">Drag photos here or click to select</p>
+                <p class="text-sm text-gray-500">
+                    Max size: {{ event.configuration.max_upload_size|filesizeformat }}
+                    <br>
+                    Allowed formats: {{ event.configuration.allowed_formats }}
+                </p>
+                <input type="file" name="images" multiple accept="image/*" class="hidden" id="fileInput">
+                <button type="button" id="browseBtn" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Browse Files
+                </button>
+            </div>
+            
+            <div id="selectedFiles" class="hidden">
+                <h4 class="font-medium mb-2">Selected Files:</h4>
+                <ul class="list-disc pl-5 text-sm"></ul>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Upload Photos
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-{% endif %}
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize carousel if it exists
-    const carousel = document.getElementById('eventPhotoCarousel');
-    if (carousel) {
-        new bootstrap.Carousel(carousel, {
-            interval: 5000,
-            wrap: true
-        });
+    // Upload modal functionality
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadModal = document.getElementById('uploadModal');
+    const closeModal = document.getElementById('closeModal');
+    const dropArea = document.getElementById('dropArea');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const selectedFiles = document.getElementById('selectedFiles');
+    const selectedFilesList = selectedFiles.querySelector('ul');
+    
+    uploadBtn.addEventListener('click', function() {
+        uploadModal.classList.remove('hidden');
+    });
+    
+    closeModal.addEventListener('click', function() {
+        uploadModal.classList.add('hidden');
+    });
+    
+    browseBtn.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', function() {
+        displaySelectedFiles(this.files);
+    });
+    
+    // Tag filter functionality
+    const tagFilter = document.getElementById('tagFilter');
+    tagFilter.addEventListener('change', function() {
+        window.location.href = `?tag=${this.value}{% if current_sort %}&sort={{ current_sort }}{% endif %}`;
+    });
+    
+    // Sort options functionality
+    const sortOptions = document.getElementById('sortOptions');
+    sortOptions.addEventListener('change', function() {
+        window.location.href = `?sort=${this.value}{% if current_tag %}&tag={{ current_tag }}{% endif %}`;
+    });
+    
+    function displaySelectedFiles(files) {
+        if (files.length > 0) {
+            selectedFiles.classList.remove('hidden');
+            selectedFilesList.innerHTML = '';
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const li = document.createElement('li');
+                li.textContent = `${file.name} (${formatFileSize(file.size)})`;
+                selectedFilesList.appendChild(li);
+            }
+        } else {
+            selectedFiles.classList.add('hidden');
+        }
     }
     
-    // Handle photo likes with proper state management
-    document.querySelectorAll('.like-btn').forEach(button => {
-        button.addEventListener('click', async function(e) {
-            e.preventDefault();
-            
-            if (!this.dataset.photoId) return;
-            
-            const photoId = this.dataset.photoId;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            try {
-                const response = await fetch(`/events/photo/${photoId}/action/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: 'action=like'
-                });
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    // Toggle like state
-                    const isLiked = this.classList.toggle('liked');
-                    const icon = this.querySelector('i');
-                    const likeCount = this.querySelector('.like-count');
-                    
-                    // Update icon
-                    icon.classList.toggle('bxs-heart', isLiked);
-                    icon.classList.toggle('bx-heart', !isLiked);
-                    
-                    // Update count
-                    if (data.like_count !== undefined) {
-                        likeCount.textContent = data.like_count;
-                    }
-                    
-                    // Update data attribute
-                    this.dataset.liked = isLiked.toString();
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        });
-    });
-
-    // Handle photo upload preview
-    const fileInput = document.querySelector('input[type="file"]');
-    const previewContainer = document.getElementById('preview-container');
-
-    if (fileInput && previewContainer) {
-        fileInput.addEventListener('change', function() {
-            previewContainer.innerHTML = '';
-            
-            [...this.files].forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const preview = document.createElement('div');
-                        preview.className = 'col-md-4';
-                        preview.innerHTML = `
-                            <div class="photo-card">
-                                <div class="card-img-wrapper">
-                                    <img src="${e.target.result}" class="card-img-top" alt="Preview">
-                                </div>
-                                <div class="card-body">
-                                    <small class="text-muted">${file.name}</small>
-                                </div>
-                            </div>
-                        `;
-                        previewContainer.appendChild(preview);
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-        });
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 });
 </script>
+{% endif %}
 {% endblock %}

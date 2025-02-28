@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-5v*(2m)bqta+1_4!c85nxiiga+nnti8h!(=-x8e23xx)7t2s&0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.128.197','192.168.164.197']   # localhost, Poco C55, Samsung F41
+ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.128.197','192.168.164.197','175.20.1.194']   # localhost, Poco C55, Samsung F41, CS Lab
 
 
 # Application definition
@@ -175,3 +175,65 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 # Contact form settings
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 CONTACT_EMAIL = os.getenv('CONTACT_EMAIL')
+
+
+
+# Celery Configuration Options
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  # Use Redis as a broker
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'  # Set to your project's timezone
+
+# Configure logging for Celery tasks
+LOGGING = {
+    # Add the existing LOGGING config if you have it
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/celery.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'photos': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Make sure the logs directory exists
+import os
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'test-celery-connection': {
+        'task': 'photos.tasks.test_task',
+        'schedule': crontab(minute='*/30'),  # Run every 30 minutes
+    },
+    # Add other scheduled tasks as needed
+}

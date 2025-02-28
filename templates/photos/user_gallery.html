@@ -1,0 +1,186 @@
+<!-- photos/templates/photos/user_gallery.html -->
+{% extends "users/db_base.html" %}
+{% load static %}
+
+{% block title %}My Photos Gallery{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col md:flex-row justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold mb-2">My Photos</h1>
+            <p class="text-gray-600">{{ photos.paginator.count }} photos where you appear</p>
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-4 mt-4 md:mt-0">
+            <div class="flex flex-col md:flex-row gap-2">
+                <!-- Event filter dropdown -->
+                <div class="relative">
+                    <select id="eventFilter" class="border rounded py-2 px-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Events</option>
+                        {% for event in user_events %}
+                            <option value="{{ event.id }}" {% if current_event == event.id|stringformat:"s" %}selected{% endif %}>
+                                {{ event.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Tag filter dropdown -->
+                <div class="relative">
+                    <select id="tagFilter" class="border rounded py-2 px-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Tags</option>
+                        {% for tag in available_tags %}
+                            <option value="{{ tag }}" {% if current_tag == tag %}selected{% endif %}>
+                                {{ tag|capfirst }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if photos %}
+        <!-- Photos gallery grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for photo in photos %}
+                <div class="photo-card bg-white rounded-lg shadow overflow-hidden">
+                    <a href="{% url 'photos:photo_detail' pk=photo.id %}" class="block">
+                        <div class="relative aspect-w-16 aspect-h-12 bg-gray-100">
+                            {% if photo.enhanced_image %}
+                                <img src="{{ photo.enhanced_image.url }}" alt="{{ photo.caption|default:'Event photo' }}" class="object-cover w-full h-full">
+                                <div class="absolute top-0 right-0 m-2 px-2 py-1 bg-green-500 text-white text-xs rounded">Enhanced</div>
+                            {% else %}
+                                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:'Event photo' }}" class="object-cover w-full h-full">
+                            {% endif %}
+                            
+                            <!-- AI tags badge -->
+                            {% if photo.scene_tags %}
+                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 text-white">
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for tag in photo.scene_tags %}
+                                            <span class="inline-block bg-gray-800/80 px-2 py-0.5 rounded text-xs">{{ tag }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="p-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-sm text-gray-600">{{ photo.event.title }}</p>
+                            <p class="text-xs text-gray-500">{{ photo.upload_date|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span class="flex items-center">
+                                    <i class="far fa-eye text-gray-500 mr-1"></i>
+                                    <span class="text-sm text-gray-600">{{ photo.view_count }}</span>
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="far fa-heart text-gray-500 mr-1"></i>
+                                    <span class="text-sm text-gray-600">{{ photo.like_count }}</span>
+                                </span>
+                            </div>
+                            {% if photo.quality_score %}
+                                <div class="flex items-center" title="AI Quality Score">
+                                    <span class="text-xs px-2 py-0.5 rounded {% if photo.quality_score >= 0.8 %}bg-green-100 text-green-800{% elif photo.quality_score >= 0.5 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ photo.quality_score|floatformat:2 }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if photos.paginator.num_pages > 1 %}
+            <div class="mt-8 flex justify-center">
+                <ul class="flex space-x-2">
+                    {% if photos.has_previous %}
+                        <li>
+                            <a href="?page=1{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                                First
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?page={{ photos.previous_page_number }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in photos.paginator.page_range %}
+                        {% if photos.number == num %}
+                            <li>
+                                <span class="px-3 py-2 bg-blue-600 text-white rounded">{{ num }}</span>
+                            </li>
+                        {% elif num > photos.number|add:'-3' and num < photos.number|add:'3' %}
+                            <li>
+                                <a href="?page={{ num }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if photos.has_next %}
+                        <li>
+                            <a href="?page={{ photos.next_page_number }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                                Next
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?page={{ photos.paginator.num_pages }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                                Last
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <div class="mb-4">
+                <i class="fas fa-image text-6xl text-gray-300"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">No Photos Found</h3>
+            <p class="text-gray-600 mb-4">You don't appear in any photos yet. Once the AI identifies you in event photos, they'll show up here.</p>
+            <p class="text-gray-500 text-sm">Make sure your profile picture clearly shows your face to help the AI recognize you.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle filter changes
+    document.getElementById('eventFilter').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    document.getElementById('tagFilter').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    function applyFilters() {
+        const eventValue = document.getElementById('eventFilter').value;
+        const tagValue = document.getElementById('tagFilter').value;
+        
+        let url = '{% url "photos:user_gallery" %}?';
+        
+        if (eventValue) {
+            url += 'event=' + eventValue + '&';
+        }
+        
+        if (tagValue) {
+            url += 'tag=' + tagValue;
+        }
+        
+        window.location.href = url;
+    }
+});
+</script>
+{% endblock %}

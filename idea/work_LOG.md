@@ -97,6 +97,13 @@
 ### 11:00 PM
 - corrected the is_registred field while accepting requests
 
+## Mar 1
+
+### Initial Implementation of Ai done
+- added the automatic tagging and enhancement of images.
+
+
+
 
 ---
 
@@ -115,3 +122,5 @@
 - Remove **participation_type** from participant registration and add it during event enrollment.  
 - Implement **crop options** when uploading **profile photos** and **event logos**.  
 
+- add the info about password while registeing to site
+- add the asteric mark to compulsory fields while complete registration

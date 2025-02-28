@@ -1,0 +1,474 @@
+{% extends "users/db_base.html" %}
+{% load static %}
+{% block add_nav %}
+<li class="menu-header small text-uppercase">
+    <span class="menu-header-text">Event Actions</span>
+  </li>
+  <li class="menu-item">
+    <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Dashboard</div>
+    </a>
+  </li>
+  
+  <li class="menu-item">
+    <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Configuration</div>
+    </a>
+  </li>
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+      {% if user.role == 'ORGANIZER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+{% endblock add_nav %}
+{% block content %}
+
+<style>
+    .photo-card {
+        break-inside: avoid;
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    
+    .photo-card:hover {
+        transform: translateY(-4px);
+    }
+    
+    .photo-card .card-img-wrapper {
+        position: relative;
+        padding-top: 100%;
+        overflow: hidden;
+    }
+    
+    .photo-card .card-img-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .photo-card .card-body {
+        padding: 1rem;
+        background: white;
+    }
+    
+    .like-btn {
+        transition: all 0.2s;
+    }
+    
+    .like-btn.liked {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    
+    .like-btn.liked i {
+        color: white;
+    }
+    
+    .masonry-grid {
+        column-count: 3;
+        column-gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    @media (max-width: 992px) {
+        .masonry-grid {
+            column-count: 2;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .masonry-grid {
+            column-count: 1;
+        }
+    }
+    
+    .empty-state {
+        background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-top: 2rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #adb5bd;
+        margin-bottom: 1.5rem;
+        display: block;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+    
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .carousel-inner {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .photo-carousel {
+        margin-bottom: 2rem;
+    }
+    
+    .photo-carousel .carousel-item img {
+        height: 400px;
+        object-fit: cover;
+    }
+    
+    .photo-carousel .carousel-caption {
+        background-color: rgba(0,0,0,0.5);
+        border-radius: 8px;
+        padding: 10px;
+        max-width: 80%;
+        margin: 0 auto;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row g-4">
+        <!-- Sidebar remains the same -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class='bx bx-camera fs-3 me-2'></i>
+                        <h5 class="card-title mb-0">{{ event.title }}</h5>
+                    </div>
+                    <p class="text-muted">{{ event.get_event_type_display }}</p>
+                    
+                    {% if can_upload %}
+                    <button type="button" class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                        <i class='bx bx-upload me-2'></i>Upload Photos
+                    </button>
+                    {% endif %}
+                    
+                    <!-- Gallery Stats -->
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h6 class="mb-3">Gallery Stats</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Photos</span>
+                                <span class="fw-bold">{{ photos.paginator.count }}</span>
+                            </div>
+                            {% if event.configuration.enable_download and photos.paginator.count > 0 %}
+                            <a href="#" class="btn btn-outline-primary btn-sm w-100">
+                                <i class='bx bx-download me-2'></i>Download All
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Updated Gallery Grid -->
+        <div class="col-md-9">
+            {% if photos %}
+                <!-- Photo Carousel for featured photos -->
+                <div class="photo-carousel">
+                    <div id="eventPhotoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            {% for photo in photos|slice:":5" %}
+                                <button type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+                                        {% if forloop.first %}class="active"{% endif %} aria-current="true" 
+                                        aria-label="Photo {{ forloop.counter }}"></button>
+                            {% endfor %}
+                        </div>
+                        <div class="carousel-inner">
+                            {% for photo in photos|slice:":5" %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <img src="{{ photo.image.url }}" class="d-block w-100" alt="Featured photo">
+                                    <div class="carousel-caption d-none d-md-block">
+                                        <h5>{{ event.title }} - Photo {{ forloop.counter }}</h5>
+                                        <p>Uploaded on {{ photo.upload_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="masonry-grid">
+                    {% for photo in photos %}
+                    <div class="photo-card">
+                        <div class="card-img-wrapper">
+                            <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
+                            {% if event.configuration.enable_likes %}
+                            <button class="btn btn-sm btn-light like-btn position-absolute top-0 end-0 m-2 {% if photo.liked_by_user %}liked{% endif %}" 
+                                    data-photo-id="{{ photo.id }}"
+                                    data-liked="{{ photo.liked_by_user|yesno:'true,false' }}">
+                                <i class='bx {% if photo.liked_by_user %}bxs-heart{% else %}bx-heart{% endif %}'></i>
+                                <span class="like-count">{{ photo.like_count }}</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">
+                                    {{ photo.upload_date|date:"M d, Y" }}
+                                </small>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'photos:photo_detail' photo.id %}" class="btn btn-primary btn-sm">
+                                        <i class='bx bx-show'></i>
+                                    </a>
+                                    {% if request.user == event.organizer or request.user in event.crew_members.all %}
+                                    <form method="POST" action="{% url 'photos:delete_photo' photo.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                onclick="return confirm('Are you sure you want to delete this photo?')">
+                                            <i class='bx bx-trash'></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Improved Empty State -->
+                <div class="empty-state">
+                    <i class='bx bx-images'></i>
+                    <h4>No Photos Yet</h4>
+                    <p>This gallery is waiting for its first moments to be captured. Bring this event to life with your photos!</p>
+                    {% if can_upload %}
+                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                        <i class='bx bx-upload me-2'></i>Upload Your First Photo
+                    </button>
+                    {% else %}
+                    <p class="mt-3">Check back soon for updates from the event team.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <!-- Pagination remains the same -->
+            {% if photos.paginator.num_pages > 1 %}
+            <nav class="mt-4" aria-label="Gallery navigation">
+                <ul class="pagination justify-content-center">
+                    {% if photos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ photos.previous_page_number }}">
+                            <i class='bx bx-chevron-left'></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in photos.paginator.page_range %}
+                    <li class="page-item {% if photos.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if photos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ photos.next_page_number }}">
+                            <i class='bx bx-chevron-right'></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Upload Photos Modal remains the same -->
+{% if can_upload %}
+<div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class='bx bx-upload me-2'></i>Upload Photos
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" 
+                  enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="upload-zone mb-3">
+                        <input type="file" name="images" multiple class="form-control" 
+                               accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
+                               required>
+                        {% if event.configuration %}
+                        <div class="form-text">
+                            <i class='bx bx-info-circle me-1'></i>
+                            Allowed formats: {{ event.configuration.allowed_formats|join:", " }}
+                            <br>
+                            Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="preview-container" class="row g-3">
+                        <!-- Preview images will be inserted here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class='bx bx-cloud-upload me-2'></i>Upload Photos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize carousel if it exists
+    const carousel = document.getElementById('eventPhotoCarousel');
+    if (carousel) {
+        new bootstrap.Carousel(carousel, {
+            interval: 5000,
+            wrap: true
+        });
+    }
+    
+    // Handle photo likes with proper state management
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!this.dataset.photoId) return;
+            
+            const photoId = this.dataset.photoId;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            try {
+                const response = await fetch(`/events/photo/${photoId}/action/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: 'action=like'
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Toggle like state
+                    const isLiked = this.classList.toggle('liked');
+                    const icon = this.querySelector('i');
+                    const likeCount = this.querySelector('.like-count');
+                    
+                    // Update icon
+                    icon.classList.toggle('bxs-heart', isLiked);
+                    icon.classList.toggle('bx-heart', !isLiked);
+                    
+                    // Update count
+                    if (data.like_count !== undefined) {
+                        likeCount.textContent = data.like_count;
+                    }
+                    
+                    // Update data attribute
+                    this.dataset.liked = isLiked.toString();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    // Handle photo upload preview
+    const fileInput = document.querySelector('input[type="file"]');
+    const previewContainer = document.getElementById('preview-container');
+
+    if (fileInput && previewContainer) {
+        fileInput.addEventListener('change', function() {
+            previewContainer.innerHTML = '';
+            
+            [...this.files].forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.createElement('div');
+                        preview.className = 'col-md-4';
+                        preview.innerHTML = `
+                            <div class="photo-card">
+                                <div class="card-img-wrapper">
+                                    <img src="${e.target.result}" class="card-img-top" alt="Preview">
+                                </div>
+                                <div class="card-body">
+                                    <small class="text-muted">${file.name}</small>
+                                </div>
+                            </div>
+                        `;
+                        previewContainer.appendChild(preview);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
