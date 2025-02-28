@@ -601,7 +601,7 @@
                 <small class="text-muted">Requested {{ request.created_at|timesince }} ago</small>
                 <div>
                   {% if request.status == 'APPROVED' %}
-                  <a href="{% url 'events:event_detail' request.event.id %}" class="btn btn-primary btn-sm">
+                  <a href="{% url 'events:event_detail' request.event.slug %}" class="btn btn-primary btn-sm">
                     <i class="bx bx-calendar-event me-1"></i>View Event
                   </a>
                   {% elif request.status == 'PENDING' %}

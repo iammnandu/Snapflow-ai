@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 import os
+from events.models import EventParticipant
 
 def event_photo_path(instance, filename):
     # Convert event title to a URL-friendly format
@@ -46,7 +47,12 @@ class PhotoLike(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['photo', 'user']
+        unique_together = ('photo', 'user')
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+    def __str__(self):
+        return f"{self.user.username} liked photo {self.photo.id}"
 
 class PhotoComment(models.Model):
     photo = models.ForeignKey(EventPhoto, on_delete=models.CASCADE, related_name='comments')
@@ -56,4 +62,10 @@ class PhotoComment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['photo']),
+            models.Index(fields=['user']),
+        ]
+    
+    def __str__(self):
+        return f"Comment by {self.user.username} on photo {self.photo.id}"

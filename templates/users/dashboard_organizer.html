@@ -377,7 +377,7 @@
     <div class="card-body pt-0">
       <ul class="list-unstyled p-0 m-0">
         {% for request in pending_requests|slice:":5" %}
-        <li class="d-flex mb-3 pb-2 border-bottom" id="request-{{ request.id }}">
+        <li class="d-flex mb-3 pb-2 border-bottom" >
           <div class="avatar flex-shrink-0 me-3">
             {% if request.user.avatar %}
             <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
@@ -411,54 +411,6 @@
 </div>
 </div>
 
-<!-- JavaScript for the access requests list page -->
-<script>
-function handleRequest(requestId, action) {
-    if (!confirm(`Are you sure you want to ${action} this request?`)) {
-        return;
-    }
-
-    fetch(`{% url 'events:handle_access_request' 0 %}`.replace('0', requestId), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify({
-            action: action
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            // Update the card to show new status instead of removing it
-            const requestCard = document.getElementById(`request-${requestId}`);
-            const statusBadge = requestCard.querySelector('.badge');
-            const buttonGroup = requestCard.querySelector('.btn-group');
-            
-            // Update badge color and text
-            statusBadge.className = `badge ${action === 'approve' ? 'bg-label-success' : 'bg-label-danger'}`;
-            statusBadge.textContent = action === 'approve' ? 'Approved' : 'Rejected';
-            
-            // Remove action buttons
-            buttonGroup.remove();
-            
-            // Show toast notification
-            const toast = document.createElement('div');
-            toast.className = 'alert alert-success position-fixed top-0 end-0 m-3';
-            toast.textContent = `Request ${action}ed successfully`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        } else {
-            alert('Error processing request');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error processing request');
-    });
-}
-</script>
 
           
         </div>

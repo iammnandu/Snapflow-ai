@@ -532,79 +532,6 @@ class RequestEventAccessView(LoginRequiredMixin, FormView):
 
 
 @login_required
-@require_http_methods(["POST"])
-def handle_access_request(request, request_id):
-    try:
-        # Get the access request and verify permissions
-        access_request = get_object_or_404(
-            EventAccessRequest,
-            id=request_id
-        )
-        
-        # Check if the user is the event organizer
-        if access_request.event.organizer != request.user:
-            raise PermissionDenied("You don't have permission to handle this request")
-        
-        # Parse the action from JSON data
-        data = json.loads(request.body)
-        action = data.get('action')
-        
-        if action not in ['approve', 'reject']:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid action'
-            }, status=400)
-        
-        # Handle approve action
-        if action == 'approve':
-            access_request.status = EventAccessRequest.RequestStatus.APPROVED
-            
-            # Add user to event based on their role
-            if access_request.request_type == 'PHOTOGRAPHER':
-                EventCrew.objects.create(
-                    event=access_request.event,
-                    member=access_request.user,
-                    role='SECOND',
-                    is_confirmed=True
-                )
-            else:
-                EventParticipant.objects.create(
-                    event=access_request.event,
-                    user=access_request.user,
-                    email=access_request.user.email,
-                    name=access_request.user.get_full_name(),
-                    participant_type='GUEST'
-                )
-        
-        # Handle reject action
-        elif action == 'reject':
-            access_request.status = EventAccessRequest.RequestStatus.REJECTED
-        
-        # Save the changes
-        access_request.save()
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': f'Request {action}ed successfully'
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid JSON data'
-        }, status=400)
-    except PermissionDenied as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=403)
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'An unexpected error occurred'
-        }, status=500)
-
-@login_required
 def request_access(request):
     """Simple form to request access to an event using event code"""
     if request.method == 'POST':
@@ -747,20 +674,28 @@ def approve_request(request, request_id):
                 role='SECOND',
                 is_confirmed=True
             )
-        else:
-            EventParticipant.objects.create(
-                event=access_request.event,
-                user=access_request.user,
-                email=access_request.user.email,
-                name=access_request.user.get_full_name(),
-                participant_type='GUEST'
-            )
+        else:  # PARTICIPANT
+            # Generate a unique registration code for the participant
+            try:
+                unique_code = EventParticipant.generate_unique_code()
+                EventParticipant.objects.create(
+                    event=access_request.event,
+                    user=access_request.user,
+                    email=access_request.user.email,
+                    name=access_request.user.get_full_name() or access_request.user.username,
+                    participant_type='GUEST',
+                    registration_code=unique_code,
+                    is_registrated=True
+                )
+            except Exception as participant_error:
+                messages.error(request, f"Error adding participant: {participant_error}")
+                return redirect('events:access_requests')
         
         access_request.save()
         messages.success(request, 'Request approved successfully')
         
     except Exception as e:
-        messages.error(request, 'An error occurred while processing the request')
+        messages.error(request, f'An error occurred while processing the request: {str(e)}')
     
     return redirect('events:access_requests')
 

@@ -191,4 +191,3 @@ class DeletePhotoView(LoginRequiredMixin, View):
         messages.success(request, "Photo deleted successfully.")
         return redirect('photos:event_gallery', slug=event.slug)
     
-
