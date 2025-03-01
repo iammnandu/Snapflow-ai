@@ -114,6 +114,9 @@
 - added the image cropping option while account registration 
 
 
+## 2 Mar
+### 12:00 AM
+- modified the ai processing to make it faster
 ---
 
 # To-Do List  
@@ -135,3 +138,4 @@
 - add the asteric mark to compulsory fields while complete registration
 - correct the tags filter search
 
+- correct the profile editing section. username and email is not editable now

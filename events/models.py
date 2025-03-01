@@ -1,4 +1,6 @@
 #events/models.py
+import random
+import string
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -188,6 +190,17 @@ class EventParticipant(models.Model):
 
     def __str__(self):
         return f"{self.name} at {self.event.title}"
+    
+    @classmethod
+    def generate_unique_code(cls, length=10):
+        """Generate a unique registration code for participants."""
+        while True:
+            # Generate a random alphanumeric code
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+            
+            # Check if this code already exists
+            if not cls.objects.filter(registration_code=code).exists():
+                return code
 
 class EventConfiguration(models.Model):
     event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='configuration')

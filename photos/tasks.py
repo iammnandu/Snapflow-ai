@@ -6,16 +6,17 @@ import numpy as np
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from celery import shared_task # type: ignore
+from celery import shared_task, chord, group # type: ignore
 from PIL import Image, ImageEnhance, ImageFilter
 import logging
 from scipy.spatial.distance import cosine # type: ignore
 import tempfile
 from pathlib import Path
 import shutil
+import concurrent.futures
+from functools import partial
 
 from .models import EventPhoto, UserPhotoMatch
-from celery import shared_task # type: ignore
 from celery.exceptions import MaxRetriesExceededError # type: ignore
 
 # Add this import at the top of tasks.py
@@ -23,6 +24,9 @@ from deepface import DeepFace # type: ignore
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+# Cache for user encodings to avoid repeated processing
+USER_ENCODING_CACHE = {}
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)  # 5 minutes retry delay
 def process_photo(self, photo_id):
@@ -49,47 +53,22 @@ def process_photo(self, photo_id):
         
         logger.info(f"Successfully loaded image with shape {image.shape}")
         
-        # 1. Analyze image quality
-        try:
-            quality_score = analyze_image_quality(image)
-            logger.info(f"Quality score: {quality_score}")
-        except Exception as e:
-            logger.error(f"Error analyzing image quality: {str(e)}", exc_info=True)
-            quality_score = 0.5
+        # Run tasks in parallel using chord
+        # First group of tasks: quality analysis, face detection, tag generation
+        analysis_tasks = group([
+            analyze_image_quality_task.s(image_path),
+            detect_faces_optimized.s(image_path, photo_id),
+            generate_tags_task.s(image_path, photo.event.event_type if hasattr(photo.event, 'event_type') else None)
+        ])
         
-        # 2. Detect and analyze faces using enhanced method with multiple backends
-        try:
-            detected_faces = detect_faces_with_fallback(image, photo)
-            logger.info(f"Detected faces: {len(detected_faces)}")
-        except Exception as e:
-            logger.error(f"Error detecting faces: {str(e)}", exc_info=True)
-            detected_faces = []
+        # Callback task to update the photo with results
+        callback = process_photo_results.s(photo_id)
         
-        # 3. Generate scene tags based on event type and content
-        try:
-            scene_tags = generate_tags(image, photo.event.event_type)
-            logger.info(f"Generated tags: {scene_tags}")
-        except Exception as e:
-            logger.error(f"Error generating tags: {str(e)}", exc_info=True)
-            scene_tags = []
+        # Execute the chord
+        chord(analysis_tasks)(callback)
         
-        # 4. Update the photo model with processing results
-        photo.processed = True
-        photo.quality_score = quality_score
-        photo.detected_faces = detected_faces
-        photo.scene_tags = scene_tags
-        photo.save()
-        logger.info(f"Updated photo with processing results")
-        
-        # 5. Create enhanced version if quality is below threshold
-        if quality_score < 0.7:  # Threshold can be adjusted
-            try:
-                enhance_photo(photo)
-                logger.info(f"Enhanced photo created")
-            except Exception as e:
-                logger.error(f"Error enhancing photo: {str(e)}", exc_info=True)
-            
-        logger.info(f"Successfully processed photo {photo_id}")
+        logger.info(f"Started parallel processing tasks for photo {photo_id}")
+        return
         
     except Exception as e:
         logger.error(f"Error processing photo {photo_id}: {str(e)}", exc_info=True)
@@ -98,6 +77,75 @@ def process_photo(self, photo_id):
             self.retry(exc=e)
         except MaxRetriesExceededError:
             logger.error(f"Max retries exceeded for photo {photo_id}")
+
+
+@shared_task
+def analyze_image_quality_task(image_path):
+    """Task to analyze image quality."""
+    try:
+        image = cv2.imread(image_path)
+        quality_score = analyze_image_quality(image)
+        logger.info(f"Quality score for {image_path}: {quality_score}")
+        return quality_score
+    except Exception as e:
+        logger.error(f"Error analyzing image quality for {image_path}: {str(e)}")
+        return 0.5
+
+
+@shared_task
+def generate_tags_task(image_path, event_type):
+    """Task to generate image tags."""
+    try:
+        image = cv2.imread(image_path)
+        tags = generate_tags(image, event_type)
+        logger.info(f"Generated tags for {image_path}: {tags}")
+        return tags
+    except Exception as e:
+        logger.error(f"Error generating tags for {image_path}: {str(e)}")
+        return []
+
+
+@shared_task
+def process_photo_results(results, photo_id):
+    """Process and save the results from parallel tasks."""
+    try:
+        photo = EventPhoto.objects.get(id=photo_id)
+        
+        # Unpack results
+        quality_score = results[0]
+        detected_faces = results[1]
+        scene_tags = results[2]
+        
+        # Update the photo model with processing results
+        photo.processed = True
+        photo.quality_score = quality_score
+        photo.detected_faces = detected_faces
+        photo.scene_tags = scene_tags
+        photo.save()
+        logger.info(f"Updated photo {photo_id} with processing results")
+        
+        # Create enhanced version if quality is below threshold
+        if quality_score < 0.7:  # Threshold can be adjusted
+            enhance_photo_task.delay(photo_id)
+        
+        return "Photo processing completed successfully"
+        
+    except Exception as e:
+        logger.error(f"Error processing results for photo {photo_id}: {str(e)}", exc_info=True)
+        return f"Error: {str(e)}"
+
+
+@shared_task
+def enhance_photo_task(photo_id):
+    """Task to create an enhanced version of a photo."""
+    try:
+        photo = EventPhoto.objects.get(id=photo_id)
+        enhance_photo(photo)
+        logger.info(f"Enhanced photo {photo_id} created")
+        return "Photo enhancement completed"
+    except Exception as e:
+        logger.error(f"Error enhancing photo {photo_id}: {str(e)}", exc_info=True)
+        return f"Error: {str(e)}"
 
 
 def analyze_image_quality(image):
@@ -136,18 +184,11 @@ def preprocess_image(img_path, output_path=None):
             return img_path
             
         # Apply preprocessing steps
-        # 1. Convert to grayscale
+        # Convert to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # 2. Apply histogram equalization to improve contrast
+        # Apply histogram equalization to improve contrast
         equalized = cv2.equalizeHist(gray)
-        
-        # 3. Apply Gaussian blur to reduce noise (optional)
-        # blurred = cv2.GaussianBlur(equalized, (5, 5), 0)
-        
-        # 4. Apply adaptive thresholding to enhance features (optional)
-        # thresh = cv2.adaptiveThreshold(equalized, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        #                               cv2.THRESH_BINARY, 11, 2)
         
         # Determine output path
         if output_path is None:
@@ -205,91 +246,146 @@ def align_face(face_img):
         return face_img  # Return original face if alignment fails
 
 
-def detect_faces_with_fallback(image, photo):
-    """Enhanced face detection with multiple backends and fallbacks."""
+def preprocess_event_users(event_id):
+    """Preprocess and cache user profile pictures and encodings for an event."""
     try:
-        # First try with DeepFace
-        deepface_results = detect_faces_deepface(image, photo)
-        
-        # Count matches found with DeepFace
-        deepface_matches = sum(1 for face in deepface_results if face.get('user_id') is not None)
-        logger.info(f"DeepFace found {deepface_matches} matches out of {len(deepface_results)} faces")
-        
-        # If DeepFace didn't find all matches, try face_recognition library
-        if deepface_matches < len(deepface_results):
-            logger.info("Some faces not matched with DeepFace, trying face_recognition library")
-            face_recognition_results = detect_faces_face_recognition(image, photo)
-            
-            # Merge results - use face_recognition results for faces without matches
-            for i, face in enumerate(deepface_results):
-                if face.get('user_id') is None and i < len(face_recognition_results):
-                    if face_recognition_results[i].get('user_id') is not None:
-                        logger.info(f"Face {i+1} matched by face_recognition but not DeepFace")
-                        deepface_results[i]['user_id'] = face_recognition_results[i]['user_id']
-                        deepface_results[i]['confidence'] = face_recognition_results[i]['confidence']
-                        deepface_results[i]['matched_by'] = 'face_recognition'
-                        
-                        # Create UserPhotoMatch entry
-                        UserPhotoMatch.objects.create(
-                            photo=photo,
-                            user=User.objects.get(id=face_recognition_results[i]['user_id']),
-                            confidence_score=face_recognition_results[i]['confidence'],
-                            method='face_recognition'
-                        )
-        
-        # Final count of matches
-        final_matches = sum(1 for face in deepface_results if face.get('user_id') is not None)
-        logger.info(f"Final result: {final_matches} matches out of {len(deepface_results)} faces")
-        
-        return deepface_results
-        
-    except Exception as e:
-        logger.error(f"Error in enhanced face detection: {str(e)}")
-        return []
-
-
-def detect_faces_deepface(image, photo):
-    """Detect faces in the image and match with users using DeepFace."""
-    try:
-        # Save the OpenCV image to a temporary file for DeepFace to process
-        image_path = photo.image.path
-
-        logger.info(f"Photo image path: {photo.image.path}")
-        logger.info(f"Path exists: {os.path.exists(photo.image.path)}")
-
-        # Log event participants statistics
-        organizers = User.objects.filter(organized_events=photo.event).count()
-        crew = User.objects.filter(eventcrew__event=photo.event).count()
-        participants = User.objects.filter(eventparticipant__event=photo.event).count()
-        total = User.objects.filter(
-            Q(organized_events=photo.event) | 
-            Q(eventcrew__event=photo.event) |
-            Q(eventparticipant__event=photo.event)
-        ).distinct().count()
-
-        logger.info(f"Organizers: {organizers}, Crew: {crew}, Participants: {participants}, Total unique: {total}")
-
         # Get all users with profile pictures for this event
         event_users = list(User.objects.filter(
-            Q(organized_events=photo.event) | 
-            Q(eventcrew__event=photo.event) |
-            Q(eventparticipant__event=photo.event)
+            Q(organized_events__id=event_id) | 
+            Q(eventcrew__event__id=event_id) |
+            Q(eventparticipant__event__id=event_id)
         ).distinct())
         
-        face_results = []
-        
-        # Create directories for debug
-        debug_dir = os.path.join(settings.MEDIA_ROOT, 'debug_faces')
-        os.makedirs(debug_dir, exist_ok=True)
+        logger.info(f"Preprocessing profile pictures for {len(event_users)} event users")
         
         # Create a temporary directory for processing
         with tempfile.TemporaryDirectory() as temp_dir:
-            # First, detect faces in the photo
-            try:
-                # Preprocess the main image for better face detection
-                preprocessed_image_path = os.path.join(temp_dir, "preprocessed_main.jpg")
-                preprocess_image(image_path, preprocessed_image_path)
+            # Create debug directory
+            debug_dir = os.path.join(settings.MEDIA_ROOT, 'debug_faces')
+            os.makedirs(debug_dir, exist_ok=True)
+            
+            # Dictionary to store user data
+            user_data = {}
+            
+            # Process users in parallel
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                # Create a partial function with the temp_dir parameter
+                process_user_func = partial(preprocess_user, temp_dir=temp_dir, debug_dir=debug_dir)
                 
+                # Process all users
+                future_to_user = {executor.submit(process_user_func, user): user for user in event_users}
+                
+                # Collect results
+                for future in concurrent.futures.as_completed(future_to_user):
+                    user = future_to_user[future]
+                    try:
+                        result = future.result()
+                        if result:
+                            user_data[user.id] = result
+                    except Exception as e:
+                        logger.error(f"Error preprocessing user {user.username}: {str(e)}")
+            
+            logger.info(f"Preprocessed {len(user_data)} users successfully")
+            return user_data
+    
+    except Exception as e:
+        logger.error(f"Error preprocessing event users: {str(e)}")
+        return {}
+
+
+def preprocess_user(user, temp_dir, debug_dir):
+    """Process a single user's profile picture."""
+    try:
+        # Check if user has an avatar picture
+        if hasattr(user, 'avatar') and user.avatar:
+            profile_pic_path = os.path.join(settings.MEDIA_ROOT, str(user.avatar))
+            
+            if os.path.exists(profile_pic_path):
+                # Save a copy of profile pic for debugging
+                debug_profile_path = os.path.join(debug_dir, f"user_{user.id}_profile.jpg")
+                shutil.copy(profile_pic_path, debug_profile_path)
+                
+                # Preprocess the profile picture
+                processed_profile_path = os.path.join(temp_dir, f"user_{user.id}_profile_processed.jpg")
+                preprocessed_profile = preprocess_image(profile_pic_path, processed_profile_path)
+                
+                # Load user encoding for face_recognition library
+                profile_img = face_recognition.load_image_file(preprocessed_profile)
+                face_locations = face_recognition.face_locations(profile_img)
+                
+                if face_locations:
+                    # Get face encodings
+                    face_encoding = face_recognition.face_encodings(profile_img, [face_locations[0]])[0]
+                    
+                    # Extract face from profile picture for DeepFace
+                    profile_faces = DeepFace.extract_faces(
+                        img_path=preprocessed_profile,
+                        detector_backend='retinaface',
+                        enforce_detection=False
+                    )
+                    
+                    if profile_faces:
+                        # Get face region
+                        profile_face = profile_faces[0]
+                        profile_face_img = cv2.imread(preprocessed_profile)
+                        
+                        extracted_profile_face = profile_face_img[
+                            int(profile_face['facial_area']['y']):int(profile_face['facial_area']['y'] + profile_face['facial_area']['h']),
+                            int(profile_face['facial_area']['x']):int(profile_face['facial_area']['x'] + profile_face['facial_area']['w'])
+                        ]
+                        
+                        extracted_profile_path = os.path.join(temp_dir, f"user_{user.id}_face.jpg")
+                        cv2.imwrite(extracted_profile_path, extracted_profile_face)
+                        
+                        # Create representations for all DeepFace models
+                        deepface_reps = {}
+                        for model_name in ['Facenet', 'VGG-Face', 'ArcFace']:
+                            try:
+                                # Get embedding
+                                embedding_obj = DeepFace.represent(
+                                    img_path=extracted_profile_path,
+                                    model_name=model_name,
+                                    detector_backend='skip'
+                                )
+                                deepface_reps[model_name] = embedding_obj[0]['embedding']
+                            except Exception as e:
+                                logger.error(f"Error creating {model_name} representation for user {user.username}: {str(e)}")
+                        
+                        # Return user data with encodings
+                        return {
+                            'face_recognition_encoding': face_encoding,
+                            'deepface_representations': deepface_reps,
+                            'profile_pic_path': profile_pic_path,
+                            'extracted_face_path': extracted_profile_path
+                        }
+    
+    except Exception as e:
+        logger.error(f"Error preprocessing user {user.username}: {str(e)}")
+    
+    return None
+
+
+@shared_task
+def detect_faces_optimized(image_path, photo_id):
+    """Optimized face detection that processes all faces and users in parallel."""
+    try:
+        photo = EventPhoto.objects.get(id=photo_id)
+        image = cv2.imread(image_path)
+        
+        if image is None:
+            logger.error(f"Failed to load image at {image_path}")
+            return []
+        
+        logger.info(f"Optimized face detection for photo {photo_id}")
+        
+        # Create temporary directory for processing
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Preprocess the image for better detection
+            preprocessed_image_path = os.path.join(temp_dir, "preprocessed_main.jpg")
+            preprocess_image(image_path, preprocessed_image_path)
+            
+            # 1. First detect all faces in the image using RetinaFace (faster than DeepFace.extract_faces)
+            try:
                 # Use DeepFace to detect faces in the image
                 detected_faces = DeepFace.extract_faces(
                     img_path=preprocessed_image_path,
@@ -297,8 +393,22 @@ def detect_faces_deepface(image, photo):
                     enforce_detection=False  # Don't error if no faces detected
                 )
                 
-                # Process each detected face
+                if not detected_faces:
+                    logger.warning(f"No faces detected in photo {photo_id}")
+                    return []
+                
+                logger.info(f"Detected {len(detected_faces)} faces in photo {photo_id}")
+                
+                # Extract faces and save them
+                face_images = []
+                face_objects = []
+                
+                # Create debug directory
+                debug_dir = os.path.join(settings.MEDIA_ROOT, 'debug_faces')
+                os.makedirs(debug_dir, exist_ok=True)
+                
                 for i, face_data in enumerate(detected_faces):
+                    # Create face object
                     face_obj = {
                         "position": {
                             "top": int(face_data['facial_area']['y']),
@@ -317,6 +427,11 @@ def detect_faces_deepface(image, photo):
                         face_obj["position"]["left"]:face_obj["position"]["right"]
                     ]
                     
+                    # Skip very small faces
+                    if face_img.shape[0] < 20 or face_img.shape[1] < 20:
+                        logger.warning(f"Skipping very small face {i} in photo {photo_id}")
+                        continue
+                    
                     # Align face using landmarks
                     aligned_face = align_face(face_img)
                     
@@ -328,237 +443,190 @@ def detect_faces_deepface(image, photo):
                     debug_face_path = os.path.join(debug_dir, f"photo_{photo.id}_face_{i}.jpg")
                     cv2.imwrite(debug_face_path, aligned_face)
                     
-                    # Analyze face quality
-                    face_quality = analyze_image_quality(aligned_face)
-                    logger.info(f"Face {i+1} quality: {face_quality}")
-                    
-                    # Try to match with users using multiple models
-                    best_match_user = None
-                    best_match_confidence = 0
-                    best_match_model = None
-                    
-                    # These models are available in DeepFace
-                    models = ['Facenet', 'VGG-Face', 'ArcFace', 'Dlib']
-                    
-                    logger.info(f"Number of event users found: {len(event_users)}")
-                    for user in event_users:
-                        logger.info(f"User: {user.username}, has avatar: {hasattr(user, 'avatar') and bool(user.avatar)}")
-                        
-                        # Check if user has an avatar picture
-                        if hasattr(user, 'avatar') and user.avatar:
-                            profile_pic_path = os.path.join(settings.MEDIA_ROOT, str(user.avatar))
-                            logger.info(f"User {user.username} avatar path: {profile_pic_path}")
-                            logger.info(f"Avatar exists: {os.path.exists(profile_pic_path)}")
-                            
-                            if os.path.exists(profile_pic_path):
-                                # Save a copy of profile pic for debugging
-                                debug_profile_path = os.path.join(debug_dir, f"user_{user.id}_profile.jpg")
-                                shutil.copy(profile_pic_path, debug_profile_path)
-                                
-                                # Preprocess the profile picture
-                                processed_profile_path = os.path.join(temp_dir, f"user_{user.id}_profile_processed.jpg")
-                                preprocessed_profile = preprocess_image(profile_pic_path, processed_profile_path)
-                                
-                                # Try different models for verification
-                                for model_name in models:
-                                    try:
-                                        # First extract face from profile pic to ensure proper comparison
-                                        profile_faces = DeepFace.extract_faces(
-                                            img_path=preprocessed_profile,
-                                            detector_backend='retinaface',
-                                            enforce_detection=False
-                                        )
-                                        
-                                        if not profile_faces:
-                                            logger.warning(f"No face detected in profile picture for user {user.username}")
-                                            continue
-                                            
-                                        # Extract and save the face from profile pic
-                                        profile_face = profile_faces[0]
-                                        profile_face_img = cv2.imread(preprocessed_profile)
-                                        extracted_profile_face = profile_face_img[
-                                            int(profile_face['facial_area']['y']):int(profile_face['facial_area']['y'] + profile_face['facial_area']['h']),
-                                            int(profile_face['facial_area']['x']):int(profile_face['facial_area']['x'] + profile_face['facial_area']['w'])
-                                        ]
-                                        
-                                        extracted_profile_path = os.path.join(temp_dir, f"user_{user.id}_face.jpg")
-                                        cv2.imwrite(extracted_profile_path, extracted_profile_face)
-                                        
-                                        # Now verify with the extracted faces
-                                        result = DeepFace.verify(
-                                            img1_path=extracted_profile_path,
-                                            img2_path=face_path,
-                                            model_name=model_name,
-                                            detector_backend='skip',  # Skip detection as we already have faces
-                                            distance_metric='cosine'
-                                        )
-                                        
-                                        # Calculate confidence (1 - distance)
-                                        distance = result.get('distance', 0)
-                                        confidence = (1 - distance) * 100
-                                        
-                                        # Log verification attempts
-                                        if result['verified']:
-                                            logger.info(f"Match: User {user.username} matched with confidence {confidence:.2f}% using {model_name}")
-                                        else:
-                                            logger.info(f"No match: User {user.username}, distance: {distance:.4f} using {model_name}")
-                                        
-                                        # Update best match if this is better
-                                        if result['verified'] and confidence > best_match_confidence:
-                                            # Adjust the threshold based on model
-                                            threshold = 50  # Default
-                                            if model_name == 'Facenet':
-                                                threshold = 45
-                                            elif model_name == 'VGG-Face':
-                                                threshold = 55
-                                            elif model_name == 'ArcFace':
-                                                threshold = 50
-                                            elif model_name == 'Dlib':
-                                                threshold = 45
-                                                
-                                            if confidence > threshold:
-                                                best_match_confidence = confidence
-                                                best_match_user = user
-                                                best_match_model = model_name
-                                    
-                                    except Exception as e:
-                                        logger.error(f"Error matching with model {model_name} for user {user.username}: {str(e)}")
-                                        continue
-                    
-                    # If we found a match, add user info
-                    if best_match_user:
-                        face_obj["user_id"] = best_match_user.id
-                        face_obj["confidence"] = round(best_match_confidence, 2)
-                        face_obj["matched_by"] = f"deepface_{best_match_model}"
-                        
-                        # Create UserPhotoMatch entry
-                        UserPhotoMatch.objects.create(
-                            photo=photo,
-                            user=best_match_user,
-                            confidence_score=face_obj["confidence"],
-                            method=f"deepface_{best_match_model}"
-                        )
-                    
-                    face_results.append(face_obj)
+                    # Store face data
+                    face_images.append({
+                        'index': i,
+                        'path': face_path,
+                        'aligned_face': aligned_face
+                    })
+                    face_objects.append(face_obj)
                 
-                logger.info(f"DeepFace face matches found: {sum(1 for face in face_results if face.get('user_id') is not None)}")
+                # 2. Preprocess all user profile pictures for the event (if not already cached)
+                event_id = photo.event.id
+                
+                # Check if users for this event are already preprocessed
+                if event_id not in USER_ENCODING_CACHE:
+                    logger.info(f"Preprocessing event {event_id} users")
+                    USER_ENCODING_CACHE[event_id] = preprocess_event_users(event_id)
+                
+                event_users_data = USER_ENCODING_CACHE[event_id]
+                logger.info(f"Using cached data for {len(event_users_data)} users in event {event_id}")
+                
+                # 3. Generate face representations for all detected faces
+                face_representations = []
+                for face_data in face_images:
+                    face_index = face_data['index']
+                    face_path = face_data['path']
+                    
+                    # Generate face recognition encoding
+                    fr_image = face_recognition.load_image_file(face_path)
+                    fr_encoding = None
+                    try:
+                        fr_encoding = face_recognition.face_encodings(fr_image)[0]
+                    except IndexError:
+                        logger.warning(f"face_recognition couldn't generate encoding for face {face_index}")
+                    
+                    # Generate DeepFace representations
+                    df_representations = {}
+                    for model_name in ['Facenet', 'VGG-Face', 'ArcFace']:
+                        try:
+                            embedding_obj = DeepFace.represent(
+                                img_path=face_path,
+                                model_name=model_name,
+                                detector_backend='skip'
+                            )
+                            df_representations[model_name] = embedding_obj[0]['embedding']
+                        except Exception as e:
+                            logger.error(f"Error creating {model_name} representation for face {face_index}: {str(e)}")
+                    
+                    face_representations.append({
+                        'index': face_index,
+                        'face_recognition_encoding': fr_encoding,
+                        'deepface_representations': df_representations
+                    })
+                
+                # 4. Match faces with users in parallel
+                with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 1)) as executor:
+                    # Create a partial function with fixed parameters
+                    match_func = partial(
+                        match_face_with_users, 
+                        event_users_data=event_users_data
+                    )
+                    
+                    # Submit all face matching tasks
+                    future_to_face = {executor.submit(match_func, face_rep): face_rep['index'] for face_rep in face_representations}
+                    
+                    # Process results as they complete
+                    for future in concurrent.futures.as_completed(future_to_face):
+                        face_index = future_to_face[future]
+                        try:
+                            match_result = future.result()
+                            if match_result:
+                                # Update the corresponding face object with match data
+                                for i, face_obj in enumerate(face_objects):
+                                    if i == face_index:
+                                        face_obj['user_id'] = match_result['user_id']
+                                        face_obj['confidence'] = match_result['confidence']
+                                        face_obj['matched_by'] = match_result['matched_by']
+                                        
+                                        # Create UserPhotoMatch entry
+                                        UserPhotoMatch.objects.create(
+                                            photo=photo,
+                                            user=User.objects.get(id=match_result['user_id']),
+                                            confidence_score=match_result['confidence'],
+                                            method=match_result['matched_by']
+                                        )
+                                        break
+                        except Exception as e:
+                            logger.error(f"Error processing match result for face {face_index}: {str(e)}")
+                
+                # Log results
+                matches_found = sum(1 for face in face_objects if face.get('user_id') is not None)
+                logger.info(f"Found {matches_found} matches out of {len(face_objects)} faces")
+                return face_objects
                 
             except Exception as e:
-                logger.error(f"Error in DeepFace face detection: {str(e)}")
-        
-        return face_results
+                logger.error(f"Error in optimized face detection: {str(e)}")
+                return []
     
     except Exception as e:
-        logger.error(f"Error in DeepFace detection: {str(e)}")
+        logger.error(f"Error in detect_faces_optimized: {str(e)}", exc_info=True)
         return []
 
 
-def detect_faces_face_recognition(image, photo):
-    """Use face_recognition library as an alternative method."""
-    face_results = []
+def match_face_with_users(face_rep, event_users_data):
+    """Match a single face with all event users in parallel."""
     try:
-        # Create a temporary directory for processing
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Get RGB image for face_recognition library
-            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
-            # Find all faces in the image
-            face_locations = face_recognition.face_locations(rgb_image)
-            
-            if not face_locations:
-                logger.warning("No faces detected by face_recognition library")
-                return []
+        face_index = face_rep['index']
+        fr_encoding = face_rep['face_recognition_encoding']
+        df_representations = face_rep['deepface_representations']
+        
+        logger.info(f"Matching face {face_index} with {len(event_users_data)} users")
+        
+        # Track best match across all methods
+        best_match = None
+        best_confidence = 0
+        best_method = None
+        
+        # Try DeepFace matching first (usually more accurate)
+        for model_name, face_embedding in df_representations.items():
+            if not face_embedding:
+                continue
                 
-            # Find face encodings
-            face_encodings = face_recognition.face_encodings(rgb_image, face_locations)
-            
-            # Get all users with profile pictures for this event
-            event_users = list(User.objects.filter(
-                Q(organized_events=photo.event) | 
-                Q(eventcrew__event=photo.event) |
-                Q(eventparticipant__event=photo.event)
-            ).distinct())
-            
-            # Create debug directory
-            debug_dir = os.path.join(settings.MEDIA_ROOT, 'debug_faces')
-            os.makedirs(debug_dir, exist_ok=True)
-            
-            # Cache user encodings
-            user_encodings = {}
-            for user in event_users:
-                if hasattr(user, 'avatar') and user.avatar:
-                    profile_pic_path = os.path.join(settings.MEDIA_ROOT, str(user.avatar))
-                    if os.path.exists(profile_pic_path):
-                        try:
-                            # Save preprocessed profile pic
-                            preprocessed_profile = os.path.join(temp_dir, f"user_{user.id}_profile_preprocessed.jpg")
-                            preprocess_image(profile_pic_path, preprocessed_profile)
-                            
-                            # Load image and get encoding
-                            profile_img = face_recognition.load_image_file(preprocessed_profile)
-                            profile_encoding = face_recognition.face_encodings(profile_img)
-                            
-                            if profile_encoding:
-                                user_encodings[user.id] = profile_encoding[0]
-                                logger.info(f"Created face encoding for user {user.username}")
-                        except Exception as e:
-                            logger.error(f"Error encoding user {user.username}: {str(e)}")
-                            
-            # Process each face
-            for i, (face_location, face_encoding) in enumerate(zip(face_locations, face_encodings)):
-                top, right, bottom, left = face_location
-                face_obj = {
-                    "position": {
-                        "top": top,
-                        "right": right,
-                        "bottom": bottom,
-                        "left": left
-                    },
-                    "user_id": None,
-                    "confidence": None,
-                    "matched_by": None
-                }
+            # Match against all users with this model
+            for user_id, user_data in event_users_data.items():
+                if not user_data:
+                    continue
+                    
+                user_df_reps = user_data.get('deepface_representations', {})
+                user_embedding = user_df_reps.get(model_name)
                 
-                # Extract face for debugging
-                face_img = image[top:bottom, left:right]
-                debug_face_path = os.path.join(debug_dir, f"photo_{photo.id}_face_recognition_{i}.jpg")
-                cv2.imwrite(debug_face_path, face_img)
-                
-                # Try to match with users
-                best_match_user = None
-                best_match_confidence = 0
-                
-                for user_id, user_encoding in user_encodings.items():
+                if user_embedding:
                     try:
-                        # Compare face encodings
-                        face_distance = face_recognition.face_distance([user_encoding], face_encoding)[0]
-                        # Convert distance to confidence score (0-100)
+                        # Calculate distance
+                        distance = cosine(np.array(face_embedding), np.array(user_embedding))
+                        confidence = (1 - distance) * 100
+                        
+                        # Threshold varies by model
+                        threshold = 50  # Default
+                        if model_name == 'Facenet':
+                            threshold = 45
+                        elif model_name == 'VGG-Face':
+                            threshold = 55
+                        elif model_name == 'ArcFace':
+                            threshold = 50
+                            
+                        if confidence > threshold and confidence > best_confidence:
+                            best_confidence = confidence
+                            best_match = user_id
+                            best_method = f"deepface_{model_name}"
+                    except Exception as e:
+                        logger.error(f"Error matching face {face_index} with user {user_id} using {model_name}: {str(e)}")
+        
+        # Try face_recognition as fallback
+        if fr_encoding is not None and (best_match is None or best_confidence < 60):
+            for user_id, user_data in event_users_data.items():
+                if not user_data:
+                    continue
+                    
+                user_fr_encoding = user_data.get('face_recognition_encoding')
+                
+                if user_fr_encoding is not None:
+                    try:
+                        # Calculate face distance
+                        face_distance = face_recognition.face_distance([user_fr_encoding], fr_encoding)[0]
                         confidence = (1 - face_distance) * 100
                         
-                        user = User.objects.get(id=user_id)
-                        logger.info(f"face_recognition: User {user.username}, confidence: {confidence:.2f}%")
-                        
-                        if confidence > best_match_confidence and confidence > 45:  # Lower threshold than DeepFace
-                            best_match_confidence = confidence
-                            best_match_user = user
+                        if confidence > 45 and confidence > best_confidence:
+                            best_confidence = confidence
+                            best_match = user_id
+                            best_method = "face_recognition"
                     except Exception as e:
-                        logger.error(f"Error matching face with user {user_id}: {str(e)}")
-                        
-                # If we found a match, add user info
-                if best_match_user:
-                    face_obj["user_id"] = best_match_user.id
-                    face_obj["confidence"] = round(best_match_confidence, 2)
-                    face_obj["matched_by"] = "face_recognition"
-                    
-                face_results.append(face_obj)
-                
-            logger.info(f"face_recognition matches found: {sum(1 for face in face_results if face.get('user_id') is not None)}")
-                
-        return face_results
-    
+                        logger.error(f"Error matching face {face_index} with user {user_id} using face_recognition: {str(e)}")
+        
+        # Return the best match if found
+        if best_match:
+            return {
+                'user_id': best_match,
+                'confidence': round(best_confidence, 2),
+                'matched_by': best_method
+            }
+        
+        return None
+        
     except Exception as e:
-        logger.error(f"Error in face_recognition detection: {str(e)}")
-        return []
+        logger.error(f"Error in match_face_with_users: {str(e)}")
+        return None
 
 
 def generate_tags(image, event_type):
@@ -633,25 +701,18 @@ def enhance_photo(photo):
     except Exception as e:
         logger.error(f"Error enhancing photo: {str(e)}")
 
-    
+
+# Helper task to clear the user encoding cache for an event
 @shared_task
-def test_task():
-    logger.info("Running test task")
-    return "Task completed successfully"
+def clear_user_encoding_cache(event_id=None):
+    """Clear the user encoding cache for a specific event or all events."""
+    global USER_ENCODING_CACHE
+    if event_id:
+        if event_id in USER_ENCODING_CACHE:
+            del USER_ENCODING_CACHE[event_id]
+            logger.info(f"Cleared user encoding cache for event {event_id}")
+    else:
+        USER_ENCODING_CACHE = {}
+        logger.info("Cleared all user encoding cache")
+    return "Cache cleared"
 
-
-# Add a Model class for testing if you don't already have it
-# If you already have UserPhotoMatch model, just make sure it has a 'method' field
-"""
-from django.db import models
-
-class UserPhotoMatch(models.Model):
-    photo = models.ForeignKey('EventPhoto', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    confidence_score = models.FloatField()
-    method = models.CharField(max_length=100, default='deepface')
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        unique_together = ('photo', 'user')
-"""

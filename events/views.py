@@ -685,7 +685,7 @@ def approve_request(request, request_id):
                     name=access_request.user.get_full_name() or access_request.user.username,
                     participant_type='GUEST',
                     registration_code=unique_code,
-                    is_registrated=True
+                    is_registered=True 
                 )
             except Exception as participant_error:
                 messages.error(request, f"Error adding participant: {participant_error}")
