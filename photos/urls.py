@@ -15,4 +15,6 @@ urlpatterns = [
     
     # New URLs for user gallery and related features
     path('my-gallery/', views.UserGalleryView.as_view(), name='user_gallery'),
+
+    path('photo/<int:pk>/reanalyze-faces/', views.reanalyze_faces, name='reanalyze_faces'),
 ]

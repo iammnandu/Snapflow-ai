@@ -161,18 +161,28 @@ class PhotoDetailView(DetailView):
         context['has_enhanced_version'] = photo.has_enhanced_version()
         context['scene_tags'] = photo.get_tags()
         
-        # Get recognized users
+        # Get recognized users (improved for DeepFace)
         recognized_users = []
+        # Get matches directly from UserPhotoMatch rather than detected_faces
+        matches = UserPhotoMatch.objects.filter(photo=photo).select_related('user')
+        
+        for match in matches:
+            recognized_users.append({
+                'user': match.user,
+                'confidence': match.confidence_score,
+                'position': None  # Get position from detected_faces if needed
+            })
+            
+        # If we have facial_area data in detected_faces, add it to the matches
         if photo.detected_faces:
-            for face in photo.detected_faces:
-                if face.get('user_id'):
-                    user_id = face.get('user_id')
-                    match = UserPhotoMatch.objects.filter(photo=photo, user_id=user_id).first()
-                    if match:
-                        recognized_users.append({
-                            'user': match.user,
-                            'confidence': match.confidence_score
-                        })
+            for face_data in photo.detected_faces:
+                if face_data.get('user_id'):
+                    user_id = face_data.get('user_id')
+                    # Find the corresponding match
+                    for user_info in recognized_users:
+                        if user_info['user'].id == user_id:
+                            user_info['position'] = face_data.get('position')
+                            break
         
         context['recognized_users'] = recognized_users
         
@@ -319,3 +329,30 @@ class UserGalleryView(LoginRequiredMixin, ListView):
         })
         
         return context
+    
+
+
+
+
+@login_required
+def reanalyze_faces(request, pk):
+    photo = get_object_or_404(EventPhoto, pk=pk)
+    
+    # Check permissions
+    if not (photo.event.organizer == request.user or 
+            photo.event.crew_members.filter(member=request.user).exists()):
+        messages.error(request, "You don't have permission to reanalyze photos.")
+        return redirect('photos:photo_detail', pk=pk)
+    
+    # Clear existing face matches
+    UserPhotoMatch.objects.filter(photo=photo).delete()
+    
+    # Reset face detection data
+    photo.detected_faces = []
+    photo.save(update_fields=['detected_faces'])
+    
+    # Queue for reprocessing
+    process_photo.delay(photo.id)
+    
+    messages.success(request, "Photo queued for face reanalysis.")
+    return redirect('photos:photo_detail', pk=pk)

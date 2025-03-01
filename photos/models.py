@@ -97,7 +97,7 @@ class UserPhotoMatch(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='photo_appearances')
     confidence_score = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    method = models.CharField(max_length=100, default='deepface')
     class Meta:
         unique_together = ('photo', 'user')
         indexes = [
