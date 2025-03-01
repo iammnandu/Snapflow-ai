@@ -3,6 +3,42 @@
 
 {% block title %}Complete Profile - Your App{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<style>
+    .image-container {
+        max-width: 100%;
+        position: relative;
+    }
+    #preview {
+        display: block;
+        max-width: 100%;
+    }
+    .preview-container {
+        overflow: hidden;
+        width: 150px;
+        height: 150px;
+        margin: 10px auto;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+    }
+    .cropper-container {
+        margin-bottom: 20px;
+    }
+    .btn-crop {
+        margin-top: 10px;
+    }
+    .img-preview {
+        display: none;
+    }
+    /* Debug styles for development */
+    .form-errors {
+        color: red;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
 {% block body_block %}
 <div class="container-xxl">
     <div class="authentication-wrapper authentication-basic container-p-y">
@@ -54,19 +90,60 @@
                     </div>
                 {% endif %}
 
-                    <form method="POST" enctype="multipart/form-data" class="mb-3">
+                    <form method="POST" enctype="multipart/form-data" class="mb-3" id="profile-form">
                         {% csrf_token %}
 
-                        <!-- Avatar Upload -->
+                        <!-- Show Form Errors -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the following errors:</strong>
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Avatar Upload with Cropping -->
                         <div class="mb-3">
                             <label class="form-label">Profile Picture</label>
-                            <input type="file" class="form-control" name="avatar">
+                            <input type="file" class="form-control" name="avatar_input" id="avatar-input" accept="image/*">
+                            <input type="hidden" name="avatar_data" id="avatar-data">
+                            {{ form.avatar }}
+                            
+                            <!-- Image Preview and Cropping Area -->
+                            <div class="image-container mt-3" id="cropper-container" style="display: none;">
+                                <img id="preview" src="#" alt="Preview">
+                                <div class="btn-toolbar mt-2">
+                                    <button type="button" class="btn btn-primary btn-crop" id="crop-btn">Crop Image</button>
+                                    <button type="button" class="btn btn-outline-secondary ms-2" id="cancel-crop">Cancel</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Cropped Preview -->
+                            <div class="preview-container mt-3" id="cropped-preview-container" style="display: none;">
+                                <img id="cropped-preview" src="#" alt="Cropped Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            
+                            {% if form.avatar.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.avatar.errors }}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- Phone Number -->
                         <div class="mb-3">
                             <label class="form-label">Phone Number</label>
                             <input type="tel" class="form-control" name="phone_number" placeholder="Enter your phone number" value="{{ form.phone_number.value|default:'' }}" />
+                            {% if form.phone_number.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.phone_number.errors }}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- Role-Specific Fields -->
@@ -74,10 +151,20 @@
                         <div class="mb-3">
                             <label class="form-label">Company Name</label>
                             <input type="text" class="form-control" name="company_name" placeholder="Company Name" value="{{ form.company_name.value|default:'' }}" />
+                            {% if form.company_name.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.company_name.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Website URL</label>
                             <input type="url" class="form-control" name="website" placeholder="Website URL" value="{{ form.website.value|default:'' }}" />
+                            {% if form.website.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.website.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
 
@@ -85,6 +172,11 @@
                         <div class="mb-3">
                             <label class="form-label">Portfolio URL</label>
                             <input type="url" class="form-control" name="portfolio_url" placeholder="Portfolio URL" value="{{ form.portfolio_url.value|default:'' }}" />
+                            {% if form.portfolio_url.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.portfolio_url.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Photography Role</label>
@@ -94,10 +186,20 @@
                                     <option value="{{ value }}" {% if value == form.photographer_role.value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
+                            {% if form.photographer_role.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.photographer_role.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Use Watermark?</label>
                             {{ form.watermark }}
+                            {% if form.watermark.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.watermark.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
 
@@ -110,6 +212,11 @@
                                     <option value="{{ value }}" {% if value == form.participant_type.value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
+                            {% if form.participant_type.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.participant_type.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Image Visibility</label>
@@ -118,14 +225,29 @@
                                 <option value="PRIVATE" {% if form.image_visibility.value == 'PRIVATE' %}selected{% endif %}>Private</option>
                                 <option value="EVENT_ONLY" {% if form.image_visibility.value == 'EVENT_ONLY' %}selected{% endif %}>Event Only</option>
                             </select>
+                            {% if form.image_visibility.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.image_visibility.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3 form-check">
                             <input class="form-check-input" type="checkbox" name="blur_requested" {% if form.blur_requested.value %}checked{% endif %} />
                             <label class="form-check-label">Request Face Blur in Photos</label>
+                            {% if form.blur_requested.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.blur_requested.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3 form-check">
                             <input class="form-check-input" type="checkbox" name="remove_requested" {% if form.remove_requested.value %}checked{% endif %} />
                             <label class="form-check-label">Request Photo Removal Option</label>
+                            {% if form.remove_requested.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.remove_requested.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
 
@@ -145,4 +267,110 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for Image Cropping -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatarInput = document.getElementById('avatar-input');
+        const avatarData = document.getElementById('avatar-data');
+        const preview = document.getElementById('preview');
+        const cropperContainer = document.getElementById('cropper-container');
+        const croppedPreviewContainer = document.getElementById('cropped-preview-container');
+        const croppedPreview = document.getElementById('cropped-preview');
+        const cropBtn = document.getElementById('crop-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        let cropper;
+
+        // Show preview and initialize cropper when image is selected
+        avatarInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (!files || !files.length) return;
+            
+            const file = files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                cropperContainer.style.display = 'block';
+                croppedPreviewContainer.style.display = 'none';
+                
+                // Destroy existing cropper if it exists
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                // Initialize cropper
+                cropper = new Cropper(preview, {
+                    aspectRatio: 1, // Square aspect ratio for profile picture
+                    viewMode: 1,    // Restrict the crop box to not exceed the size of the canvas
+                    guides: true,   // Show guides
+                    center: true,   // Show center indicator
+                    background: false, // Hide the black modal
+                    autoCropArea: 0.8, // Define default size of the cropping area
+                    movable: true,
+                    zoomable: true,
+                    rotatable: true,
+                });
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        // Crop the image when crop button is clicked
+        cropBtn.addEventListener('click', function() {
+            if (!cropper) return;
+            
+            // Get cropped image as a canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            // Show the cropped image
+            croppedPreview.src = canvas.toDataURL('image/jpeg', 0.9);
+            croppedPreviewContainer.style.display = 'block';
+            
+            // Store the cropped image data in the hidden input
+            avatarData.value = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Hide the cropper
+            cropperContainer.style.display = 'none';
+            
+            // Destroy the cropper
+            cropper.destroy();
+            cropper = null;
+        });
+        
+        // Fix for the cancel button - wrong ID in event listener
+        document.getElementById('cancel-crop').addEventListener('click', function() {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            cropperContainer.style.display = 'none';
+            avatarInput.value = '';
+        });
+        
+        // Validate form submission
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            console.log("Form submission triggered");
+            // If a file was selected but not cropped, show an alert
+            if (avatarInput.files.length > 0 && !avatarData.value) {
+                e.preventDefault();
+                alert('Please crop your profile picture before submitting.');
+            } else {
+                console.log("Form validation passed, submitting...");
+                // Log the avatar data for debugging (truncated)
+                if (avatarData.value) {
+                    console.log("Avatar data length: " + avatarData.value.length);
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

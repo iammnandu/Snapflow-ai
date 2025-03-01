@@ -92,14 +92,14 @@
           <div>View Profile</div>
         </a>
       </li>
-
+      {% if user.role == 'PARTICIPANT' %}
       <li class="menu-item">
-        <a href="{% url 'users:profile_update' %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Edit Profile</div>
+        <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-photo-album"></i>
+          <div>My Photos</div>
         </a>
       </li>
-
+      {% endif %}
 
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Events</span>
@@ -176,14 +176,14 @@
 
                 <!-- User -->
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="{% url 'users:profile'  %}" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
                       <img src="{{ user.avatar.url }}" alt class="w-px-40 h-px-40 rounded-circle object-fit-cover" />
                     </div>
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                      <a class="dropdown-item" href="#">
+                      <a class="dropdown-item" href="{% url 'users:profile'  %}">
                         <div class="d-flex">
                           <div class="flex-shrink-0 me-3">
                             <div class="avatar avatar-online">

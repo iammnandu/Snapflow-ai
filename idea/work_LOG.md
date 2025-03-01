@@ -99,10 +99,19 @@
 
 ## Mar 1
 
-### Initial Implementation of Ai done
+### 12 30 am Initial Implementation of Ai done
 - added the automatic tagging and enhancement of images.
 
+### 7 30pm
+- corrected the face recognition
 
+### 10 30pm
+- corrected the gallery, photo_detail, user_gallery templates
+-
+
+### 11 30pm
+- updated the url routing for user_gallery
+- added the image cropping option while account registration 
 
 
 ---
@@ -124,3 +133,5 @@
 
 - add the info about password while registeing to site
 - add the asteric mark to compulsory fields while complete registration
+- correct the tags filter search
+

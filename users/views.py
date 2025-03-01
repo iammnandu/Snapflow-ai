@@ -84,6 +84,16 @@ def register(request):
     return render(request, 'users/register.html', {'form': form})
 
 
+import base64
+import io
+import logging
+from django.core.files.base import ContentFile
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+logger = logging.getLogger(__name__)
+
 @login_required
 def complete_profile(request):
     user = request.user
@@ -97,11 +107,47 @@ def complete_profile(request):
     FormClass = form_classes.get(user.role)
     
     if request.method == 'POST':
+        # Log form data for debugging (exclude image data for brevity)
+        post_data = {k: v for k, v in request.POST.items() if k != 'avatar_data'}
+        logger.debug(f"Form POST data: {post_data}")
+        logger.debug(f"Files: {request.FILES}")
+        
+        # Create form without saving it yet
         form = FormClass(request.POST, request.FILES, instance=user)
+        
+        # Manually handle the cropped image
+        if 'avatar_data' in request.POST and request.POST['avatar_data']:
+            try:
+                # Get the base64 string from the hidden input
+                avatar_data = request.POST['avatar_data']
+                
+                # Remove the data URL prefix
+                if ',' in avatar_data:
+                    format_info, avatar_data = avatar_data.split(',', 1)
+                    logger.debug(f"Image format info: {format_info}")
+                
+                # Decode base64 data
+                avatar_image = base64.b64decode(avatar_data)
+                
+                # Create a Django file-like object
+                avatar_file = ContentFile(avatar_image, name='profile-image.jpg')
+                
+                # Assign the file to the form instance
+                form.instance.avatar = avatar_file
+                logger.debug("Successfully processed avatar image")
+            except Exception as e:
+                logger.error(f"Error processing avatar: {str(e)}")
+                messages.error(request, f"Error processing profile image: {str(e)}")
+        
+        # Check form validity and display errors
         if form.is_valid():
+            logger.debug("Form is valid, saving...")
             form.save()
             messages.success(request, 'Profile completed successfully!')
             return redirect('users:dashboard')
+        else:
+            logger.error(f"Form validation errors: {form.errors}")
+            messages.error(request, f"Please correct the errors below: {form.errors}")
     else:
         form = FormClass(instance=user)
     
