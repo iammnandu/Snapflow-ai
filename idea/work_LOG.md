@@ -117,6 +117,10 @@
 ## 2 Mar
 ### 12:00 AM
 - modified the ai processing to make it faster
+
+
+### 12 45 am
+- increased the photo upload soze from 10mb to 50mb
 ---
 
 # To-Do List  
@@ -139,3 +143,4 @@
 - correct the tags filter search
 
 - correct the profile editing section. username and email is not editable now
+- update the ai tag generator for photos. now its accuracy is not that good and add more type of tags based on scene analyzing.

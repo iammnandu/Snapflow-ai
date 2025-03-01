@@ -199,16 +199,31 @@
         background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
     }
     
-    .badge-position-top-left {
+    /* Updated badge positioning to prevent overlap */
+    .badge-container {
         position: absolute;
-        top: 0.5rem;
-        left: 0.5rem;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none; /* Allow clicks to pass through to elements below */
     }
     
-    .badge-position-top-right {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
+    .badge-container .badge {
+        pointer-events: auto; /* Re-enable clicks on badges */
+        margin-bottom: 0.25rem;
+    }
+    
+    .badge-left-container, .badge-right-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .badge-right-container {
+        align-items: flex-end;
     }
     
     .quality-enhanced-badge {
@@ -329,24 +344,25 @@
                         <div class="card-img-wrapper">
                             <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
                             
-                            <!-- Enhanced available badge -->
-                            {% if photo.quality_score and photo.quality_score < 0.5 and photo.has_enhanced_version %}
-                            <div class="badge-position-top-right">
-                                <span class="badge quality-enhanced-badge">
-                                    <i class='bx bx-image-alt'></i> Enhanced Available
-                                </span>
+                            <!-- Updated badge layout to prevent overlap -->
+                            <div class="badge-container">
+                                <div class="badge-left-container">
+                                    {% if photo.detected_faces %}
+                                    <span class="badge people-badge">
+                                        <i class='bx bx-user'></i> {{ photo.detected_faces|length }} 
+                                        {% if photo.detected_faces|length == 1 %}Person{% else %}People{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="badge-right-container">
+                                    {% if photo.quality_score and photo.quality_score < 0.5 and photo.has_enhanced_version %}
+                                    <span class="badge quality-enhanced-badge">
+                                        <i class='bx bx-image-alt'></i> Enhanced Available
+                                    </span>
+                                    {% endif %}
+                                </div>
                             </div>
-                            {% endif %}
-                            
-                            <!-- People count badge -->
-                            {% if photo.detected_faces %}
-                            <div class="badge-position-top-left">
-                                <span class="badge people-badge">
-                                    <i class='bx bx-user'></i> {{ photo.detected_faces|length }} 
-                                    {% if photo.detected_faces|length == 1 %}Person{% else %}People{% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
                             
                             <!-- Tags overlay -->
                             {% if photo.scene_tags %}
@@ -362,11 +378,12 @@
                             </div>
                             {% endif %}
                             
-                            <!-- Like button -->
+                            <!-- Like button (now positioned separately from badges) -->
                             {% if enable_likes %}
                             <button class="btn btn-sm btn-light like-btn position-absolute top-0 end-0 m-2 {% if photo.liked_by_user %}liked{% endif %}" 
                                     data-photo-id="{{ photo.id }}"
-                                    data-liked="{{ photo.liked_by_user|yesno:'true,false' }}">
+                                    data-liked="{{ photo.liked_by_user|yesno:'true,false' }}"
+                                    style="z-index: 10; margin-top: 2.5rem !important;"> <!-- Added higher z-index and adjusted margin -->
                                 <i class='bx {% if photo.liked_by_user %}bxs-heart{% else %}bx-heart{% endif %}'></i>
                                 <span class="like-count">{{ photo.like_count }}</span>
                             </button>

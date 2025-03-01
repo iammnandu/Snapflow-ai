@@ -237,3 +237,8 @@ CELERY_BEAT_SCHEDULE = {
     },
     # Add other scheduled tasks as needed
 }
+
+
+# Increase the maximum upload size to 50MB (or your desired limit)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB in bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB in bytes
