@@ -4,12 +4,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from pathlib import Path
-from deepface import DeepFace
-from PIL import Image
-import shutil
-import cv2
-from datetime import datetime
-import tempfile
+from deepface import DeepFace # type: ignore
 from photos.models import EventPhoto, UserPhotoMatch
 from events.models import Event
 from django.db.models import Q

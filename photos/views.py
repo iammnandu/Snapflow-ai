@@ -20,20 +20,24 @@ class EventGalleryView(DetailView):
     model = Event
     template_name = 'photos/gallery.html'
     context_object_name = 'event'
-    
+   
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = self.get_object()
-        
+       
         # Get tag filter
         tag_filter = self.request.GET.get('tag')
         photos_queryset = event.photos.all()
-        
+       
         # Apply tag filter if specified
         if tag_filter:
-            # Filter by tag using JSONField filtering
-            photos_queryset = photos_queryset.filter(scene_tags__contains=[tag_filter])
-        
+            # For SQLite: Filter at Python level instead of database level
+            photo_ids = []
+            for photo in photos_queryset:
+                if photo.scene_tags and tag_filter in photo.scene_tags:
+                    photo_ids.append(photo.id)
+            photos_queryset = photos_queryset.filter(id__in=photo_ids)
+       
         # Apply sorting
         sort_by = self.request.GET.get('sort', 'recent')
         if sort_by == 'popular':
@@ -42,27 +46,27 @@ class EventGalleryView(DetailView):
             photos_queryset = photos_queryset.order_by('-quality_score', '-upload_date')
         else:  # Default: recent
             photos_queryset = photos_queryset.order_by('-upload_date')
-        
+       
         # Get unique tags across all event photos
         all_tags = set()
         for photo in event.photos.exclude(scene_tags__isnull=True):
             if photo.scene_tags:
                 all_tags.update(photo.scene_tags)
-        
+       
         # Get photos with pagination
         paginator = Paginator(photos_queryset, 12)  # Show 12 photos per page
         page = self.request.GET.get('page')
         photos = paginator.get_page(page)
-        
+       
         # Check user permissions
         can_upload = False
         if self.request.user.is_authenticated:
             can_upload = (
-                event.organizer == self.request.user or 
-                event.crew_members.filter(member=self.request.user).exists() or 
+                event.organizer == self.request.user or
+                event.crew_members.filter(member=self.request.user).exists() or
                 event.allow_guest_upload
             )
-        
+       
         context.update({
             'photos': photos,
             'can_upload': can_upload,

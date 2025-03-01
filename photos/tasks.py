@@ -6,20 +6,20 @@ import numpy as np
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from celery import shared_task
+from celery import shared_task # type: ignore
 from PIL import Image, ImageEnhance, ImageFilter
 import logging
-from scipy.spatial.distance import cosine
+from scipy.spatial.distance import cosine # type: ignore
 import tempfile
 from pathlib import Path
 import shutil
 
 from .models import EventPhoto, UserPhotoMatch
-from celery import shared_task
-from celery.exceptions import MaxRetriesExceededError
+from celery import shared_task # type: ignore
+from celery.exceptions import MaxRetriesExceededError # type: ignore
 
 # Add this import at the top of tasks.py
-from deepface import DeepFace
+from deepface import DeepFace # type: ignore
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
