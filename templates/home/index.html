@@ -1,385 +1,464 @@
 {% extends 'home/base.html' %}
 {% load static %}
 
+{% block content %}
+     <!-- Hero Section -->
+     <section id="hero" class="hero section">
 
-{% block body_block %}
-     <!-- Hero Start -->
-     <div class="container-xxl bg-primary hero-header">
-        <div class="container px-lg-5">
-            <div class="row g-5">
-                <div class="col-lg-8 text-center text-lg-start">
-                    <h1 class="text-white mb-4 animated slideInDown">Revolutionize Event Photography with SnapFlow</h1>
-                    <p class="text-white pb-3 animated slideInDown">SnapFlow is the ultimate event photo management and sharing platform. From real-time uploads to AI-powered editing, we make event photography seamless and efficient for organizers, photographers, and participants.</p>
-                    <a href="{% url 'home:features' %} " class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill me-3 animated slideInLeft">Explore Features</a>
-                    <a href="" class="btn btn-secondary-gradient py-sm-3 px-4 px-sm-5 rounded-pill animated slideInRight">Contact Us</a>
-                </div>
-                <div class="col-lg-4 d-flex justify-content-center justify-content-lg-end wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="owl-carousel screenshot-carousel">
-                        <img class="img-fluid" src="img/event1.jpg" alt="Event Photo 1">
-                        <img class="img-fluid" src="img/event2.jpg" alt="Event Photo 2">
-                        <img class="img-fluid" src="img/event3.jpg" alt="Event Photo 3">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Hero End -->
-
-<!-- About Start -->
-<div class="container-xxl py-5" id="about">
-    <div class="container py-5 px-lg-5">
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                <h5 class="text-primary-gradient fw-medium">About SnapFlow</h5>
-                <h1 class="mb-4">Revolutionizing Photography with AI</h1>
-                <p class="mb-4">SnapFlow helps photographers, clients, and event participants manage and enhance photos effortlessly. AI-driven organization, privacy-focused sharing, and powerful editing tools make it the ultimate solution for event photography.</p>
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6 wow fadeIn" data-wow-delay="0.5s">
-                        <div class="d-flex">
-                            <i class="fa fa-camera fa-2x text-primary-gradient flex-shrink-0 mt-1"></i>
-                            <div class="ms-3">
-                                <h2 class="mb-0" data-toggle="counter-up">5000+</h2>
-                                <p class="text-primary-gradient mb-0">Photos Processed</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 wow fadeIn" data-wow-delay="0.7s">
-                        <div class="d-flex">
-                            <i class="fa fa-users fa-2x text-secondary-gradient flex-shrink-0 mt-1"></i>
-                            <div class="ms-3">
-                                <h2 class="mb-0" data-toggle="counter-up">1200+</h2>
-                                <p class="text-secondary-gradient mb-0">Happy Clients</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <a href="#" class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill mt-3">Explore Features</a>
-            </div>
+        <div class="container" data-aos="fade-up" data-aos-delay="100">
+  
+          <div class="row align-items-center">
             <div class="col-lg-6">
-                <img class="img-fluid wow fadeInUp" data-wow-delay="0.5s" src="img/about-photography.jpg">
+              <div class="hero-content" data-aos="fade-up" data-aos-delay="200">
+                <div class="company-badge mb-4">
+                  <i class="bi bi-camera-fill me-2"></i>
+                  AI-Powered Event Photography
+                </div>
+  
+                <h1 class="mb-4">
+                  Capture <br>
+                  Organize <br>
+                  <span class="accent-text">Remember</span>
+                </h1>
+  
+                <p class="mb-4 mb-md-5">
+                  SnapFlow transforms event photography with real-time uploads, AI-powered organization, and intelligent editing. Create custom event galleries that your participants will love.
+                </p>
+  
+                <div class="hero-buttons">
+                    {% if not user.is_authenticated %}
+                  <a href="#about" class="btn btn-primary me-0 me-sm-2 mx-1">Get Started</a>
+                  {% endif %}
+                </div>
+              </div>
             </div>
+  
+            <div class="col-lg-6">
+              <div class="hero-image" data-aos="zoom-out" data-aos-delay="300">
+                <img src="{% static 'home/img/19198826.png' %}" alt="Event Photography" class="img-fluid">
+  
+              </div>
+            </div>
+          </div>
+  
+          <div class="row stats-row gy-4 mt-5" data-aos="fade-up" data-aos-delay="500">
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-camera"></i>
+                </div>
+                <div class="stat-content">
+                  <h4>{{ stats.event_types }}+ Event Types</h4>
+                  <p class="mb-0">Customized solutions</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-image"></i>
+                </div>
+                <div class="stat-content">
+                  <h4>{{ stats.photo_count }}+ Photos</h4>
+                  <p class="mb-0">Processed monthly</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-people"></i>
+                </div>
+                <div class="stat-content">
+                  <h4>{{ stats.user_count }}+ Users</h4>
+                  <p class="mb-0">Active platform users</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="bi bi-award"></i>
+                </div>
+                <div class="stat-content">
+                  <h4>{{ stats.satisfaction }}% Satisfaction</h4>
+                  <p class="mb-0">Customer rating</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
         </div>
-    </div>
-</div>
-<!-- About End -->
-
-
-
- <!-- Features Start -->
-<div class="container-xxl py-5" id="feature">
-    <div class="container py-5 px-lg-5">
-        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-            <h5 class="text-primary-gradient fw-medium">SnapFlow Features</h5>
-            <h1 class="mb-5">AI-Driven Photography Management</h1>
+  
+      </section><!-- /Hero Section -->
+  
+      <!-- About Section -->
+      <section id="about" class="about section">
+  
+        <div class="container" data-aos="fade-up" data-aos-delay="100">
+  
+          <div class="row gy-4 align-items-center justify-content-between">
+  
+            <div class="col-xl-5" data-aos="fade-up" data-aos-delay="200">
+              <span class="about-meta">ABOUT SNAPFLOW</span>
+              <h2 class="about-title">Revolutionizing Event Photography with AI</h2>
+              <p class="about-description">SnapFlow is a comprehensive AI-driven event photo management system designed to streamline the entire photography process from capture to delivery. Our platform enables real-time uploads, intelligent organization, and personalized experiences for event organizers and participants alike.</p>
+  
+              <div class="row feature-list-wrapper">
+                <div class="col-md-6">
+                  <ul class="feature-list">
+                    <li><i class="bi bi-check-circle-fill"></i> Real-time photo uploads</li>
+                    <li><i class="bi bi-check-circle-fill"></i> AI-powered organization</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Automated image tagging</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <ul class="feature-list">
+                    <li><i class="bi bi-check-circle-fill"></i> Custom event websites</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Privacy controls</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Smart editing features</li>
+                  </ul>
+                </div>
+              </div>
+  
+              <div class="info-wrapper">
+                <div class="row gy-4">
+                  <div class="col-lg-5">
+                    <div class="profile d-flex align-items-center gap-3">
+                      <img src="{% static 'home/img/avatar.jpg' %}" alt="CEO Profile" class="profile-image">
+                      <div>
+                        <h4 class="profile-name">Venkidesh Venu</h4>
+                        <p class="profile-position">CEO &amp; Founder</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-7">
+                    <div class="contact-info d-flex align-items-center gap-2">
+                      <i class="bi bi-telephone-fill"></i>
+                      <div>
+                        <p class="contact-label">Contact our team</p>
+                        <p class="contact-number">+91 8547193672 SNAPFLOW</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <div class="col-xl-6" data-aos="fade-up" data-aos-delay="300">
+              <div class="image-wrapper">
+                <div class="images position-relative" data-aos="zoom-out" data-aos-delay="400">
+                  <img src="{% static 'home/img/about-5.webp' %}" alt="Event Photography" class="img-fluid main-image rounded-4">
+                  <img src="{% static 'home/img/about-2.webp' %}" alt="Photo Editing" class="img-fluid small-image rounded-4">
+                </div>
+                <div class="experience-badge floating">
+                  <h3>5+ <span>Years</span></h3>
+                  <p>Of innovation in AI photography</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
         </div>
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="feature-item bg-light rounded p-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle mb-4" style="width: 60px; height: 60px;">
-                        <i class="fa fa-magic text-white fs-4"></i>
-                    </div>
-                    <h5 class="mb-3">AI-Driven Image Enhancement</h5>
-                    <p class="m-0">Automatically enhances image quality with smart filters, lighting corrections, and cropping suggestions.</p>
+  
+      </section><!-- /About Section -->
+  
+      <!-- Features Section -->
+      <section id="features" class="features section">
+  
+        <!-- Section Title -->
+        <div class="container section-title" data-aos="fade-up">
+          <h2>AI-Powered Features</h2>
+          <p>SnapFlow leverages cutting-edge AI technology to enhance every aspect of event photography</p>
+        </div><!-- End Section Title -->
+  
+        <div class="container">
+  
+          <div class="d-flex justify-content-center">
+  
+            <ul class="nav nav-tabs" data-aos="fade-up" data-aos-delay="100">
+  
+              <li class="nav-item">
+                <a class="nav-link active show" data-bs-toggle="tab" data-bs-target="#features-tab-1">
+                  <h4>Photo Management</h4>
+                </a>
+              </li><!-- End tab nav item -->
+  
+              <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#features-tab-2">
+                  <h4>AI Editing</h4>
+                </a><!-- End tab nav item -->
+  
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#features-tab-3">
+                  <h4>Privacy & Security</h4>
+                </a>
+              </li><!-- End tab nav item -->
+  
+            </ul>
+  
+          </div>
+  
+          <div class="tab-content" data-aos="fade-up" data-aos-delay="200">
+  
+            <div class="tab-pane fade active show" id="features-tab-1">
+              <div class="row">
+                <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0 d-flex flex-column justify-content-center">
+                  <h3>Intelligent Photo Organization</h3>
+                  <p class="fst-italic">
+                    Our AI-powered system automatically categorizes and organizes photos in real-time, saving hours of manual work.
+                  </p>
+                  <ul>
+                    <li><i class="bi bi-check2-all"></i> <span>Automated tagging based on event type, special moments, people, and themes.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>Real-time uploads allowing instant viewing by event participants.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>Smart image selection that identifies the best shots based on quality metrics like sharpness, composition, and expressions.</span></li>
+                  </ul>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="feature-item bg-light rounded p-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle mb-4" style="width: 60px; height: 60px;">
-                        <i class="fa fa-folder-open text-white fs-4"></i>
-                    </div>
-                    <h5 class="mb-3">Smart Image Grouping</h5>
-                    <p class="m-0">Automatically categorizes images based on event type, themes, special moments, and people.</p>
+                <div class="col-lg-6 order-1 order-lg-2 text-center">
+                  <img src="{% static 'home/img/4399.jpg' %}" alt="AI Photo Organization" class="img-fluid">
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div class="feature-item bg-light rounded p-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle mb-4" style="width: 60px; height: 60px;">
-                        <i class="fa fa-lock text-white fs-4"></i>
-                    </div>
-                    <h5 class="mb-3">Secure & Private Sharing</h5>
-                    <p class="m-0">End-to-end encryption ensures that only authorized users can access and download event photos.</p>
+              </div>
+            </div><!-- End tab content item -->
+  
+            <div class="tab-pane fade" id="features-tab-2">
+              <div class="row">
+                <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0 d-flex flex-column justify-content-center">
+                  <h3>AI-Powered Editing & Enhancement</h3>
+                  <p class="fst-italic">
+                    Take your event photos to the next level with our intelligent editing tools that save time and enhance quality.
+                  </p>
+                  <ul>
+                    <li><i class="bi bi-check2-all"></i> <span>Automatic image enhancement with lighting correction and filter recommendations.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>AI-powered background enhancements and noise reduction.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>Blurred and low-quality image filtering to ensure only the best photos make it to your gallery.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>AI-powered storyboard creation and highlight reel generation to capture your event's best moments.</span></li>
+                  </ul>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="feature-item bg-light rounded p-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle mb-4" style="width: 60px; height: 60px;">
-                        <i class="fa fa-cloud text-white fs-4"></i>
-                    </div>
-                    <h5 class="mb-3">Cloud-Based Storage</h5>
-                    <p class="m-0">Seamlessly access and manage your images from any device, anywhere in the world.</p>
+                <div class="col-lg-6 order-1 order-lg-2 text-center">
+                  <img src="{% static 'home/img/10165944.jpg' %}" alt="AI Photo Editing" class="img-fluid">
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="feature-item bg-light rounded p-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle mb-4" style="width: 60px; height: 60px;">
-                        <i class="fa fa-star text-white fs-4"></i>
-                    </div>
-                    <h5 class="mb-3">Best-Shot Recommendations</h5>
-                    <p class="m-0">AI intelligently picks and suggests the best images for photographers and event hosts.</p>
+              </div>
+            </div><!-- End tab content item -->
+  
+            <div class="tab-pane fade" id="features-tab-3">
+              <div class="row">
+                <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0 d-flex flex-column justify-content-center">
+                  <h3>Privacy Controls & Data Security</h3>
+                  <ul>
+                    <li><i class="bi bi-check2-all"></i> <span>Granular privacy controls allowing users to set visibility as Public, Private, or Event-Specific.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>AI-assisted privacy enforcement with face-blurring for users who opt out of public sharing.</span></li>
+                    <li><i class="bi bi-check2-all"></i> <span>GDPR-compliant data handling ensuring user consent and protection.</span></li>
+                  </ul>
+                  <p class="fst-italic">
+                    We prioritize security and privacy, giving you complete control over your photos while ensuring compliance with data protection regulations.
+                  </p>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div class="feature-item bg-light rounded p-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle mb-4" style="width: 60px; height: 60px;">
-                        <i class="fa fa-upload text-white fs-4"></i>
-                    </div>
-                    <h5 class="mb-3">Real-Time Photo Uploading</h5>
-                    <p class="m-0">Photographers can instantly upload and manage event images for seamless collaboration.</p>
+                <div class="col-lg-6 order-1 order-lg-2 text-center">
+                  <img src="{% static 'home/img/Data_security_05.jpg' %}" alt="Privacy Controls" class="img-fluid">
                 </div>
-            </div>
+              </div>
+            </div><!-- End tab content item -->
+  
+          </div>
+  
         </div>
-    </div>
-</div>
-<!-- Features End -->
-
-<!-- Screenshot Start -->
-<div class="container-xxl py-5">
-    <div class="container py-5 px-lg-5">
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-8 wow fadeInUp" data-wow-delay="0.1s">
-                <h5 class="text-primary-gradient fw-medium">SnapFlow Interface</h5>
-                <h1 class="mb-4">Sleek & Intuitive Event Photo Management</h1>
-                <p class="mb-4">Experience an AI-powered photography platform designed to simplify event photo management, enhance collaboration, and provide seamless access to high-quality images.</p>
-                <p><i class="fa fa-check text-primary-gradient me-3"></i>Event-Based Photo Galleries</p>
-                <p><i class="fa fa-check text-primary-gradient me-3"></i>AI-Powered Face Recognition & Tagging</p>
-                <p class="mb-4"><i class="fa fa-check text-primary-gradient me-3"></i>Instant Editing & Filters for Photographers</p>
-                <a href="#" class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill mt-3">Explore More</a>
-            </div>
-            <div class="col-lg-4 d-flex justify-content-center justify-content-lg-end wow fadeInUp" data-wow-delay="0.3s">
-                <div class="owl-carousel screenshot-carousel">
-                    <img class="img-fluid" src="img/snapflow-1.png" alt="SnapFlow Screenshot 1">
-                    <img class="img-fluid" src="img/snapflow-2.png" alt="SnapFlow Screenshot 2">
-                    <img class="img-fluid" src="img/snapflow-3.png" alt="SnapFlow Screenshot 3">
-                    <img class="img-fluid" src="img/snapflow-4.png" alt="SnapFlow Screenshot 4">
-                    <img class="img-fluid" src="img/snapflow-5.png" alt="SnapFlow Screenshot 5">
-                </div>
-            </div>
+  
+      </section><!-- /Features Section -->
+  
+      <!-- Features Cards Section -->
+      <section id="features-cards" class="features-cards section">
+  
+        <div class="container">
+  
+          <div class="row gy-4">
+  
+            <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="100">
+              <div class="feature-box orange">
+                <i class="bi bi-camera-reels"></i>
+                <h4>Custom Event Websites</h4>
+                <p>Create branded event websites with personalized galleries, crew profiles, and interactive albums</p>
+              </div>
+            </div><!-- End Feature Box-->
+  
+            <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="200">
+              <div class="feature-box blue">
+                <i class="bi bi-people"></i>
+                <h4>Multi-User Collaboration</h4>
+                <p>Streamlined workflows for photographers, editors, and event organizers with role-based access</p>
+              </div>
+            </div><!-- End Feature Box-->
+  
+            <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="300">
+              <div class="feature-box green">
+                <i class="bi bi-search"></i>
+                <h4>Intelligent Search</h4>
+                <p>Find photos quickly with AI-powered search using names, faces, or event details</p>
+              </div>
+            </div><!-- End Feature Box-->
+  
+            <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
+              <div class="feature-box red">
+                <i class="bi bi-share"></i>
+                <h4>Social Integration</h4>
+                <p>Share event photos directly to social media platforms with customizable privacy settings</p>
+              </div>
+            </div><!-- End Feature Box-->
+  
+          </div>
+  
         </div>
-    </div>
-</div>
-<!-- Screenshot End -->
-
-
-
-        <!-- Process Start -->
-        <div class="container-xxl py-5">
-            <div class="container py-5 px-lg-5">
-                <div class="text-center pb-4 wow fadeInUp" data-wow-delay="0.1s">
-                    <h5 class="text-primary-gradient fw-medium">How It Works</h5>
-                    <h1 class="mb-5">3 Easy Steps</h1>
+  
+      </section><!-- /Features Cards Section -->
+  
+      <!-- Testimonials Section -->
+      <section id="testimonials" class="testimonials section light-background">
+  
+        <!-- Section Title -->
+        <div class="container section-title" data-aos="fade-up">
+          <h2>Success Stories</h2>
+          <p>See what event organizers and photographers are saying about SnapFlow</p>
+        </div><!-- End Section Title -->
+  
+        <div class="container">
+  
+          <div class="row g-5">
+  
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+              <div class="testimonial-item">
+                <img src="{% static 'home/img/testimonials/testimonials-1.jpg' %}" class="testimonial-img" alt="">
+                <h3>Michael Roberts</h3>
+                <h4>Wedding Photographer</h4>
+                <div class="stars">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
                 </div>
-                <div class="row gy-5 gx-4 justify-content-center">
-                    <div class="col-lg-4 col-sm-6 text-center pt-4 wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="position-relative bg-light rounded pt-5 pb-4 px-4">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle position-absolute top-0 start-50 translate-middle shadow" style="width: 100px; height: 100px;">
-                                <i class="fa fa-cog fa-3x text-white"></i>
-                            </div>
-                            <h5 class="mt-4 mb-3">Install the App</h5>
-                            <p class="mb-0">Tempor erat elitr rebum clita dolor diam ipsum sit diam amet diam eos erat ipsum et lorem et sit sed stet</p>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-6 text-center pt-4 wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="position-relative bg-light rounded pt-5 pb-4 px-4">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-secondary-gradient rounded-circle position-absolute top-0 start-50 translate-middle shadow" style="width: 100px; height: 100px;">
-                                <i class="fa fa-address-card fa-3x text-white"></i>
-                            </div>
-                            <h5 class="mt-4 mb-3">Setup Your Profile</h5>
-                            <p class="mb-0">Tempor erat elitr rebum clita dolor diam ipsum sit diam amet diam eos erat ipsum et lorem et sit sed stet</p>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-6 text-center pt-4 wow fadeInUp" data-wow-delay="0.5s">
-                        <div class="position-relative bg-light rounded pt-5 pb-4 px-4">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-primary-gradient rounded-circle position-absolute top-0 start-50 translate-middle shadow" style="width: 100px; height: 100px;">
-                                <i class="fa fa-check fa-3x text-white"></i>
-                            </div>
-                            <h5 class="mt-4 mb-3">Enjoy The Features</h5>
-                            <p class="mb-0">Tempor erat elitr rebum clita dolor diam ipsum sit diam amet diam eos erat ipsum et lorem et sit sed stet</p>
-                        </div>
-                    </div>
+                <p>
+                  <i class="bi bi-quote quote-icon-left"></i>
+                  <span>SnapFlow has transformed my wedding photography business. The AI editing features save me hours of post-processing time, and my clients love the real-time photo sharing. It's become an essential part of my workflow.</span>
+                  <i class="bi bi-quote quote-icon-right"></i>
+                </p>
+              </div>
+            </div><!-- End testimonial item -->
+  
+  
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="400">
+              <div class="testimonial-item">
+                <img src="{% static 'home/img/testimonials/testimonials-4.jpg' %}" class="testimonial-img" alt="">
+                <h3>Jennifer Chen</h3>
+                <h4>Corporate Event Manager</h4>
+                <div class="stars">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
                 </div>
-            </div>
+                <p>
+                  <i class="bi bi-quote quote-icon-left"></i>
+                  <span>We used SnapFlow for our annual conference with over 1,000 attendees. The automated organization features categorized photos by sessions and speakers perfectly. The privacy controls gave our attendees peace of mind, and the highlight reel was perfect for social media.</span>
+                  <i class="bi bi-quote quote-icon-right"></i>
+                </p>
+              </div>
+            </div><!-- End testimonial item -->
+  
+          </div>
+  
         </div>
-        <!-- Process Start -->
-
-        <!-- Pricing Start -->
-        <div class="container-xxl py-5" id="pricing">
-            <div class="container py-5 px-lg-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h5 class="text-primary-gradient fw-medium">Pricing Plans</h5>
-                    <h1 class="mb-5">Affordable Plans for Every Need</h1>
-                </div>
-                <div class="row g-4">
-                    <div class="col-lg-4">
-                        <div class="bg-light rounded">
-                            <div class="border-bottom p-4 mb-4">
-                                <h4 class="text-primary-gradient mb-1">Starter Plan</h4>
-                                <span>Perfect for small events</span>
-                            </div>
-                            <div class="p-4 pt-0">
-                                <h1 class="mb-3">
-                                    <small class="align-top" style="font-size: 22px; line-height: 45px;">$</small>29.99<small
-                                        class="align-bottom" style="font-size: 16px; line-height: 40px;">/ Month</small>
-                                </h1>
-                                <div class="d-flex justify-content-between mb-3"><span>Real-Time Uploads</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <div class="d-flex justify-content-between mb-3"><span>AI Editing Tools</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <div class="d-flex justify-content-between mb-3"><span>Basic Privacy Controls</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <a href="" class="btn btn-primary-gradient rounded-pill py-2 px-4 mt-4">Get Started</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="bg-light rounded border">
-                            <div class="border-bottom p-4 mb-4">
-                                <h4 class="text-primary-gradient mb-1">Pro Plan</h4>
-                                <span>Ideal for professional photographers</span>
-                            </div>
-                            <div class="p-4 pt-0">
-                                <h1 class="mb-3">
-                                    <small class="align-top" style="font-size: 22px; line-height: 45px;">$</small>59.99<small
-                                        class="align-bottom" style="font-size: 16px; line-height: 40px;">/ Month</small>
-                                </h1>
-                                <div class="d-flex justify-content-between mb-3"><span>Advanced AI Tools</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <div class="d-flex justify-content-between mb-3"><span>Custom Branding</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <div class="d-flex justify-content-between mb-3"><span>Enhanced Privacy</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <a href="" class="btn btn-secondary-gradient rounded-pill py-2 px-4 mt-4">Get Started</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="bg-light rounded">
-                            <div class="border-bottom p-4 mb-4">
-                                <h4 class="text-primary-gradient mb-1">Enterprise Plan</h4>
-                                <span>For large-scale events</span>
-                            </div>
-                            <div class="p-4 pt-0">
-                                <h1 class="mb-3">
-                                    <small class="align-top" style="font-size: 22px; line-height: 45px;">$</small>99.99<small
-                                        class="align-bottom" style="font-size: 16px; line-height: 40px;">/ Month</small>
-                                </h1>
-                                <div class="d-flex justify-content-between mb-3"><span>Unlimited Storage</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <div class="d-flex justify-content-between mb-3"><span>Dedicated Support</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <div class="d-flex justify-content-between mb-3"><span>Full Customization</span><i class="fa fa-check text-primary-gradient pt-1"></i></div>
-                                <a href="" class="btn btn-primary-gradient rounded-pill py-2 px-4 mt-4">Get Started</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  
+      </section><!-- /Testimonials Section -->
+  
+      <!-- Stats Section -->
+      <section id="stats" class="stats section">
+  
+        <div class="container" data-aos="fade-up" data-aos-delay="100">
+  
+          <div class="row gy-4">
+  
+            <div class="col-lg-3 col-md-6">
+              <div class="stats-item text-center w-100 h-100">
+                <span data-purecounter-start="0" data-purecounter-end="25000" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Events Managed</p>
+              </div>
+            </div><!-- End Stats Item -->
+  
+            <div class="col-lg-3 col-md-6">
+              <div class="stats-item text-center w-100 h-100">
+                <span data-purecounter-start="0" data-purecounter-end="7500" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Photographers</p>
+              </div>
+            </div><!-- End Stats Item -->
+  
+            <div class="col-lg-3 col-md-6">
+              <div class="stats-item text-center w-100 h-100">
+                <span data-purecounter-start="0" data-purecounter-end="{{ stats.photo_count }}" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Photos</p>
+              </div>
+            </div><!-- End Stats Item -->
+  
+            <div class="col-lg-3 col-md-6">
+              <div class="stats-item text-center w-100 h-100">
+                <span data-purecounter-start="0" data-purecounter-end="98" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Customer Satisfaction</p>
+              </div>
+            </div><!-- End Stats Item -->
+  
+          </div>
+  
         </div>
-        <!-- Pricing End -->
-
-
-        <!-- Testimonials Start -->
-        <div class="container-xxl py-5" id="testimonials">
-            <div class="container py-5 px-lg-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h5 class="text-primary-gradient fw-medium">Testimonials</h5>
-                    <h1 class="mb-5">What Our Clients Say</h1>
-                </div>
-                <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="testimonial-item rounded p-4">
-                        <div class="d-flex align-items-center mb-4">
-                            <img class="img-fluid bg-white rounded flex-shrink-0 p-1" src="{% static 'home/img/testimonial-1.jpg' %}" style="width: 85px; height: 85px;">
-                            <div class="ms-4">
-                                <h5 class="mb-1">John Doe</h5>
-                                <p class="mb-1">Event Organizer</p>
-                                <div>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mb-0">SnapFlow made our event photography seamless. The real-time uploads and AI tools saved us hours of work!</p>
-                    </div>
-                    <div class="testimonial-item rounded p-4">
-                        <div class="d-flex align-items-center mb-4">
-                            <img class="img-fluid bg-white rounded flex-shrink-0 p-1" src="{% static 'home/img/testimonial-2.jpg' %} " style="width: 85px; height: 85px;">
-                            <div class="ms-4">
-                                <h5 class="mb-1">Jane Smith</h5>
-                                <p class="mb-1">Photographer</p>
-                                <div>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                </div>
-                            </div>
-                                                </div>
-                        <p class="mb-0">The AI-powered editing tools are a game-changer. My clients love the quality and speed of delivery!</p>
-                    </div>
-                    <div class="testimonial-item rounded p-4">
-                        <div class="d-flex align-items-center mb-4">
-                            <img class="img-fluid bg-white rounded flex-shrink-0 p-1" src="{% static 'home/img/testimonial-3.jpg' %}" style="width: 85px; height: 85px;">
-                            <div class="ms-4">
-                                <h5 class="mb-1">Sarah Johnson</h5>
-                                <p class="mb-1">Event Participant</p>
-                                <div>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                    <small class="fa fa-star text-warning"></small>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mb-0">I loved how easy it was to find and download my photos from the event. SnapFlow is a must-have for any event!</p>
-                    </div>
-                </div>
+  
+      </section><!-- /Stats Section -->
+  
+      <!-- Faq Section -->
+      <section class="faq-9 faq section light-background" id="faq">
+  
+        <div class="container">
+          <div class="row">
+  
+            <div class="col-lg-5" data-aos="fade-up">
+              <h2 class="faq-title">Frequently Asked Questions</h2>
+              <p class="faq-description">Learn more about SnapFlow's features, pricing, and how our platform can enhance your event photography experience.</p>
+              <div class="faq-arrow d-none d-lg-block" data-aos="fade-up" data-aos-delay="200">
+                <svg class="faq-arrow" width="200" height="211" viewBox="0 0 200 211" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M198.804 194.488C189.279 189.596 179.529 185.52 169.407 182.07L169.384 182.049C169.227 181.994 169.07 181.939 168.912 181.884C166.669 181.139 165.906 184.546 167.669 185.615C174.053 189.473 182.761 191.837 189.146 195.695C156.603 195.912 119.781 196.591 91.266 179.049C62.5221 161.368 48.1094 130.695 56.934 98.891C84.5539 98.7247 112.556 84.0176 129.508 62.667C136.396 53.9724 146.193 35.1448 129.773 30.2717C114.292 25.6624 93.7109 41.8875 83.1971 51.3147C70.1109 63.039 59.63 78.433 54.2039 95.0087C52.1221 94.9842 50.0776 94.8683 48.0703 94.6608C30.1803 92.8027 11.2197 83.6338 5.44902 65.1074C-1.88449 41.5699 14.4994 19.0183 27.9202 1.56641C28.6411 0.625793 27.2862 -0.561638 26.5419 0.358501C13.4588 16.4098 -0.221091 34.5242 0.896608 56.5659C1.8218 74.6941 14.221 87.9401 30.4121 94.2058C37.7076 97.0203 45.3454 98.5003 53.0334 98.8449C47.8679 117.532 49.2961 137.487 60.7729 155.283C87.7615 197.081 139.616 201.147 184.786 201.155L174.332 206.827C172.119 208.033 174.345 211.287 176.537 210.105C182.06 207.125 187.582 204.122 193.084 201.144C193.346 201.147 195.161 199.887 195.423 199.868C197.08 198.548 193.084 201.144 195.528 199.81C196.688 199.192 197.846 198.552 199.006 197.935C200.397 197.167 200.007 195.087 198.804 194.488ZM60.8213 88.0427C67.6894 72.648 78.8538 59.1566 92.1207 49.0388C98.8475 43.9065 106.334 39.2953 114.188 36.1439C117.295 34.8947 120.798 33.6609 124.168 33.635C134.365 33.5511 136.354 42.9911 132.638 51.031C120.47 77.4222 86.8639 93.9837 58.0983 94.9666C58.8971 92.6666 59.783 90.3603 60.8213 88.0427Z" fill="currentColor"></path>
+                </svg>
+              </div>
             </div>
-        </div>
-        <!-- Testimonials End -->
-
-        <!-- Contact Start -->
-        <div class="container-xxl py-5" id="contact">
-            <div class="container py-5 px-lg-5">
-                <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                    <h5 class="text-primary-gradient fw-medium">Contact Us</h5>
-                    <h1 class="mb-5">Get In Touch!</h1>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-lg-9">
-                        <div class="wow fadeInUp" data-wow-delay="0.3s">
-                            <p class="text-center mb-4">The contact form is currently inactive. Get a functional and working contact form with Ajax & PHP in a few minutes. Just copy and paste the files, add a little code and you're done. <a href="https://htmlcodex.com/contact-form">Download Now</a>.</p>
-                            <form>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="name" placeholder="Your Name">
-                                            <label for="name">Your Name</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="email" class="form-control" id="email" placeholder="Your Email">
-                                            <label for="email">Your Email</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="subject" placeholder="Subject">
-                                            <label for="subject">Subject</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="form-floating">
-                                            <textarea class="form-control" placeholder="Leave a message here" id="message" style="height: 150px"></textarea>
-                                            <label for="message">Message</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 text-center">
-                                        <button class="btn btn-primary-gradient rounded-pill py-3 px-5" type="submit">Send Message</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+  
+            <div class="col-lg-7" data-aos="fade-up" data-aos-delay="300">
+              <div class="faq-container">
+  
+                <div class="faq-item faq-active">
+                  <h3>What types of events does SnapFlow support?</h3>
+                  <div class="faq-content">
+                    <p>SnapFlow supports a wide range of events including personal celebrations (weddings, birthdays, anniversaries), corporate events (conferences, trade shows, company parties), cultural events (festivals, concerts), sports events, academic events, award ceremonies, and public gatherings. Each event type comes with customized features and organization tools.</p>
+                  </div>
+                  <i class="faq-toggle bi bi-chevron-right"></i>
+                </div><!-- End Faq item-->
+  
+                <div class="faq-item">
+                  <h3>How does the AI photo tagging work?</h3>
+                  <div class="faq-content">
+                    <p>Our AI-powered photo tagging uses advanced facial recognition and machine learning algorithms to automatically identify and categorize photos. It can tag photos based on event type, special moments, people, and themes. This significantly reduces the manual effort typically required for photo organization while improving accuracy.</p>
+                  </div>
+                  <i class="faq-toggle bi bi-chevron-right"></i>
+                </div><!-- End Faq item-->
+  
+                <div class="faq-item">
+                  <h3>Is SnapFlow secure and private?</h3>
+                  <div class="faq-content">
+                    <p>Yes, privacy and security are top priorities at SnapFlow. We offer granular privacy controls allowing users to set specific visibility settings for each photo. Our AI-assisted privacy enforcement can automatically blur faces for users who opt out of public sharing. All data is handled in compliance with GDPR and other data protection regulations, with secure encrypted storage.</p>
+                  </div>
+                  <i class="faq-toggle bi bi-chevron-right"></i>
+                </div><!-- End Faq item-->
+  
+                <div class="faq-item">
+                  <h3>Can event participants access and download their photos?</h3>
+                  <div class="faq-content">
+                    <p>Yes, event participants can create a temporary profile to view and download photos they appear in. Event organizers can customize access permissions and download options. We also offer secure watermarking to protect photographers' work from unauthorized use.</p>
+                  </div>
+                  <i class="faq-toggle bi bi-chevron-right"></i>
+                </div><!-- End Faq item-->
+  
+              </div>
             </div>
+  
+          </div>
         </div>
-        <!-- Contact End -->
-{% endblock body_block %}
+      </section><!-- /Faq Section -->
+{% endblock content %}

@@ -63,7 +63,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'users.middleware.ProfileCompletionMiddleware',
+    'users.middleware.ProfileCompletionMiddleware', #verify user details
 ]
 
 ROOT_URLCONF = 'SnapFlow.urls'

@@ -130,6 +130,10 @@
 - added the models class diagram
 - added the sphagetti and meatballs extension
 
+
+## 11 30pm
+- updated the index page
+
 ---
 
 # To-Do List  

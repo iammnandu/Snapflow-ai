@@ -1,196 +1,209 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
-    <title>SnapFlow - From Clicks to Memories</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="" name="keywords">
-    <meta content="" name="description">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>{% block title %}SnapFlow - AI-Driven Event Photo Management System{% endblock %}</title>
+  <meta name="description" content="SnapFlow is an AI-powered platform for event photo management, offering real-time uploads, automated organization, and intelligent editing features.">
+  <meta name="keywords" content="event photos, AI photo management, event photography, photo organization">
 
-    <!-- Favicon -->
-    <link href="img/favicon.ico" rel="icon">
+  <!-- Favicons -->
+  <link href="{% static 'home/img/favicon.png' %}" rel="icon">
+  <link href="{% static 'home/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
 
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500&family=Jost:wght@500;600;700&display=swap" rel="stylesheet"> 
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
-    <!-- Icon Font Stylesheet -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'home/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'home/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'home/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'home/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'home/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
 
-    <!-- Libraries Stylesheet -->
-    <link href="{% static 'home/lib/animate/animate.min.css' %}" rel="stylesheet">
-    <link href="{% static 'home/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
-
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="{% static 'home/css/bootstrap.min.css' %}" rel="stylesheet">
-
-    <!-- Template Stylesheet -->
-    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+  <!-- Main CSS File -->
+  <link href="{% static 'home/css/main.css' %}" rel="stylesheet">
 </head>
 
-<body data-bs-spy="scroll" data-bs-target=".navbar" data-bs-offset="51">
-    <div class="container-xxl bg-white p-0">
+<body class="{% block bodyclass %}index-page{% endblock %}">
 
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-<!-- Navbar & Hero Start -->
-<div class="container-xxl position-relative p-0" id="home">
-    <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
-        <a href="#" class="navbar-brand p-0">
-            <h1 class="m-0">SnapFlow</h1>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-            <span class="fa fa-bars"></span>
-        </button>
-        <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
-            <ul class="navbar-nav mx-auto py-0">
-                <li class="nav-item"><a href="#home" class="nav-link active">Home</a></li>
-                <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
-                <li class="nav-item"><a href="#features" class="nav-link">Features</a></li>
-                <li class="nav-item"><a href="#pricing" class="nav-link">Pricing</a></li>
-                <li class="nav-item"><a href="#gallery" class="nav-link">Gallery</a></li>
-                <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
-            </ul>
+      <a href="{% url 'home:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <!-- <img src="assets/img/logo.png" alt=""> -->
+        <h1 class="sitename">SnapFlow</h1>
+      </a>
 
-            {% if user.is_authenticated %}
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown position-static">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if user.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="Profile" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
-                        {% else %}
-                            <i class="fas fa-user-circle me-2"></i>
-                        {% endif %}
-                        {{ user.username }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="fas fa-user-cog me-2"></i>Profile</a></li>
-                        {% if user.role == 'ORGANIZER' %}
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-calendar-alt me-2"></i>My Events</a></li>
-                        {% elif user.role == 'PHOTOGRAPHER' %}
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-camera me-2"></i>My Assignments</a></li>
-                        {% elif user.role == 'PARTICIPANT' %}
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-ticket-alt me-2"></i>My Events</a></li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="post" action="{% url 'users:logout' %}" class="dropdown-item p-0">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'home:index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">Home</a></li>
+          <li><a href="#about" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
+          <li><a href="#features" class="{% if request.resolver_match.url_name == 'features' %}active{% endif %}">Features</a></li>
+          <li><a href="{% url 'home:contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+      {% if user.is_authenticated %}
+      <div class="d-flex align-items-center">
+        <div class="dropdown">
+          <a class="btn btn-outline-primary dropdown-toggle me-2 d-flex align-items-center" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if user.avatar %}
+              <img src="{{ user.avatar.url }}" alt="Profile" class="rounded-circle me-2" width="30" height="30">
             {% else %}
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'users:login' %}"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'users:register' %}"><i class="fas fa-user-plus me-1"></i>Register</a>
-                </li>
-            </ul>
+              <img src="{% static 'images/default-profile.png' %}" alt="Profile" class="rounded-circle me-2" width="30" height="30">
             {% endif %}
-
-            <a href="{% url 'users:login' %}" class="btn btn-primary-gradient rounded-pill py-2 px-4 ms-3 d-none d-lg-block">Get Started</a>
+            <span>{% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}</span>
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="userDropdown">
+            {% if user.role == 'ORGANIZER' %}
+              <li><a class="dropdown-item" href="{% url 'events:event_list'  %}">My Events</a></li>
+              <li><a class="dropdown-item" href="{% url 'events:event_create'  %}">Create Event</a></li>
+            {% elif user.role == 'PHOTOGRAPHER' %}
+              <li><a class="dropdown-item" href="{% url 'events:event_list'  %}">My Assignments</a></li>
+              <li><a class="dropdown-item" href="#">Portfolio</a></li>
+            {% elif user.role == 'PARTICIPANT' %}
+              <li><a class="dropdown-item" href="{% url 'photos:user_gallery'  %}">My Galleries</a></li>
+              <li><a class="dropdown-item" href="#">Privacy Settings</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'users:profile'  %}">Profile</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="{% url 'users:logout'  %}">Logout</a></li>
+          </ul>
         </div>
-    </nav>
-</div>
-
-    <!-- Navbar End  -->
-
-      {% block body_block %}
-      {% endblock body_block %}
-
-
-
-        <!-- Footer Start -->
-        <div class="container-fluid bg-primary text-light footer wow fadeIn" data-wow-delay="0.1s">
-            <div class="container py-5 px-lg-5">
-                <div class="row g-5">
-                    <div class="col-md-6 col-lg-3">
-                        <h4 class="text-white mb-4">Address</h4>
-                        <p><i class="fa fa-map-marker-alt me-3"></i>123 Street, New York, USA</p>
-                        <p><i class="fa fa-phone-alt me-3"></i>+012 345 67890</p>
-                        <p><i class="fa fa-envelope me-3"></i>info@example.com</p>
-                        <div class="d-flex pt-2">
-                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-instagram"></i></a>
-                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <h4 class="text-white mb-4">Quick Link</h4>
-                        <a class="btn btn-link" href="">About Us</a>
-                        <a class="btn btn-link" href="">Contact Us</a>
-                        <a class="btn btn-link" href="">Privacy Policy</a>
-                        <a class="btn btn-link" href="">Terms & Condition</a>
-                        <a class="btn btn-link" href="">Career</a>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <h4 class="text-white mb-4">Popular Link</h4>
-                        <a class="btn btn-link" href="">About Us</a>
-                        <a class="btn btn-link" href="">Contact Us</a>
-                        <a class="btn btn-link" href="">Privacy Policy</a>
-                        <a class="btn btn-link" href="">Terms & Condition</a>
-                        <a class="btn btn-link" href="">Career</a>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <h4 class="text-white mb-4">Newsletter</h4>
-                        <p>Lorem ipsum dolor sit amet elit. Phasellus nec pretium mi. Curabitur facilisis ornare velit non vulpu</p>
-                        <div class="position-relative w-100 mt-3">
-                            <input class="form-control border-0 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Your Email" style="height: 48px;">
-                            <button type="button" class="btn shadow-none position-absolute top-0 end-0 mt-1 me-2"><i class="fa fa-paper-plane text-primary-gradient fs-4"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="container px-lg-5">
-                <div class="copyright">
-                    <div class="row">
-                        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                            &copy; <a class="border-bottom" href="#">Your Site Name</a>, All Right Reserved. 
-                            
-                            <!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
-                            Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a>
-                        </div>
-                        <div class="col-md-6 text-center text-md-end">
-                            <div class="footer-menu">
-                                <a href="">Home</a>
-                                <a href="">Cookies</a>
-                                <a href="">Help</a>
-                                <a href="">FQAs</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Footer End -->
-
-
-        <!-- Back to Top -->
-        <a href="#" class="btn btn-lg btn-lg-square back-to-top pt-2"><i class="bi bi-arrow-up text-white"></i></a>
+      </div>
+    {% else %}
+      <a class="btn-getstarted" href="{% url 'users:login'  %}">Get Started</a>
+    {% endif %}
     </div>
+  </header>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'home/lib/wow/wow.min.js' %}"></script>
-    <script src="{% static 'home/lib/easing/easing.min.js' %}"></script>
-    <script src="{% static 'home/lib/waypoints/waypoints.min.js' %}"></script>
-    <script src="{% static 'home/lib/counterup/counterup.min.js' %}"></script>
-    <script src="{% static 'home/lib/owlcarousel/owl.carousel.min.js' %}"></script>
+  <main class="main">
+    {% block content %}{% endblock content %}
+  </main>
 
-    <!-- Template Javascript -->
-    <script src="{% static 'home/js/main.js' %}"></script>
+  <footer id="footer" class="footer">
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="{% url 'home:index' %}" class="logo d-flex align-items-center">
+            <span class="sitename">SnapFlow</span>
+          </a>
+          <p>Event photo management with face detection technology to categorize participants and create personalized galleries.</p>
+          <div class="footer-contact pt-3">
+            <p><strong>Email:</strong> <span>contact@snapflow.com</span></p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="{% url 'home:index' %}">Home</a></li>
+            <li><a href="#about">About us</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#">Pricing</a></li>
+            <li><a href="{% url 'home:contact' %}">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>For Organizers</h4>
+          <ul>
+            {% if user.is_authenticated and user.role == 'ORGANIZER' %}
+              <li><a href="{% url 'events:event_create' %}">Create Event</a></li>
+              <li><a href="{% url 'events:event_list' %}">Manage Events</a></li>
+              <li><a href="{% url 'users:invite_crew' %}">Invite Crew</a></li>
+              <li><a href="{% url 'events:manage_participants' %}">Manage Participants</a></li>
+              <li><a href="{% url 'home:maintanance' %}">AI Features</a></li>
+            {% else %}
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Organizer access required">Create Event</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Organizer access required">Manage Events</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Organizer access required">Invite Crew</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Organizer access required">Manage Participants</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Organizer access required">AI Features</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>For Photographers</h4>
+          <ul>
+            {% if user.is_authenticated and user.role == 'PHOTOGRAPHER' %}
+              <li><a href="{% url 'events:request_access' %}">Join Events</a></li>
+              <li><a href="{% url 'events:event_list' %}">Upload Photos</a></li>
+              <li><a href="{% url 'events:event_list' %}">Equipment Setup</a></li>
+              <li><a href="{% url 'photos:user_gallery' %}">Photo Management</a></li>
+              <li><a href="{% url 'photos:user_gallery' %}">Gallery Access</a></li>
+            {% else %}
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Photographer access required">Join Events</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Photographer access required">Upload Photos</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Photographer access required">Equipment Setup</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Photographer access required">Photo Management</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Photographer access required">Gallery Access</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>For Participants</h4>
+          <ul>
+            {% if user.is_authenticated and user.role == 'PARTICIPANT' %}
+              <li><a href="{% url 'users:register' %}">Register Events</a></li>
+              <li><a href="{% url 'photos:user_gallery' %}">My Gallery</a></li>
+              <li><a href="{% url 'home:maintanance' %}">Privacy Settings</a></li>
+              <li><a href="{% url 'home:maintanance' %}">Download Photos</a></li>
+              <li><a href="{% url 'events:access_requests' %}">Event Access</a></li>
+            {% else %}
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Participant access required">Register Events</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Participant access required">My Gallery</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Participant access required">Privacy Settings</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Participant access required">Download Photos</a></li>
+              <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Participant access required">Event Access</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">SnapFlow</strong> <span>All Rights Reserved</span></p>
+      <div class="credits">
+        <p>Face detection powered photo management for seamless event experiences</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Initialize tooltips -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+    });
+  </script>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'home/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'home/vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'home/vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'home/vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'home/vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'home/vendor/purecounter/purecounter_vanilla.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'home/js/main.js' %}"></script>
+
 </body>
 
 </html>
