@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-5v*(2m)bqta+1_4!c85nxiiga+nnti8h!(=-x8e23xx)7t2s&0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.128.197','192.168.164.197','175.20.1.194']   # localhost, Poco C55, Samsung F41, CS Lab
+ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.128.197','192.168.164.197','175.20.1.194','192.168.1.3']   # localhost, Poco C55, Samsung F41, CS Lab, GNXS-57E610
 
 
 # Application definition
@@ -49,6 +49,9 @@ INSTALLED_APPS = [
 
     'crispy_forms',
     'crispy_bootstrap5',
+
+    'django_extensions',
+    'django_spaghetti',
 ]
 
 MIDDLEWARE = [
@@ -228,7 +231,7 @@ LOGGING = {
 import os
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 
-from celery.schedules import crontab
+from celery.schedules import crontab # type: ignore
 
 CELERY_BEAT_SCHEDULE = {
     'test-celery-connection': {
@@ -242,3 +245,10 @@ CELERY_BEAT_SCHEDULE = {
 # Increase the maximum upload size to 50MB (or your desired limit)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB in bytes
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB in bytes
+
+
+# Add configuration to settings.py
+SPAGHETTI_SAUCE = {
+    'apps': ['users', 'events', 'photos'],  # List the apps you want to visualize
+    'show_fields': True,  # Set to True to show all fields
+}

@@ -121,6 +121,15 @@
 
 ### 12 45 am
 - increased the photo upload soze from 10mb to 50mb
+
+### 9 45am
+- updated the photo grid in gallery
+- 
+
+
+- added the models class diagram
+- added the sphagetti and meatballs extension
+
 ---
 
 # To-Do List  
@@ -144,3 +153,7 @@
 
 - correct the profile editing section. username and email is not editable now
 - update the ai tag generator for photos. now its accuracy is not that good and add more type of tags based on scene analyzing.
+- add additional filter options for images
+- personalized image filter
+
+- update the upload photo size for organizers

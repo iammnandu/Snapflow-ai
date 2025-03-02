@@ -259,71 +259,71 @@
                     </div>
                 </div>
                 
-                <!-- Masonry grid for photos -->
-                <div class="masonry-grid">
-                    {% for photo in photos %}
-                    <div class="photo-card">
-                        <div class="card-img-wrapper">
-                            {% if photo.enhanced_image %}
-                                <img src="{{ photo.enhanced_image.url }}" class="card-img-top" alt="Event photo">
-                                <div class="badge-position-top-right">
-                                    <span class="badge quality-enhanced-badge">
-                                        <i class='bx bx-image-alt'></i> Enhanced
-                                    </span>
-                                </div>
-                            {% else %}
-                                <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
-                            {% endif %}
-                            
-                            <!-- Quality score badge -->
-                            {% if photo.quality_score %}
-                            <div class="badge-position-top-left">
-                                <span class="badge {% if photo.quality_score >= 0.8 %}bg-success{% elif photo.quality_score >= 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
-                                    <i class='bx bx-star'></i> {{ photo.quality_score|floatformat:2 }}
-                                </span>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- Tags overlay -->
-                            {% if photo.scene_tags %}
-                            <div class="photo-overlay">
-                                <div class="d-flex flex-wrap">
-                                    {% for tag in photo.scene_tags|slice:":3" %}
-                                    <span class="tag-badge">{{ tag }}</span>
-                                    {% endfor %}
-                                    {% if photo.scene_tags|length > 3 %}
-                                    <span class="tag-badge">+{{ photo.scene_tags|length|add:"-3" }}</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small class="text-muted">
-                                    {{ photo.event.title }}
-                                </small>
-                                <small class="text-muted">
-                                    <i class='bx bx-calendar'></i> {{ photo.upload_date|date:"M d" }}
-                                </small>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex gap-2">
-                                    <span title="Views">
-                                        <i class='bx bx-show'></i> {{ photo.view_count }}
-                                    </span>
-                                    <span title="Likes">
-                                        <i class='bx bx-heart'></i> {{ photo.like_count }}
-                                    </span>
-                                </div>
-                                <a href="{% url 'photos:photo_detail' pk=photo.id %}" class="btn btn-primary btn-sm">
-                                    <i class='bx bx-show'></i> View
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+ <!-- Masonry grid for photos -->
+<div class="masonry-grid">
+    {% for photo in photos %}
+    <div class="photo-card">
+        <div class="card-img-wrapper">
+            {% if photo.enhanced_image %}
+                <img src="{{ photo.enhanced_image.url }}" class="card-img-top" alt="Event photo">
+                <div class="badge-position-top-right">
+                    <span class="badge quality-enhanced-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
+                        <i class='bx bx-image-alt'></i> Enhanced
+                    </span>
                 </div>
+            {% else %}
+                <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
+            {% endif %}
+            
+            <!-- Quality score badge -->
+            {% if photo.quality_score %}
+            <div class="badge-position-top-left">
+                <span class="badge {% if photo.quality_score >= 0.8 %}bg-success{% elif photo.quality_score >= 0.5 %}bg-warning{% else %}bg-danger{% endif %}" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
+                    <i class='bx bx-star'></i> {{ photo.quality_score|floatformat:2 }}
+                </span>
+            </div>
+            {% endif %}
+            
+            <!-- Tags overlay -->
+            {% if photo.scene_tags %}
+            <div class="photo-overlay">
+                <div class="d-flex flex-wrap">
+                    {% for tag in photo.scene_tags|slice:":3" %}
+                    <span class="tag-badge">{{ tag }}</span>
+                    {% endfor %}
+                    {% if photo.scene_tags|length > 3 %}
+                    <span class="tag-badge">+{{ photo.scene_tags|length|add:"-3" }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-muted">
+                    {{ photo.event.title }}
+                </small>
+                <small class="text-muted">
+                    <i class='bx bx-calendar'></i> {{ photo.upload_date|date:"M d" }}
+                </small>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <span title="Views">
+                        <i class='bx bx-show'></i> {{ photo.view_count }}
+                    </span>
+                    <span title="Likes">
+                        <i class='bx bx-heart'></i> {{ photo.like_count }}
+                    </span>
+                </div>
+                <a href="{% url 'photos:photo_detail' pk=photo.id %}" class="btn btn-primary btn-sm">
+                    <i class='bx bx-show'></i> View
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
             {% else %}
                 <!-- Empty State -->
                 <div class="empty-state">
