@@ -10,7 +10,7 @@
   <meta name="keywords" content="event photos, AI photo management, event photography, photo organization">
 
   <!-- Favicons -->
-  <link href="{% static 'home/img/favicon.png' %}" rel="icon">
+  <link href="{% static 'home/camera-lens.png' %}" rel="icon">
   <link href="{% static 'home/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
 
   <!-- Fonts -->
@@ -46,6 +46,9 @@
           <li><a href="#about" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
           <li><a href="#features" class="{% if request.resolver_match.url_name == 'features' %}active{% endif %}">Features</a></li>
           <li><a href="{% url 'home:contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a></li>
+          {% if user.is_authenticated %}
+          <li><a href="{% url 'users:dashboard' %}">Dashboard</a
+          {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -122,8 +125,8 @@
             {% if user.is_authenticated and user.role == 'ORGANIZER' %}
               <li><a href="{% url 'events:event_create' %}">Create Event</a></li>
               <li><a href="{% url 'events:event_list' %}">Manage Events</a></li>
-              <li><a href="{% url 'users:invite_crew' %}">Invite Crew</a></li>
-              <li><a href="{% url 'events:manage_participants' %}">Manage Participants</a></li>
+              <li><a href="{% url 'events:access_requests' %}">Invite Crew</a></li>
+              <li><a href="{% url 'events:access_requests' %}">Manage Participants</a></li>
               <li><a href="{% url 'home:maintanance' %}">AI Features</a></li>
             {% else %}
               <li><a href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Organizer access required">Create Event</a></li>
