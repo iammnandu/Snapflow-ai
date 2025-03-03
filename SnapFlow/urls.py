@@ -25,6 +25,9 @@ urlpatterns = [
     path('account/', include('users.urls')),
     path('events/', include('events.urls')),
     path('photos/', include('photos.urls')),
+    path('notifications/', include('notifications.urls')),
+
+
     path('plate/', include('django_spaghetti.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
