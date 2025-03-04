@@ -1,0 +1,150 @@
+{% extends 'users/db_base.html' %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">Notifications</h1>
+        
+        <div class="flex space-x-4">
+            {% if unread_count > 0 %}
+            <form action="{% url 'mark_all_notifications_read' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Mark All Read
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'notification_preferences' %}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+                Preferences
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-gray-100 p-4 rounded-lg mb-6">
+        <form method="get" class="flex flex-wrap gap-4 items-center">
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700">Type:</label>
+                <select id="type" name="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                    <option value="">All Types</option>
+                    {% for type_code, type_name in notification_types %}
+                    <option value="{{ type_code }}" {% if filter_type == type_code %}selected{% endif %}>{{ type_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="unread" name="unread" value="true" {% if unread_only %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="unread" class="ml-2 block text-sm text-gray-700">Unread only</label>
+            </div>
+            
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Apply Filters
+            </button>
+            
+            <a href="{% url 'notification_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Clear Filters</a>
+        </form>
+    </div>
+    
+    <!-- Notifications list -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+            {% for notification in page_obj %}
+            <li class="{% if not notification.read %}bg-blue-50{% endif %}">
+                <a href="{% url 'notification_detail' notification.id %}" class="block hover:bg-gray-50">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                {% if notification.from_user and notification.from_user.avatar %}
+                                <img class="h-10 w-10 rounded-full" src="{{ notification.from_user.avatar.url }}" alt="">
+                                {% else %}
+                                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <span class="text-gray-600">{{ notification.notification_type|slice:":1" }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ notification.title }}</div>
+                                    <div class="text-sm text-gray-500">{{ notification.message }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="text-sm text-gray-500 mr-4">
+                                    {{ notification.created_at|timesince }} ago
+                                </div>
+                                
+                                <!-- Action buttons -->
+                                <div class="flex space-x-2">
+                                    {% if not notification.read %}
+                                    <form action="{% url 'mark_notification_read' notification.id %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-blue-600 hover:text-blue-800">
+                                            <span class="sr-only">Mark as read</span>
+                                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    
+                                    <form action="{% url 'delete_notification' notification.id %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-red-600 hover:text-red-800">
+                                            <span class="sr-only">Delete</span>
+                                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </li>
+            {% empty %}
+            <li class="px-4 py-6 text-center text-gray-500">
+                No notifications found. 
+                {% if filter_type or unread_only %}
+                <a href="{% url 'notification_list' %}" class="text-blue-600 hover:text-blue-800">Clear filters</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="border-t border-gray-200 px-4 flex items-center justify-between sm:px-0 mt-6">
+        <div class="w-0 flex-1 flex">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&type={{ filter_type }}{% endif %}{% if unread_only %}&unread=true{% endif %}" class="border-t-2 border-transparent pt-4 pr-1 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Previous
+            </a>
+            {% endif %}
+        </div>
+        <div class="hidden md:flex">
+            <span class="px-4 py-2">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </div>
+        <div class="w-0 flex-1 flex justify-end">
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if filter_type %}&type={{ filter_type }}{% endif %}{% if unread_only %}&unread=true{% endif %}" class="border-t-2 border-transparent pt-4 pl-1 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Next
+                <svg class="ml-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

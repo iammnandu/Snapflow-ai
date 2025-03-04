@@ -1,0 +1,17 @@
+SnapFlow Notification
+
+Hello {{ notification.recipient.first_name }},
+
+{{ notification.title }}
+
+{{ notification.message }}
+
+{% if notification.action_url %}
+View more details at: {{ site_url }}{{ notification.action_url }}
+{% endif %}
+
+Thank you for using SnapFlow for your event photography needs!
+
+---
+This email was sent to {{ notification.recipient.email }} because you have an account on SnapFlow.
+To manage your notification preferences, visit: {{ site_url }}{% url 'notification_preferences' %}

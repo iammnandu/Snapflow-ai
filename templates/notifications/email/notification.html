@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ notification.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f0f4f8;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #ffffff;
+            padding: 20px;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+        .notification-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .notification-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        .notification-message {
+            margin-bottom: 15px;
+            color: #4b5563;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .footer {
+            background-color: #f0f4f8;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-radius: 0 0 8px 8px;
+        }
+        .preferences-link {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SnapFlow Notification</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hello {{ notification.recipient.first_name }},</p>
+            
+            <div class="notification-box">
+                <div class="notification-title">{{ notification.title }}</div>
+                <div class="notification-message">{{ notification.message }}</div>
+                
+                {% if notification.action_url %}
+                <a href="{{ site_url }}{{ notification.action_url }}" class="button">View Details</a>
+                {% endif %}
+            </div>
+            
+            <p>Thank you for using SnapFlow for your event photography needs!</p>
+        </div>
+        
+        <div class="footer">
+            <p>This email was sent to {{ notification.recipient.email }} because you have an account on SnapFlow.</p>
+            <p>To manage your notification preferences, <a href="{{ site_url }}{% url 'notification_preferences' %}" class="preferences-link">click here</a>.</p>
+        </div>
+    </div>
+</body>
+</html>

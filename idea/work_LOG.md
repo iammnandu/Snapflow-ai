@@ -161,3 +161,5 @@
 - personalized image filter
 
 - update the upload photo size for organizers
+
+- handle the error when two events with same name is created.
