@@ -1,0 +1,14 @@
+<!-- templates/notifications/emails/access_request.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>New Access Request</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>{{ notification.message }}</p>
+
+<a href="{{ site_url }}/events/access-requests/" class="button">Review Request</a>
+
+<p>Thank you for using {{ site_name }}!</p>
+{% endblock %}

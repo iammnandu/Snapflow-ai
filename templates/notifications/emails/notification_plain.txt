@@ -1,0 +1,20 @@
+{{ notification.title }}
+
+Hello {{ recipient.first_name }},
+
+{{ notification.message }}
+
+{% if notification.event %}
+Event: {{ notification.event.title }}
+{% endif %}
+
+{% if notification.action_url %}
+View Details: {{ site_url }}{{ notification.action_url }}
+{% endif %}
+
+Thank you for using SnapFlow!
+
+---
+This email was sent to {{ recipient.email }}.
+You received this email because you're registered on SnapFlow.
+You can manage your notification preferences at {{ site_url }}{% url 'notification_preferences' %}

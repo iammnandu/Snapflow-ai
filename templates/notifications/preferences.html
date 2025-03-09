@@ -1,96 +1,72 @@
-{% extends 'users/db_base.html' %}
+<!-- templates/notifications/preferences.html -->
+{% extends "notifications/base_notifications.html" %}
 
-{% block title %}Notification Preferences{% endblock %}
+{% block notification_content %}
+<div class="notification-header">
+    <h2>Notification Preferences</h2>
+    <p class="text-muted">Customize how you receive notifications from SnapFlow</p>
+</div>
 
-{% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold">Notification Preferences</h1>
-        <a href="{% url 'notification_list' %}" class="text-blue-600 hover:text-blue-800">
-            Back to Notifications
-        </a>
-    </div>
+<form method="post" class="notification-preferences-form">
+    {% csrf_token %}
     
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="mb-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Email Notifications</h2>
-                    <p class="text-sm text-gray-500 mb-4">Select which notifications you want to receive via email.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% for field in form.email_fields %}
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                {{ field }}
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="{{ field.id_for_label }}" class="font-medium text-gray-700">{{ field.label }}</label>
-                                {% if field.help_text %}
-                                <p class="text-gray-500">{{ field.help_text }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Email Notifications</h3>
+            <p class="text-muted">Choose which notifications you want to receive via email</p>
+        </div>
+        <div class="card-body">
+            {% for field in form.email_fields %}
+                <div class="form-group form-check">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">
+                        {{ field.label }}
+                    </label>
                 </div>
-                
-                <div class="mb-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">In-App Notifications</h2>
-                    <p class="text-sm text-gray-500 mb-4">Select which notifications you want to receive within the app.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% for field in form.in_app_fields %}
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                {{ field }}
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="{{ field.id_for_label }}" class="font-medium text-gray-700">{{ field.label }}</label>
-                                {% if field.help_text %}
-                                <p class="text-gray-500">{{ field.help_text }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <div class="mb-8">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Notification Digests</h2>
-                    <p class="text-sm text-gray-500 mb-4">Receive regular summaries of your notifications.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% for field in form.digest_fields %}
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                {{ field }}
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="{{ field.id_for_label }}" class="font-medium text-gray-700">{{ field.label }}</label>
-                                {% if field.help_text %}
-                                <p class="text-gray-500">{{ field.help_text }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <div class="pt-5">
-                    <div class="flex justify-end">
-                        <a href="{% url 'notification_list' %}" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3">
-                            Cancel
-                        </a>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Save Preferences
-                        </button>
-                    </div>
-                </div>
-            </form>
+            {% endfor %}
         </div>
     </div>
-</div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>In-App Notifications</h3>
+            <p class="text-muted">Choose which notifications you want to see in the app</p>
+        </div>
+        <div class="card-body">
+            {% for field in form.app_fields %}
+                <div class="form-group form-check">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">
+                        {{ field.label }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Digest Preferences</h3>
+            <p class="text-muted">Choose how you want to receive notification summaries</p>
+        </div>
+        <div class="card-body">
+            {% for field in form.digest_fields %}
+                <div class="form-group form-check">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">
+                        {{ field.label }}
+                    </label>
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Preferences</button>
+        <a href="{% url 'notifications:list' %}" class="btn btn-light">Cancel</a>
+    </div>
+</form>
 {% endblock %}

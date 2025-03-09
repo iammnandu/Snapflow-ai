@@ -1,0 +1,40 @@
+<!-- templates/notifications/emails/weekly_digest.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>Your Weekly Digest ({{ week_start }} - {{ week_end }})</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>Here's a summary of your notifications from the past week:</p>
+
+<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <h3>Summary</h3>
+    <ul>
+        {% for count in notification_counts %}
+            <li>
+                <strong>{{ count.count }}</strong> {{ count.notification_type|title|replace:"_":" " }}
+                {% if count.count != 1 %}s{% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<h3>Highlights from This Week</h3>
+
+{% for notification in notifications|slice:":10" %}
+    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+        <h4 style="margin: 0;">{{ notification.title }}</h4>
+        <p style="margin: 5px 0;">{{ notification.message }}</p>
+        <p style="margin: 0; font-size: 12px; color: #777;">{{ notification.created_at|date:"M d, g:i A" }}</p>
+    </div>
+{% endfor %}
+
+{% if notifications.count > 10 %}
+    <p>...and {{ notifications.count|add:"-10" }} more notifications.</p>
+{% endif %}
+
+<a href="{{ site_url }}/notifications/" class="button">View All Notifications</a>
+
+<p>You're receiving this email because you've enabled weekly notification digests. You can change your preferences in your account settings.</p>
+{% endblock %}

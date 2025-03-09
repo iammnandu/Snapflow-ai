@@ -1,0 +1,27 @@
+<!-- templates/notifications/base_notifications.html -->
+{% extends "users/db_base.html" %}
+
+{% block title %}Notifications - SnapFlow{% endblock %}
+
+{% block content %}
+<div class="notification-container">
+    <div class="notification-sidebar">
+        <h3>Notification Center</h3>
+        <ul class="notification-nav">
+            <li><a href="{% url 'notifications:list' %}" class="{% if request.resolver_match.url_name == 'list' %}active{% endif %}">All Notifications</a></li>
+            <li><a href="{% url 'notifications:preferences' %}" class="{% if request.resolver_match.url_name == 'preferences' %}active{% endif %}">Preferences</a></li>
+        </ul>
+        
+        <div class="notification-actions">
+            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-secondary">Mark All as Read</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="notification-content">
+        {% block notification_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

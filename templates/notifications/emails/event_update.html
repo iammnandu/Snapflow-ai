@@ -1,0 +1,14 @@
+<!-- templates/notifications/emails/event_update.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>Event Update</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>{{ notification.message }}</p>
+
+<a href="{{ site_url }}{% url 'events:detail' notification.content_object.slug %}" class="button">View Event</a>
+
+<p>Thank you for using {{ site_name }}!</p>
+{% endblock %}

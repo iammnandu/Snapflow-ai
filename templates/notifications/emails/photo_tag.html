@@ -1,0 +1,16 @@
+<!-- templates/notifications/emails/photo_tag.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>You've been tagged in a photo!</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>{{ notification.message }}</p>
+
+<a href="{{ site_url }}/photo/{{ notification.content_object.id }}/" class="button">View Photo</a>
+
+<p>If you believe this is a mistake or would like to adjust your privacy settings, you can do so from your profile settings.</p>
+
+<p>Thank you for using {{ site_name }}!</p>
+{% endblock %}

@@ -1,187 +1,149 @@
-/**
- * Notifications handler for SnapFlow
- * Provides real-time notification functionality
- */
-
-class NotificationHandler {
-    constructor(options) {
-        this.options = Object.assign({
-            countSelector: '#notification-count',
-            menuSelector: '#notification-menu',
-            checkInterval: 30000,  // 30 seconds
-            checkUrl: '/notifications/unread-count/',
-            markReadUrl: '/notifications/{id}/mark-read/',
-            listUrl: '/notifications/',
-            fadeTime: 300,
-        }, options);
-        
-        this.notificationCount = parseInt(document.querySelector(this.options.countSelector)?.textContent || '0');
-        this.initialize();
-    }
-    
-    initialize() {
-        // Set up polling for new notifications
-        this.startPolling();
-        
-        // Set up click handlers
-        this.setupEventListeners();
-    }
-    
-    startPolling() {
-        this.intervalId = setInterval(() => {
-            this.checkNotifications();
-        }, this.options.checkInterval);
-    }
-    
-    stopPolling() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-        }
-    }
-    
-    setupEventListeners() {
-        // Mark as read buttons
-        document.querySelectorAll('.mark-read-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const notificationId = button.dataset.notificationId;
-                this.markAsRead(notificationId);
-            });
-        });
-        
-        // Document visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                this.checkNotifications();
-            }
-        });
-    }
-    
-    checkNotifications() {
-        fetch(this.options.checkUrl, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin'
-        })
+// Function to update notification badge count
+function updateNotificationCount() {
+    fetch('/notifications/unread-count/')
         .then(response => response.json())
         .then(data => {
-            if (data.count !== this.notificationCount) {
-                this.updateNotificationCount(data.count);
-                
-                // If there are new notifications, show a browser notification
-                if (data.count > this.notificationCount) {
-                    this.showBrowserNotification(data.count - this.notificationCount);
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error checking notifications:', error);
-        });
-    }
-    
-    updateNotificationCount(count) {
-        this.notificationCount = count;
-        
-        // Update the counter in the DOM
-        const countElement = document.querySelector(this.options.countSelector);
-        if (countElement) {
-            countElement.textContent = count;
+            const count = data.count;
+            const badge = document.querySelector('#notification-badge');
             
-            // Show/hide the badge
-            if (count > 0) {
-                countElement.classList.remove('hidden');
-            } else {
-                countElement.classList.add('hidden');
-            }
-        }
-    }
-    
-    markAsRead(notificationId) {
-        const url = this.options.markReadUrl.replace('{id}', notificationId);
-        
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-                'X-CSRFToken': this.getCsrfToken()
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update notification count
-                this.updateNotificationCount(data.unread_count);
+            if (badge) {
+                // Update the badge indicator
+                let indicator = badge.querySelector('span.absolute');
                 
-                // Visual feedback
-                const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
-                if (notification) {
-                    notification.classList.remove('bg-blue-50');
-                    notification.classList.add('bg-white');
-                    
-                    // Hide the read button
-                    const readBtn = notification.querySelector('.mark-read-btn');
-                    if (readBtn) {
-                        readBtn.style.display = 'none';
+                if (count > 0) {
+                    if (!indicator) {
+                        // Create the indicator if it doesn't exist
+                        indicator = document.createElement('span');
+                        indicator.classList.add('absolute', 'top-0', 'right-0', 'block', 'h-2', 'w-2', 'rounded-full', 'bg-red-500', 'ring-2', 'ring-white');
+                        badge.querySelector('a').appendChild(indicator);
                     }
+                } else if (indicator) {
+                    // Remove the indicator if count is 0
+                    indicator.remove();
                 }
             }
         })
-        .catch(error => {
-            console.error('Error marking notification as read:', error);
-        });
-    }
+        .catch(error => console.error('Error fetching notification count:', error));
+}
+
+// Mark notification as read
+function markAsRead(notificationId, element) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
-    showBrowserNotification(newCount) {
-        // Check if browser notifications are supported and permission granted
-        if (!('Notification' in window)) {
-            return;
+    fetch(`/notifications/${notificationId}/mark-read/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
         }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI
+            const listItem = element.closest('li');
+            listItem.classList.remove('bg-blue-50');
+            updateNotificationCount();
+        }
+    })
+    .catch(error => console.error('Error marking notification as read:', error));
+}
+
+// Delete notification
+function deleteNotification(notificationId, element) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/notifications/${notificationId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the notification from the list
+            const listItem = element.closest('li');
+            listItem.remove();
+            updateNotificationCount();
+        }
+    })
+    .catch(error => console.error('Error deleting notification:', error));
+}
+
+// Initialize WebSocket for real-time notifications (if WebSockets are configured)
+function initializeNotificationSocket() {
+    // Check if WebSocket is supported and a URL is provided by the server
+    const socketUrl = document.querySelector('meta[name="notification-socket-url"]')?.content;
+    if (!socketUrl) return;
+    
+    const socket = new WebSocket(socketUrl);
+    
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
         
-        if (Notification.permission === 'granted') {
-            this.createBrowserNotification(newCount);
-        } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    this.createBrowserNotification(newCount);
-                }
-            });
-        }
-    }
-    
-    createBrowserNotification(newCount) {
-        const notificationText = newCount === 1 
-            ? "You have 1 new notification" 
-            : `You have ${newCount} new notifications`;
+        if (data.type === 'notification') {
+            // Update notification count
+            updateNotificationCount();
             
-        const notification = new Notification('SnapFlow', {
-            body: notificationText,
-            icon: '/static/img/logo.png'
-        });
-        
-        notification.onclick = () => {
-            window.open(this.options.listUrl, '_blank');
-        };
-    }
-    
-    getCsrfToken() {
-        // Get CSRF token from cookie
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.startsWith('csrftoken=')) {
-                return cookie.substring('csrftoken='.length, cookie.length);
+            // Show a browser notification if permissions granted
+            if (Notification.permission === 'granted' && data.notification) {
+                const notification = new Notification(data.notification.title, {
+                    body: data.notification.message,
+                    icon: '/static/images/logo.png'
+                });
+                
+                notification.onclick = function() {
+                    window.open(data.notification.action_url, '_blank');
+                };
             }
         }
-        return '';
+    };
+    
+    socket.onclose = function() {
+        console.log('Notification socket closed. Reconnecting in 5 seconds...');
+        setTimeout(initializeNotificationSocket, 5000);
+    };
+}
+
+// Request browser notification permission
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
     }
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.notificationHandler = new NotificationHandler();
+// Document ready function
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial notification count update
+    updateNotificationCount();
+    
+    // Set up polling for notification updates (every 30 seconds)
+    setInterval(updateNotificationCount, 30000);
+    
+    // Request notification permission
+    requestNotificationPermission();
+    
+    // Initialize WebSocket for real-time updates
+    initializeNotificationSocket();
+    
+    // Add event listeners for read/delete buttons
+    document.querySelectorAll('.mark-read-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const notificationId = this.dataset.id;
+            markAsRead(notificationId, this);
+        });
+    });
+    
+    document.querySelectorAll('.delete-notification-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const notificationId = this.dataset.id;
+            deleteNotification(notificationId, this);
+        });
+    });
 });

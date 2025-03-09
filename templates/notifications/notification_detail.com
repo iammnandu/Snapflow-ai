@@ -1,0 +1,79 @@
+{% extends 'users/db_base.html' %}
+
+{% block title %}{{ notification.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <div class="mb-4">
+        <a href="{% url 'notification_list' %}" class="text-blue-600 hover:text-blue-800">
+            &larr; Back to notifications
+        </a>
+    </div>
+    
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                {{ notification.title }}
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                {{ notification.created_at }}
+            </p>
+        </div>
+        
+        <div class="border-t border-gray-200">
+            <div class="px-4 py-5 sm:p-6">
+                <p class="text-gray-700">{{ notification.message }}</p>
+                
+                {% if notification.from_user %}
+                <div class="mt-4 flex items-center">
+                    <div class="flex-shrink-0">
+                        {% if notification.from_user.avatar %}
+                        <img class="h-10 w-10 rounded-full" src="{{ notification.from_user.avatar.url }}" alt="">
+                        {% else %}
+                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-lg text-gray-600">{{ notification.from_user.first_name|first }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">
+                            From: {{ notification.from_user.first_name }} {{ notification.from_user.last_name }}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if notification.event %}
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-700">Related Event:</h4>
+                    <p>{{ notification.event.title }}</p>
+                    <a href="{% url 'event_detail' notification.event.slug %}" class="text-blue-600 hover:text-blue-800">
+                        View Event
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if notification.photo %}
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-700">Related Photo:</h4>
+                    <div class="mt-2">
+                        <img src="{{ notification.photo.image.url }}" alt="Photo" class="max-w-md rounded-lg shadow-md">
+                    </div>
+                    <a href="{% url 'photo_detail' notification.photo.pk %}" class="text-blue-600 hover:text-blue-800 mt-2 inline-block">
+                        View Photo
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if notification.action_url %}
+                <div class="mt-6">
+                    <a href="{{ notification.action_url }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Take Action
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

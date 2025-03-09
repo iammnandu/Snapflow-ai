@@ -1,0 +1,14 @@
+<!-- templates/notifications/emails/comment.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>New Comment on Your Photo</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>{{ notification.message }}</p>
+
+<a href="{{ site_url }}/photo/{{ notification.content_object.photo.id }}/" class="button">View Comment</a>
+
+<p>Thank you for using {{ site_name }}!</p>
+{% endblock %}

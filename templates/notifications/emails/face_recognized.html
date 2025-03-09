@@ -1,0 +1,18 @@
+<!-- templates/notifications/emails/face_recognized.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>You were recognized in a new photo!</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>Our system has identified you in a new photo from an event you attended.</p>
+
+<p>{{ notification.message }}</p>
+
+<a href="{{ site_url }}/photo/{{ notification.content_object.id }}/" class="button">View Photo</a>
+
+<p>If this isn't you or you'd like to adjust your privacy settings, please visit your profile settings.</p>
+
+<p>Thank you for using {{ site_name }}!</p>
+{% endblock %}

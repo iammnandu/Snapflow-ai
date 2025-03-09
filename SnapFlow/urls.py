@@ -25,7 +25,7 @@ urlpatterns = [
     path('account/', include('users.urls')),
     path('events/', include('events.urls')),
     path('photos/', include('photos.urls')),
-    path('notifications/', include('notifications.urls')),
+    path('notifications/', include('notifications.urls', namespace='notifications')),
 
 
     path('plate/', include('django_spaghetti.urls')),

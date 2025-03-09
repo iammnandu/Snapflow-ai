@@ -1,0 +1,14 @@
+<!-- templates/notifications/emails/new_photo.html -->
+{% extends "notifications/emails/base_email.html" %}
+
+{% block content %}
+<h2>New Photo Uploaded</h2>
+
+<p>Hello {{ user.first_name }},</p>
+
+<p>{{ notification.message }}</p>
+
+<a href="{{ site_url }}/photo/{{ notification.content_object.id }}/" class="button">View Photo</a>
+
+<p>Thank you for using {{ site_name }}!</p>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!-- templates/includes/notification_bell.html -->
+{% load static %}
+
+<div class="notification-bell-container">
+    <a href="#" id="notification-bell" class="notification-bell" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-bell"></i>
+        {% if unread_notifications_count > 0 %}
+            <span class="notification-badge" id="notification-counter">
+                {% if unread_notifications_count > 99 %}99+{% else %}{{ unread_notifications_count }}{% endif %}
+            </span>
+        {% endif %}
+    </a>
+    
+    <div class="notification-dropdown dropdown-menu dropdown-menu-right" id="notification-dropdown" aria-labelledby="notification-bell">
+        <div class="notification-header">
+            <h5>Notifications</h5>
+            <div class="notification-actions">
+                <form method="post" action="{% url 'notifications:mark_all_read' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-link">Mark all as read</button>
+                </form>
+                <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-link">View all</a>
+            </div>
+        </div>
+        
+        <div class="notification-list" id="notification-list">
+            {% if recent_notifications %}
+                {% for notification in recent_notifications %}
+                    <a href="{% url 'notifications:detail' notification.id %}" class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                        <div class="notification-icon">
+                            <i class="fas {{ notification.get_icon_class }}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">{{ notification.title }}</div>
+                            <div class="notification-message">{{ notification.message|truncatechars:60 }}</div>
+                            <div class="notification-time">{{ notification.created_at|timesince }} ago</div>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No new notifications</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="notification-footer">
+            <a href="{% url 'notifications:preferences' %}" class="btn btn-sm btn-link">Notification settings</a>
+        </div>
+    </div>
+</div>
