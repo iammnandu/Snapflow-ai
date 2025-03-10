@@ -136,6 +136,16 @@
 
 ---
 
+
+## 9 March
+
+### 1 pm
+- notifications functionality added
+
+- corrected the photo upload size for every events ( updated to 100Mb )
+    if you want to increase it further go to EventConfiguration model and update the max_upload_size field
+- 1 Mb == 1048576
+
 # To-Do List  
 
 ✅ **Completed**  
@@ -149,7 +159,11 @@
 - Implement **Notifications and Connections** section on the profile page.  
 - Check for errors in **Crew Management View**.  
 - Remove **participation_type** from participant registration and add it during event enrollment.  
-- Implement **crop options** when uploading **profile photos** and **event logos**.  
+- Implement **crop options** when uploading **profile photos**.  
+
+
+
+
 
 - add the info about password while registeing to site
 - add the asteric mark to compulsory fields while complete registration
@@ -160,6 +174,8 @@
 - add additional filter options for images
 - personalized image filter
 
-- update the upload photo size for organizers
+- update the upload photo size for organizers   // fized 
 
 - handle the error when two events with same name is created.
+
+- correct and incorporate the notifications templates to dashbaord

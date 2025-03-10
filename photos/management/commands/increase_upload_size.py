@@ -7,5 +7,5 @@ class Command(BaseCommand):
     help = 'Increases max upload size for all event configurations'
 
     def handle(self, *args, **kwargs):
-        count = EventConfiguration.objects.all().update(max_upload_size=52428800)  # 50MB
+        count = EventConfiguration.objects.all().update(max_upload_size=104857600)  # 100MB
         self.stdout.write(self.style.SUCCESS(f'Successfully updated {count} configurations'))

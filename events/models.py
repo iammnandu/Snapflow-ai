@@ -212,7 +212,7 @@ class EventConfiguration(models.Model):
     download_watermark = models.BooleanField(default=True)
     
     # Upload Settings
-    max_upload_size = models.IntegerField(default=10485760)  # 10MB
+    max_upload_size = models.IntegerField(default=104857600)  # 100MB
     allowed_formats = models.CharField(
         max_length=200,
         default='jpg,jpeg,png,heic'
