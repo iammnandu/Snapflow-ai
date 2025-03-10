@@ -1,0 +1,99 @@
+{% extends 'users/db_base.html' %}
+{% load static %}
+
+{% block title %}Duplicate Group #{{ group.id }} - {{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .photo-card {
+        transition: all 0.3s;
+    }
+    .photo-card.primary {
+        border: 3px solid #28a745;
+    }
+    .similarity-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+    .primary-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Duplicate Group #{{ group.id }}</h1>
+            <p class="text-muted">{{ event.title }} - {{ duplicate_photos.count }} similar photos</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'highlights:duplicate_photos' event.slug %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Duplicates
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i> Select the best photo as "Primary". You can delete or keep the duplicate photos.
+    </div>
+    
+    <div class="row">
+        {% for dup_photo in duplicate_photos %}
+        <div class="col-md-4 mb-4">
+            <div class="card photo-card {% if dup_photo.is_primary %}primary{% endif %}">
+                <div class="position-relative">
+                    <img src="{{ dup_photo.photo.image.url }}" class="card-img-top" alt="Photo">
+                    
+                    {% if dup_photo.is_primary %}
+                    <div class="primary-badge">
+                        <i class="fas fa-check-circle"></i> Primary
+                    </div>
+                    {% else %}
+                    <div class="similarity-indicator">
+                        {{ dup_photo.similarity_score|floatformat:0 }}% Similar
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Uploaded: {{ dup_photo.photo.upload_date|date:"M d, Y" }}</small><br>
+                        <small class="text-muted">Quality: {{ dup_photo.photo.quality_score|floatformat:1 }}</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        {% if not dup_photo.is_primary %}
+                        <a href="{% url 'highlights:select_primary_photo' group.id dup_photo.photo.id %}" 
+                           class="btn btn-sm btn-success">
+                            Set as Primary
+                        </a>
+                        {% else %}
+                        <button class="btn btn-sm btn-success" disabled>
+                            <i class="fas fa-check"></i> Primary Photo
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'photos:photo_detail' dup_photo.photo.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

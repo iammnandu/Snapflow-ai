@@ -1,0 +1,79 @@
+{% extends 'users/db_base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} - Duplicate Photos{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>{{ event.title }} - Duplicate Photos</h1>
+            <p class="text-muted">Manage duplicate and similar photos from this event</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'highlights:event_highlights' event.slug %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Highlights
+            </a>
+        </div>
+    </div>
+
+    {% if not duplicate_groups %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> No duplicate photos have been detected for this event.
+    </div>
+    {% endif %}
+
+    <div class="row">
+        {% for group in duplicate_groups %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Duplicate Group #{{ group.id }}</h5>
+                    <span class="badge badge-info">{{ group.photos.count }} photos</span>
+                </div>
+                
+                {% if group.primary_photo %}
+                <div class="card-img-top">
+                    <img src="{{ group.primary_photo.image.url }}" class="img-fluid" alt="Primary photo">
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <p class="card-text">
+                        This group contains {{ group.photos.count }} similar photos with at least 
+                        {{ group.similarity_threshold|floatformat:0 }}% similarity.
+                    </p>
+    
+                    {% if group.photos.count > 1 %}
+                    <div class="row">
+                        {% for dup_photo in group.photos.all|slice:"1:4" %}
+                        <div class="col-4">
+                            <img src="{{ dup_photo.image.url }}" class="img-thumbnail" 
+                                 alt="Similar photo ({{ dup_photo.similarity_score|floatformat:0 }}% similar)">
+                        </div>
+                        {% endfor %}
+    
+                        {% if group.photos.count > 4 %}
+                        <div class="col-4 d-flex align-items-center justify-content-center">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-ellipsis-h fa-2x"></i>
+                                <p>{{ group.photos.count|add:"-4" }} more</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <a href="{% url 'highlights:duplicate_group_detail' group.id %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-search"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+</div>
+{% endblock %}

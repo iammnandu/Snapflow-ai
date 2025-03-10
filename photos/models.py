@@ -19,6 +19,7 @@ class EventPhoto(models.Model):
     
     # AI Processing Fields
     processed = models.BooleanField(default=False)
+    highlights = models.BooleanField(default=False)
     quality_score = models.FloatField(null=True, blank=True)
     detected_faces = models.JSONField(null=True, blank=True)
     scene_tags = models.JSONField(null=True, blank=True)

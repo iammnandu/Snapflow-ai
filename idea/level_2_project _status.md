@@ -1,6 +1,6 @@
 # SnapFlow: Event Photo Management Web Application
 
-Based on the provided documentation, SnapFlow is a comprehensive Django-based web application designed for event photo management with advanced face recognition capabilities. The system intelligently categorizes photos by participants and provides personalized galleries.
+SnapFlow is a comprehensive Django-based web application designed for event photo management with advanced face recognition capabilities. The system intelligently categorizes photos by participants and provides personalized galleries.
 
 ## Core Structure
 

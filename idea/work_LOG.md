@@ -146,6 +146,19 @@
     if you want to increase it further go to EventConfiguration model and update the max_upload_size field
 - 1 Mb == 1048576
 
+
+## 10 March
+
+### 3 pm
+- updated the notifications preferences page
+
+### 7 pm
+- created the highlights app
+
+
+### 10 pm
+- added the features for best shot and duplicate image finder
+
 # To-Do List  
 
 ✅ **Completed**  
