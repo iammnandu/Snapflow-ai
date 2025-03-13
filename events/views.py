@@ -109,7 +109,7 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             next_step = steps[current_index + 1]
             return redirect('events:event_setup', slug=event.slug, step=next_step)
         else:
-            return redirect('events:event_detail', slug=event.slug)
+            return redirect('events:event_dashboard', slug=event.slug)
 
     def get_success_url(self):
         event = self.get_object()
@@ -125,7 +125,7 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             next_step = steps[current_index + 1]
             return reverse('events:event_setup', kwargs={'slug': event.slug, 'step': next_step})
         else:
-            return reverse('events:event_detail', kwargs={'slug': event.slug})
+            return reverse('events:event_dashboard', kwargs={'slug': event.slug})
 
 
 from django.shortcuts import render
@@ -343,7 +343,7 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
             self.object = self.get_object()
             if self.object is None:
                 messages.error(request, "No crew members found for this event.")
-                return redirect('events:event_detail', slug=self.kwargs['slug'])
+                return redirect('events:event_dashboard', slug=self.kwargs['slug'])
             
             context = self.get_context_data(object=self.object)
             
@@ -355,7 +355,7 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
             return self.render_to_response(context)
         except Http404:
             messages.error(request, "You don't have permission to view this page.")
-            return redirect('events:event_detail', slug=self.kwargs['slug'])
+            return redirect('events:event_dashboard', slug=self.kwargs['slug'])
    
     def post(self, request, *args, **kwargs):
         # Get the event
@@ -364,13 +364,13 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
         # If user is the organizer, they shouldn't be able to update
         if event.organizer == request.user:
             messages.warning(request, "As an organizer, you can only view equipment details.")
-            return redirect('events:event_detail', slug=self.kwargs['slug'])
+            return redirect('events:event_dashboard', slug=self.kwargs['slug'])
             
         return super().post(request, *args, **kwargs)
    
     def get_success_url(self):
         # Redirect back to the event detail page after successful update
-        return reverse('events:event_detail', kwargs={'slug': self.kwargs['slug']})
+        return reverse('events:event_dashboard', kwargs={'slug': self.kwargs['slug']})
    
     def form_valid(self, form):
         response = super().form_valid(form)

@@ -3,6 +3,74 @@
 
 {% block title %}{{ event.title }} - Duplicate Photos{% endblock %}
 
+
+{% block add_nav %}
+<li class="menu-header small text-uppercase">
+    <span class="menu-header-text">Event Actions</span>
+  </li>
+  <li class="menu-item">
+    <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Dashboard</div>
+    </a>
+  </li>
+  
+  <li class="menu-item">
+    <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Highlights</div>
+    </a>
+  </li>
+  
+  <li class="menu-item">
+    <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Configuration</div>
+    </a>
+  </li>
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+      {% if user.role == 'ORGANIZER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+{% endblock add_nav %}
+
+
 {% block content %}
 <div class="container py-5">
     <div class="row mb-4">
@@ -34,7 +102,7 @@
                 
                 {% if group.primary_photo %}
                 <div class="card-img-top">
-                    <img src="{{ group.primary_photo.image.url }}" class="img-fluid" alt="Primary photo">
+                    <img src="{{ group.primary_photo.photo.image.url }}" class="img-fluid" alt="Primary photo">
                 </div>
                 {% endif %}
                 
@@ -48,7 +116,7 @@
                     <div class="row">
                         {% for dup_photo in group.photos.all|slice:"1:4" %}
                         <div class="col-4">
-                            <img src="{{ dup_photo.image.url }}" class="img-thumbnail" 
+                            <img src="{{ dup_photo.photo.image.url }}" class="img-thumbnail" 
                                  alt="Similar photo ({{ dup_photo.similarity_score|floatformat:0 }}% similar)">
                         </div>
                         {% endfor %}

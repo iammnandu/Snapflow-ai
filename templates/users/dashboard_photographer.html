@@ -283,7 +283,7 @@
                   <tbody class="table-border-bottom-0">
                     {% for crew in crew_memberships|slice:":5" %}
                     <tr>
-                      <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' crew.event.slug %}">{{ crew.event.title }}</a></strong></td>
+                      <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_dashboard' crew.event.slug %}">{{ crew.event.title }}</a></strong></td>
                       <td>{{ crew.event.start_date|date:"M d, Y" }}</td>
                       <td>{{ crew.get_role_display }}</td>
                       <td>
@@ -304,7 +304,7 @@
                             <i class="bx bx-dots-vertical-rounded"></i>
                           </button>
                           <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'events:event_detail' crew.event.slug %}">
+                            <a class="dropdown-item" href="{% url 'events:event_dashboard' crew.event.slug %}">
                               <i class="bx bx-show-alt me-1"></i> View Event
                             </a>
                             <a class="dropdown-item" href="{% url 'photos:upload_photos' crew.event.slug %}">

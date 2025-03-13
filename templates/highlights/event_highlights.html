@@ -3,6 +3,76 @@
 {% load highlight_filters %}
 {% block title %}{{ event.title }} Highlights{% endblock %}
 
+
+{% block add_nav %}
+<li class="menu-header small text-uppercase">
+    <span class="menu-header-text">Event Actions</span>
+  </li>
+  <li class="menu-item">
+    <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Dashboard</div>
+    </a>
+  </li>
+
+  <li class="menu-item">
+    <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Highlights</div>
+    </a>
+  </li>
+
+
+  
+  <li class="menu-item">
+    <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Configuration</div>
+    </a>
+  </li>
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+      {% if user.role == 'ORGANIZER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+{% endblock add_nav %}
+
+
 {% block content %}
 <div class="container py-5">
     <div class="row mb-4">
@@ -14,7 +84,7 @@
             <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-primary">
                 <i class="fas fa-arrow-left"></i> Back to Event
             </a>
-            {% if user == event.organizer or user in event.eventcrew_set.all|map_attribute:'member' %}
+            {% if user == event.organizer or user in event.crew_members.all|map_attribute:'member' %}
             <a href="{% url 'highlights:duplicate_photos' event.slug %}" class="btn btn-outline-secondary">
                 <i class="fas fa-clone"></i> Manage Duplicates
             </a>
@@ -22,13 +92,14 @@
         </div>
     </div>
 
-    {% if not best_shots %}
+    {% if not good_shots and not problem_shots %}
     <div class="alert alert-info">
         <i class="fas fa-info-circle"></i> No highlights available yet. Highlights are automatically generated as photos are uploaded and processed.
     </div>
     {% endif %}
 
-    {% for category, shots in best_shots.items %}
+    <!-- Good shots section -->
+    {% for category, shots in good_shots.items %}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
             <h3>{% if category == 'OVERALL' %}Overall Best Shots{% else %}{{ shots.0.get_category_display }}{% endif %}</h3>
@@ -57,5 +128,39 @@
         </div>
     </div>
     {% endfor %}
+
+    <!-- Problem shots section -->
+    {% if problem_shots %}
+    <h2>Images Needing Attention</h2>
+    {% for category, shots in problem_shots.items %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h3>{{ shots.0.get_category_display }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for shot in shots %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <a href="{% url 'photos:photo_detail' shot.photo.id %}">
+                            <img src="{{ shot.photo.image.url }}" class="card-img-top" alt="{{ shot.photo.caption|default:'Event photo' }}">
+                        </a>
+                        <div class="card-body">
+                            <p class="card-text">
+                                {% if shot.photo.caption %}{{ shot.photo.caption }}{% endif %}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Issue: {{ shot.get_category_display }}</small>
+                                <small class="text-muted">{{ shot.photo.upload_date|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
 </div>
 {% endblock %}

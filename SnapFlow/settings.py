@@ -257,3 +257,8 @@ SPAGHETTI_SAUCE = {
     'apps': ['users', 'events', 'photos'],  # List the apps you want to visualize
     'show_fields': True,  # Set to True to show all fields
 }
+
+
+
+
+SITE_URL = 'www.snapflow.com'

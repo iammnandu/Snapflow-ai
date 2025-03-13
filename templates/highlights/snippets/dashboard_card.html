@@ -13,7 +13,7 @@
         {% if has_duplicates %}
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i> {{ duplicate_count }} groups of similar photos have been detected.
-            {% if user == event.organizer or user in event.eventcrew_set.all|map_attribute:'member' %}
+            {% if user == event.organizer or user in event.crew_members.all|map_attribute:'member' %}
             <a href="{% url 'highlights:duplicate_photos' event.slug %}">Manage duplicates</a>
             {% endif %}
         </div>

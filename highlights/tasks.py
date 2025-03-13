@@ -40,45 +40,76 @@ def analyze_photo_quality(photo_id):
         # Create or update best shots by category
         event = photo.event
         
-        # Define consistent thresholds for each category
-        thresholds = {
-            'OVERALL': {'limit': 10, 'min_score': 70},
+        # Define thresholds for good categories
+        good_categories = {
+            'OVERALL': {'limit': 10, 'min_score': 75},
             'PORTRAIT': {'limit': 5, 'min_score': 75},
             'GROUP': {'limit': 5, 'min_score': 75},
             'ACTION': {'limit': 5, 'min_score': 75},
             'COMPOSITION': {'limit': 5, 'min_score': 80},
             'LIGHTING': {'limit': 5, 'min_score': 80},
-            # Add problem categories with lower thresholds so they get tracked
-            'BLURRY': {'limit': 3, 'min_score': 20},
-            'UNDEREXPOSED': {'limit': 3, 'min_score': 20},
-            'OVEREXPOSED': {'limit': 3, 'min_score': 20},
-            'ACCIDENTAL': {'limit': 3, 'min_score': 10},
         }
         
-        # Add to OVERALL category if it's a good quality photo
-        if results['quality_score'] > thresholds['OVERALL']['min_score']:
-            update_category_best_shot(event, photo, results['quality_score'], 'OVERALL', 
-                                      thresholds['OVERALL']['limit'])
+        # Define thresholds for problem categories
+        problem_categories = {
+            'BLURRY': {'limit': 10, 'threshold': 40},  # Photos with blur_score < 40
+            'UNDEREXPOSED': {'limit': 10, 'threshold': True},  # Boolean value
+            'OVEREXPOSED': {'limit': 10, 'threshold': True},  # Boolean value
+            'ACCIDENTAL': {'limit': 10, 'threshold': True},  # Boolean value
+        }
         
-        # Add to specific categories based on analysis results
+        # Only add to OVERALL if it's actually a good photo (not blurry/exposure issues)
+        if (results['quality_score'] > good_categories['OVERALL']['min_score'] and 
+            results['blur_score'] >= 50 and
+            not results['is_underexposed'] and 
+            not results['is_overexposed'] and
+            not results['is_accidental']):
+            update_category_best_shot(event, photo, results['quality_score'], 'OVERALL', 
+                                     good_categories['OVERALL']['limit'])
+        
+        # Add to specific good categories based on analysis results
         for category in results['categories']:
-            if category in thresholds:
+            if category in good_categories:
                 # Get category-specific score
                 if category == 'COMPOSITION':
                     category_score = results['composition_score']
                 elif category == 'LIGHTING':
                     category_score = results['lighting_score']
-                elif category == 'BLURRY':
-                    category_score = results['blur_score']
-                elif category in ['UNDEREXPOSED', 'OVEREXPOSED']:
-                    category_score = results['exposure_score']
                 else:
                     category_score = results['quality_score']
-                    
-                # Only add if the score meets the minimum threshold
-                if category_score > thresholds[category]['min_score']:
+                
+                # Only add to good categories if score meets minimum and no major issues
+                if (category_score > good_categories[category]['min_score'] and
+                    results['blur_score'] >= 50 and  # Not too blurry
+                    not results['is_accidental']):
                     update_category_best_shot(event, photo, category_score, category, 
-                                             thresholds[category]['limit'])
+                                            good_categories[category]['limit'])
+        
+        # Handle problem categories separately
+        # BLURRY photos
+        if results['blur_score'] < problem_categories['BLURRY']['threshold']:
+            # For problem categories, lower score = worse = higher priority to show
+            inverted_score = 100 - results['blur_score']
+            update_problem_shot(event, photo, inverted_score, 'BLURRY', 
+                               problem_categories['BLURRY']['limit'])
+        
+        # UNDEREXPOSED photos
+        if results['is_underexposed']:
+            inverted_score = 100 - results['exposure_score']
+            update_problem_shot(event, photo, inverted_score, 'UNDEREXPOSED', 
+                               problem_categories['UNDEREXPOSED']['limit'])
+        
+        # OVEREXPOSED photos
+        if results['is_overexposed']:
+            inverted_score = 100 - results['exposure_score']
+            update_problem_shot(event, photo, inverted_score, 'OVEREXPOSED', 
+                               problem_categories['OVEREXPOSED']['limit'])
+        
+        # ACCIDENTAL photos
+        if results['is_accidental']:
+            inverted_score = 100 - results['quality_score']
+            update_problem_shot(event, photo, inverted_score, 'ACCIDENTAL', 
+                               problem_categories['ACCIDENTAL']['limit'])
         
         # Check for duplicates after processing
         find_duplicate_photos.delay(photo.event.id)
@@ -88,6 +119,63 @@ def analyze_photo_quality(photo_id):
     except Exception as e:
         logger.error(f"Error analyzing photo {photo_id}: {str(e)}")
         return None
+
+
+def update_category_best_shot(event, photo, score, category, limit):
+    """Helper function to update best shots for a category."""
+    try:
+        with transaction.atomic():
+            existing_count = BestShot.objects.filter(event=event, category=category).count()
+            
+            if existing_count < limit:
+                # Always add if we have fewer than the limit
+                BestShot.objects.create(
+                    event=event,
+                    photo=photo,
+                    score=score,
+                    category=category
+                )
+            else:
+                # Otherwise, replace the lowest-scoring shot if this one is better
+                lowest_shot = BestShot.objects.filter(
+                    event=event, category=category
+                ).order_by('score').first()
+                
+                if lowest_shot and score > lowest_shot.score:
+                    lowest_shot.photo = photo
+                    lowest_shot.score = score
+                    lowest_shot.save()
+    except Exception as e:
+        logger.error(f"Error updating best shot for category {category}: {str(e)}")
+
+
+def update_problem_shot(event, photo, inverted_score, category, limit):
+    """Helper function to update problem shots for a category.
+    For problem shots, higher inverted_score means worse quality (more problematic)."""
+    try:
+        with transaction.atomic():
+            existing_count = BestShot.objects.filter(event=event, category=category).count()
+            
+            if existing_count < limit:
+                # Always add if we have fewer than the limit
+                BestShot.objects.create(
+                    event=event,
+                    photo=photo,
+                    score=inverted_score,  # For problem categories, higher score = worse quality
+                    category=category
+                )
+            else:
+                # For problem shots, we want the WORST ones (highest inverted score)
+                lowest_shot = BestShot.objects.filter(
+                    event=event, category=category
+                ).order_by('score').first()
+                
+                if lowest_shot and inverted_score > lowest_shot.score:
+                    lowest_shot.photo = photo
+                    lowest_shot.score = inverted_score
+                    lowest_shot.save()
+    except Exception as e:
+        logger.error(f"Error updating problem shot for category {category}: {str(e)}")
 
 
 def update_category_best_shot(event, photo, score, category, limit):

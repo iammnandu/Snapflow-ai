@@ -1,4 +1,3 @@
-
 def analyze_photo_advanced(photo):
     """Advanced analysis of photo quality with detection of shot types and problems."""
     import cv2
@@ -92,24 +91,36 @@ def analyze_photo_advanced(photo):
         laplacian_var = laplacian.var()
         
         # Higher variance = less blur, normalize to 0-100
-        blur_score = min((laplacian_var / 500) * 100, 100)
+        # Set a reasonable lower threshold to identify truly blurry images
+        raw_blur_score = min((laplacian_var / 500) * 100, 100)
+        
+        # IMPROVED: Make blur score more sensitive to detect actual blur
+        # Images with variance < 100 are usually very blurry
+        if laplacian_var < 100:
+            blur_score = max(raw_blur_score * 0.7, 10)  # Reduce score for very blurry images
+        elif laplacian_var < 300:
+            blur_score = max(raw_blur_score * 0.9, 30)  # Reduce score for somewhat blurry images
+        else:
+            blur_score = raw_blur_score
         
         # IMPROVED: Exposure detection
         # Calculate exposure score based on histogram distribution
         histogram = np.array(img_gray.histogram())
+        total_pixels = np.sum(histogram)
         
         # Check for underexposure (too many dark pixels)
-        dark_ratio = np.sum(histogram[:50]) / np.sum(histogram)
+        dark_ratio = np.sum(histogram[:50]) / total_pixels
         
         # Check for overexposure (too many bright pixels)
-        bright_ratio = np.sum(histogram[200:]) / np.sum(histogram)
+        bright_ratio = np.sum(histogram[200:]) / total_pixels
         
-        # Determine exposure issues
-        is_underexposed = dark_ratio > 0.5
-        is_overexposed = bright_ratio > 0.5
+        # More precise exposure score calculation
+        mid_range_ratio = np.sum(histogram[50:200]) / total_pixels
+        exposure_score = mid_range_ratio * 100  # Higher ratio in middle range = better exposure
         
-        # Calculate exposure score (higher is better)
-        exposure_score = 100 - (dark_ratio * 50 + bright_ratio * 50)
+        # Determine exposure issues with more accurate thresholds
+        is_underexposed = dark_ratio > 0.5 or brightness < 60
+        is_overexposed = bright_ratio > 0.5 or brightness > 200
         
         # Check for good action shots
         is_action = False
@@ -123,14 +134,23 @@ def analyze_photo_advanced(photo):
             except:
                 pass
         
-        # IMPROVED: Detect accidental shots (combination of blur and bad angle)
-        is_accidental = blur_score < 30 and (is_underexposed or is_overexposed or composition_score < 40)
+        # IMPROVED: Detect accidental shots with more accurate criteria
+        technical_issues = 0
+        if blur_score < 40:
+            technical_issues += 1
+        if is_underexposed or is_overexposed:
+            technical_issues += 1
+        if composition_score < 40:
+            technical_issues += 1
+            
+        # An image with 2 or more significant technical issues is likely accidental
+        is_accidental = technical_issues >= 2
         
         # Technical score (resolution, focus, blur)
         technical_score = (
-            resolution_score * 0.5 + 
+            resolution_score * 0.4 + 
             contrast_score * 0.2 + 
-            blur_score * 0.3
+            blur_score * 0.4
         )
         
         # Add categories for exposure and blur issues
@@ -146,26 +166,52 @@ def analyze_photo_advanced(photo):
         if is_accidental:
             results['categories'].append('ACCIDENTAL')
         
-        # IMPROVED: Overall quality score with better weighting
-        overall_score = (
-            brightness_score * 0.15 +
-            contrast_score * 0.15 +
-            resolution_score * 0.15 +
-            composition_score * 0.15 +
-            lighting_score * 0.15 +
-            blur_score * 0.25  # Higher weight for blur as it's critical
-        )
+        # IMPROVED: Overall quality score with better weighting and penalties
+        # Different calculation paths based on image problems
+        if blur_score < 40:
+            # Severely penalize blurry photos
+            overall_score = max(
+                (brightness_score * 0.10 +
+                contrast_score * 0.10 +
+                resolution_score * 0.10 +
+                composition_score * 0.10 +
+                lighting_score * 0.10 +
+                blur_score * 0.50) * 0.7,  # Additional 30% penalty
+                10  # Minimum score floor
+            )
+        elif is_underexposed or is_overexposed:
+            # Penalize exposure problems
+            overall_score = max(
+                (brightness_score * 0.10 +
+                contrast_score * 0.10 +
+                resolution_score * 0.15 +
+                composition_score * 0.15 +
+                lighting_score * 0.10 +
+                blur_score * 0.20 +
+                exposure_score * 0.20) * 0.8,  # 20% penalty
+                20  # Minimum score floor
+            )
+        else:
+            # Normal weighting for good photos
+            overall_score = (
+                brightness_score * 0.15 +
+                contrast_score * 0.15 +
+                resolution_score * 0.15 +
+                composition_score * 0.20 +
+                lighting_score * 0.15 +
+                blur_score * 0.20
+            )
         
         # Heavily penalize accidental shots
         if is_accidental:
-            overall_score *= 0.5
+            overall_score = max(overall_score * 0.5, 5)  # 50% penalty, minimum 5
         
         # Add composition category if it's exceptionally good
-        if composition_score > 85:
+        if composition_score > 85 and blur_score >= 60 and not is_underexposed and not is_overexposed:
             results['categories'].append('COMPOSITION')
             
         # Add lighting category if it's exceptionally good
-        if lighting_score > 85:
+        if lighting_score > 85 and blur_score >= 60 and not is_underexposed and not is_overexposed:
             results['categories'].append('LIGHTING')
         
         # Update all results

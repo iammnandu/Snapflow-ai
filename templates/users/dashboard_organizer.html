@@ -279,7 +279,7 @@
                     <tbody class="table-border-bottom-0">
                       {% for event in events|slice:":5" %}
                       <tr>
-                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' event.slug %}" >{{ event.title }}</a></strong></td>
+                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_dashboard' event.slug %}" >{{ event.title }}</a></strong></td>
                         <td>{{ event.start_date|date:"M d, Y" }}</td>
                         <td>{{ event.event_type }}</td>
                         <td>
@@ -302,7 +302,7 @@
                               <i class="bx bx-dots-vertical-rounded"></i>
                             </button>
                             <div class="dropdown-menu">
-                              <a class="dropdown-item" href="{% url 'events:event_detail' event.slug %}">
+                              <a class="dropdown-item" href="{% url 'events:event_dashboard' event.slug %}">
                                 <i class="bx bx-show-alt me-1"></i> View Details
                               </a>
                               <a class="dropdown-item" href="{% url 'events:event_edit' event.slug %}">

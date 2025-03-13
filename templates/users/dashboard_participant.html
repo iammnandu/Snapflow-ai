@@ -395,7 +395,7 @@
                     <tbody class="table-border-bottom-0">
                       {% for participation in participations|slice:":5" %}
                       <tr>
-                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_detail' participation.event.slug %}">{{ participation.event.title }}</a></strong></td>
+                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong><a href="{% url 'events:event_dashboard' participation.event.slug %}">{{ participation.event.title }}</a></strong></td>
                         <td>{{ participation.event.start_date|date:"M d, Y" }}</td>
                         <td>{{ participation.participant_type }}</td>
                         <td>
@@ -416,7 +416,7 @@
                               <i class="bx bx-dots-vertical-rounded"></i>
                             </button>
                             <div class="dropdown-menu">
-                              <a class="dropdown-item" href="{% url 'events:event_detail' participation.event.slug %}">
+                              <a class="dropdown-item" href="{% url 'events:event_dashboard' participation.event.slug %}">
                                 <i class="bx bx-show-alt me-1"></i> View Event
                               </a>
                               <a class="dropdown-item" href="{% url 'photos:event_gallery' participation.event.slug %}">

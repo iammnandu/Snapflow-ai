@@ -127,7 +127,7 @@
                                 {{ event.description|truncatewords:20 }}
                             </p>
                             <div class="d-flex justify-content-between align-items-center">
-                                <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary">View Details</a>
+                                <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-primary">View Details</a>
                                 <span class="text-muted small">{{ event.start_date|date:"M d, Y" }}</span>
                             </div>
                         </div>
@@ -163,7 +163,7 @@
                                 {{ event.description|truncatewords:20 }}
                             </p>
                             <div class="d-flex justify-content-between align-items-center">
-                                <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary">View Details</a>
+                                <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-primary">View Details</a>
                                 <span class="text-muted small">{{ event.start_date|date:"M d, Y" }}</span>
                             </div>
                         </div>

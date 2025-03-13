@@ -163,6 +163,11 @@
 ## 13 March
 ### 09 30 pm
 - corrected the duplicate image finder.
+- added option to delete the duplicate images by selecting the unwanted ones
+
+### 10 30pm
+- updated the best shot feature to show the best shot and also added the option to categorize the photos in highlights
+- updated the additional nav item to include event highlights
 
 
 # To-Do List  

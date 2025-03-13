@@ -13,26 +13,35 @@ def event_highlights(request, event_slug):
     
     # Check if user has access to this event
     if not (request.user == event.organizer or 
-            event.eventcrew_set.filter(member=request.user).exists() or
-            event.eventparticipant_set.filter(user=request.user).exists() or
+            event.crew_members.filter(member=request.user).exists() or
+            event.participants.filter(user=request.user).exists() or
             event.is_public):
         messages.error(request, "You don't have access to this event.")
         return redirect('events:dashboard')
     
-    # Get best shots by category
-    best_shots = {}
+    # Get best shots by category - separate good and problem categories
+    good_shots = {}
+    problem_shots = {}
+    
+    # Good categories
     for category in ['OVERALL', 'PORTRAIT', 'GROUP', 'ACTION', 'COMPOSITION', 'LIGHTING']:
-        category_shots = BestShot.objects.filter(event=event, category=category)
+        category_shots = BestShot.objects.filter(event=event, category=category).order_by('-score')
         if category_shots.exists():
-            best_shots[category] = category_shots
+            good_shots[category] = category_shots
+    
+    # Problem categories - for these, higher score means worse quality
+    for category in ['BLURRY', 'UNDEREXPOSED', 'OVEREXPOSED', 'ACCIDENTAL']:
+        category_shots = BestShot.objects.filter(event=event, category=category).order_by('-score')
+        if category_shots.exists():
+            problem_shots[category] = category_shots
     
     context = {
         'event': event,
-        'best_shots': best_shots,
+        'good_shots': good_shots,
+        'problem_shots': problem_shots,
     }
     
     return render(request, 'highlights/event_highlights.html', context)
-
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -46,7 +55,7 @@ def duplicate_photos(request, event_slug):
     
     # Check if user is organizer or crew
     if not (request.user == event.organizer or 
-            event.eventcrew_set.filter(member=request.user).exists()):
+            event.crew_members.filter(member=request.user).exists()):
         messages.error(request, "Only organizers and crew members can manage duplicate photos.")
         return redirect('events:dashboard')
     
@@ -73,7 +82,7 @@ def duplicate_group_detail(request, group_id):
     
     # Check if user is organizer or crew
     if not (request.user == event.organizer or 
-            event.eventcrew_set.filter(member=request.user).exists()):
+            event.crew_members.filter(member=request.user).exists()):
         messages.error(request, "Only organizers and crew members can manage duplicate photos.")
         return redirect('events:dashboard')
     
@@ -97,7 +106,7 @@ def select_primary_photo(request, group_id, photo_id):
     
     # Check if user is organizer or crew
     if not (request.user == event.organizer or 
-            event.eventcrew_set.filter(member=request.user).exists()):
+            event.crew_members.filter(member=request.user).exists()):
         messages.error(request, "Only organizers and crew members can manage duplicate photos.")
         return redirect('events:dashboard')
     
@@ -113,4 +122,62 @@ def select_primary_photo(request, group_id, photo_id):
         duplicate_photo.save()
     
     messages.success(request, "Primary photo updated successfully.")
+    return redirect('highlights:duplicate_group_detail', group_id=group_id)
+
+
+
+
+@login_required
+def delete_duplicate_photos(request, group_id):
+    """Delete multiple photos from a duplicate group."""
+    group = get_object_or_404(DuplicateGroup, id=group_id)
+    event = group.event
+    
+    # Check if user is organizer or crew
+    if not (request.user == event.organizer or 
+            event.crew_members.filter(member=request.user).exists()):
+        messages.error(request, "Only organizers and crew members can manage duplicate photos.")
+        return redirect('events:dashboard')
+    
+    if request.method == 'POST':
+        photo_ids = request.POST.getlist('photo_ids')
+        
+        if not photo_ids:
+            messages.warning(request, "No photos were selected for deletion.")
+            return redirect('highlights:duplicate_group_detail', group_id=group_id)
+            
+        with transaction.atomic():
+            # Check if we're trying to delete the primary photo
+            primary_photo = DuplicatePhoto.objects.filter(group=group, is_primary=True).first()
+            
+            if primary_photo and str(primary_photo.photo.id) in photo_ids:
+                messages.error(request, "Cannot delete the primary photo. Please select a different primary photo first.")
+                return redirect('highlights:duplicate_group_detail', group_id=group_id)
+            
+            # Delete the selected photos
+            deleted_count = 0
+            for photo_id in photo_ids:
+                try:
+                    dup_photo = DuplicatePhoto.objects.get(group=group, photo_id=photo_id)
+                    # Option 1: Delete just the DuplicatePhoto entry
+                    # dup_photo.delete()
+                    
+                    # Option 2: Delete both the DuplicatePhoto entry and the actual EventPhoto
+                    photo = dup_photo.photo
+                    dup_photo.delete()
+                    photo.delete()  # This will also delete the image file
+                    
+                    deleted_count += 1
+                except:
+                    continue
+            
+            # If we deleted all photos except the primary, delete the group
+            remaining = group.photos.count()
+            if remaining <= 1:
+                messages.info(request, f"Removed duplicate group as only the primary photo remains.")
+                group.delete()
+                return redirect('highlights:duplicate_photos', event_slug=event.slug)
+            
+            messages.success(request, f"Successfully deleted {deleted_count} duplicate photos.")
+        
     return redirect('highlights:duplicate_group_detail', group_id=group_id)

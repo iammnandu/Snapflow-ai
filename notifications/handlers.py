@@ -121,8 +121,8 @@ class NotificationHandler:
     def handle_event_update(event, update_message):
         """Notify all event participants and crew about event updates"""
         # Get all users associated with the event
-        participants = [p.user for p in event.eventparticipant_set.all() if p.user]
-        crew_members = [c.member for c in event.eventcrew_set.all()]
+        participants = [p.user for p in event.participants.all() if p.user]
+        crew_members = [c.member for c in event.crew_members.all()]
         
         # Combine and remove duplicates
         all_users = list(set(participants + crew_members))

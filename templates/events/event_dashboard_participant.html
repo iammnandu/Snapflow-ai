@@ -11,14 +11,15 @@
   <div>Event Dashboard</div>
   </a>
 </li>
-{% if user.role == 'ORGANIZER' or user.role == 'PHOTOGRAPHER' %}
+
 <li class="menu-item">
-  <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+  <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
   <i class="menu-icon tf-icons bx bx-dock-top"></i>
-  <div>Event Configuration</div>
+  <div>Event Highlights</div>
   </a>
 </li>
-{% endif %}
+
+
 
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Quick Actions</span>
@@ -29,38 +30,6 @@
           <div>View Gallery</div>
         </a>
       </li>
-      {% if user.role == 'ORGANIZER' %}
-      <li class="menu-item">
-        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Manage Crew</div>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>View Participants</div>
-        </a>
-      </li>
-
-      {% elif user.role == 'PHOTOGRAPHER' %}
-      <li class="menu-item">
-        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Equipments</div>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>View Participants</div>
-        </a>
-      </li>
-      {% endif %}
-
-
 
 {% endblock add_nav %}
 
@@ -158,13 +127,13 @@
         </div>
       </div>
     </div>
-  
+    {% include 'highlights/snippets/dashboard_card.html' %}
     <!-- Photo Carousel Section -->
     <div class="row mb-4">
       <div class="col-12">
         <div class="card shadow-sm border-0">
           <div class="card-header d-flex justify-content-between align-items-center border-0 bg-transparent">
-            <h5 class="mb-0">Photo Highlights</h5>
+            <h5 class="mb-0">Photo Wall</h5>
             <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-sm btn-outline-primary">View All Photos</a>
           </div>
           <div class="card-body">
@@ -406,7 +375,7 @@
             <div class="mb-3">
               <label class="form-label">Event Link</label>
               <div class="input-group">
-                <input type="text" class="form-control" id="eventLink" value="{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" readonly>
+                <input type="text" class="form-control" id="eventLink" value="{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_dashboard' event.slug %}" readonly>
                 <button class="btn btn-outline-secondary" type="button" onclick="copyEventLink()">
                   <i class="bi bi-clipboard"></i>
                 </button>
@@ -423,13 +392,13 @@
               <small class="text-muted">Share this code with others to join the event</small>
             </div>
             <div class="d-flex justify-content-center gap-3 mt-4">
-              <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}" target="_blank" class="btn btn-outline-primary">
+              <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_dashboard' event.slug %}" target="_blank" class="btn btn-outline-primary">
                 <i class="bi bi-facebook"></i>
               </a>
-              <a href="https://twitter.com/intent/tweet?url={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}&text=Join%20me%20at%20{{ event.title|urlencode }}" target="_blank" class="btn btn-outline-primary">
+              <a href="https://twitter.com/intent/tweet?url={{ request.scheme }}://{{ request.get_host }}{% url 'events:event_dashboard' event.slug %}&text=Join%20me%20at%20{{ event.title|urlencode }}" target="_blank" class="btn btn-outline-primary">
                 <i class="bi bi-twitter"></i>
               </a>
-              <a href="mailto:?subject=Join%20{{ event.title|urlencode }}&body=Hi,%0A%0AI'd%20like%20to%20invite%20you%20to%20{{ event.title|urlencode }}%20on%20{{ event.start_date|date:'M d, Y' }}.%0A%0AClick%20here%20to%20view%20details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.slug %}%0A%0AEvent%20code:%20{{ event.event_code }}" class="btn btn-outline-primary">
+              <a href="mailto:?subject=Join%20{{ event.title|urlencode }}&body=Hi,%0A%0AI'd%20like%20to%20invite%20you%20to%20{{ event.title|urlencode }}%20on%20{{ event.start_date|date:'M d, Y' }}.%0A%0AClick%20here%20to%20view%20details:%20{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_dashboard' event.slug %}%0A%0AEvent%20code:%20{{ event.event_code }}" class="btn btn-outline-primary">
                 <i class="bi bi-envelope"></i>
               </a>
               <a href="https://wa.me/?text={{ 'Join me at ' | add:event.title | add:'! Details: ' | add:request.build_absolute_uri | add:' Code: ' | add:event.event_code | urlencode }}" 

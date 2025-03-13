@@ -29,9 +29,91 @@
         padding: 2px 8px;
         border-radius: 4px;
     }
+    .photo-card {
+        position: relative;
+    }
+    
+    .photo-card .form-check {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+    }
+    
+    .photo-card .form-check-input {
+        width: 20px;
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.7);
+        border: 1px solid #333;
+    }
 </style>
 {% endblock %}
 
+{% block add_nav %}
+<li class="menu-header small text-uppercase">
+    <span class="menu-header-text">Event Actions</span>
+  </li>
+  <li class="menu-item">
+    <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Dashboard</div>
+    </a>
+  </li>
+
+  <li class="menu-item">
+    <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Highlights</div>
+    </a>
+  </li>
+  
+  <li class="menu-item">
+    <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Event Configuration</div>
+    </a>
+  </li>
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Quick Actions</span>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+          <i class="menu-icon tf-icons bx bx-dock-top"></i>
+          <div>View Gallery</div>
+        </a>
+      </li>
+      {% if user.role == 'ORGANIZER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Manage Crew</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+
+      {% elif user.role == 'PHOTOGRAPHER' %}
+      <li class="menu-item">
+        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>Equipments</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-cog"></i>
+          <div>View Participants</div>
+        </a>
+      </li>
+      {% endif %}
+
+{% endblock add_nav %}
 {% block content %}
 <div class="container py-5">
     <div class="row mb-4">
@@ -50,50 +132,126 @@
         <i class="fas fa-info-circle"></i> Select the best photo as "Primary". You can delete or keep the duplicate photos.
     </div>
     
-    <div class="row">
-        {% for dup_photo in duplicate_photos %}
-        <div class="col-md-4 mb-4">
-            <div class="card photo-card {% if dup_photo.is_primary %}primary{% endif %}">
-                <div class="position-relative">
-                    <img src="{{ dup_photo.photo.image.url }}" class="card-img-top" alt="Photo">
-                    
-                    {% if dup_photo.is_primary %}
-                    <div class="primary-badge">
-                        <i class="fas fa-check-circle"></i> Primary
-                    </div>
-                    {% else %}
-                    <div class="similarity-indicator">
-                        {{ dup_photo.similarity_score|floatformat:0 }}% Similar
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="card-body">
-                    <div class="mb-2">
-                        <small class="text-muted">Uploaded: {{ dup_photo.photo.upload_date|date:"M d, Y" }}</small><br>
-                        <small class="text-muted">Quality: {{ dup_photo.photo.quality_score|floatformat:1 }}</small>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between">
+    <form action="{% url 'highlights:delete_duplicate_photos' group.id %}" method="post" id="deleteForm">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                <i class="fas fa-trash"></i> Delete Selected Photos
+            </button>
+            <button type="button" class="btn btn-outline-secondary ms-2" id="selectAllBtn">
+                Select All Non-Primary
+            </button>
+        </div>
+        
+        <div class="row">
+            {% for dup_photo in duplicate_photos %}
+            <div class="col-md-4 mb-4">
+                <div class="card photo-card {% if dup_photo.is_primary %}primary{% endif %}">
+                    <div class="position-relative">
+                        <img src="{{ dup_photo.photo.image.url }}" class="card-img-top" alt="Photo">
+                        
                         {% if not dup_photo.is_primary %}
-                        <a href="{% url 'highlights:select_primary_photo' group.id dup_photo.photo.id %}" 
-                           class="btn btn-sm btn-success">
-                            Set as Primary
-                        </a>
-                        {% else %}
-                        <button class="btn btn-sm btn-success" disabled>
-                            <i class="fas fa-check"></i> Primary Photo
-                        </button>
+                        <div class="form-check position-absolute" style="top: 10px; left: 10px;">
+                            <input class="form-check-input photo-checkbox" type="checkbox" name="photo_ids" 
+                                   value="{{ dup_photo.photo.id }}" id="photo-{{ dup_photo.photo.id }}">
+                        </div>
                         {% endif %}
                         
-                        <a href="{% url 'photos:photo_detail' dup_photo.photo.id %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i> View
-                        </a>
+                        {% if dup_photo.is_primary %}
+                        <div class="primary-badge">
+                            <i class="fas fa-check-circle"></i> Primary
+                        </div>
+                        {% else %}
+                        <div class="similarity-indicator">
+                            {{ dup_photo.similarity_score|floatformat:0 }}% Similar
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Uploaded: {{ dup_photo.photo.upload_date|date:"M d, Y" }}</small><br>
+                            <small class="text-muted">Quality: {{ dup_photo.photo.quality_score|floatformat:1 }}</small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            {% if not dup_photo.is_primary %}
+                            <a href="{% url 'highlights:select_primary_photo' group.id dup_photo.photo.id %}" 
+                               class="btn btn-sm btn-success">
+                                Set as Primary
+                            </a>
+                            {% else %}
+                            <button class="btn btn-sm btn-success" disabled>
+                                <i class="fas fa-check"></i> Primary Photo
+                            </button>
+                            {% endif %}
+                            
+                            <a href="{% url 'photos:photo_detail' dup_photo.photo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </form>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the selected photos? This action cannot be undone.</p>
+                    <p id="selectedCount">No photos selected.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Selected Photos</button>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update selected count
+            function updateSelectedCount() {
+                const selectedCount = document.querySelectorAll('input.photo-checkbox:checked').length;
+                document.getElementById('selectedCount').textContent = 
+                    selectedCount > 0 ? `${selectedCount} photos selected for deletion.` : 'No photos selected.';
+            }
+            
+            // Add event listeners to checkboxes
+            const checkboxes = document.querySelectorAll('input.photo-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectedCount);
+            });
+            
+            // Select all non-primary photos
+            document.getElementById('selectAllBtn').addEventListener('click', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateSelectedCount();
+            });
+            
+            // Handle form submission
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                const selectedCount = document.querySelectorAll('input.photo-checkbox:checked').length;
+                if (selectedCount > 0) {
+                    document.getElementById('deleteForm').submit();
+                } else {
+                    alert('Please select at least one photo to delete.');
+                    $('#confirmDeleteModal').modal('hide');
+                }
+            });
+        });
+    </script>
 </div>
 {% endblock %}

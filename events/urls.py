@@ -7,7 +7,6 @@ urlpatterns = [
     # Event Management
     path('create/', views.EventCreateView.as_view(), name='event_create'),  # done
     path('list/', views.EventListView.as_view(), name='event_list'),  # done
-    path('<slug:slug>/', views.EventDashboardView.as_view(), name='event_detail'),
     path('<slug:slug>/dashboard/', views.EventDashboardView.as_view(), name='event_dashboard'),  # done
     path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'),  # done
     path('<slug:slug>/setup/<str:step>/', views.EventSetupView.as_view(), name='event_setup'),
@@ -38,5 +37,5 @@ urlpatterns = [
     path('events/requests/<int:request_id>/approve/', views.approve_request, name='approve_request'),  # done
     path('events/requests/<int:request_id>/reject/', views.reject_request, name='reject_request'),  # done
 
-    path('requests/cancel/<int:request_id>/', views.cancel_access_request, name='cancel_access_request'),
+    path('requests/cancel/<int:request_id>/', views.cancel_access_request, name='cancel_access_request'), #done
 ]
