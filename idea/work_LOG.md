@@ -159,6 +159,12 @@
 ### 10 pm
 - added the features for best shot and duplicate image finder
 
+
+## 13 March
+### 09 30 pm
+- corrected the duplicate image finder.
+
+
 # To-Do List  
 
 ✅ **Completed**  

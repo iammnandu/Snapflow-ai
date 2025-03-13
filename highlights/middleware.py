@@ -17,8 +17,15 @@ class HighlightsMiddleware:
             # Only process if event is an Event instance
             if isinstance(event, Event):
                 # Add highlights data to the context
-                response.context_data['has_highlights'] = BestShot.objects.filter(event=event).exists()
+                best_shots = BestShot.objects.filter(event=event)
+                response.context_data['has_highlights'] = best_shots.exists()
                 response.context_data['has_duplicates'] = DuplicateGroup.objects.filter(event=event).exists()
                 response.context_data['duplicate_count'] = DuplicateGroup.objects.filter(event=event).count()
+                
+                # Add problem photo counts
+                response.context_data['blurry_count'] = best_shots.filter(category='BLURRY').count()
+                response.context_data['underexposed_count'] = best_shots.filter(category='UNDEREXPOSED').count()
+                response.context_data['overexposed_count'] = best_shots.filter(category='OVEREXPOSED').count()
+                response.context_data['accidental_count'] = best_shots.filter(category='ACCIDENTAL').count()
                 
         return response

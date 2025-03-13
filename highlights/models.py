@@ -16,6 +16,11 @@ class BestShot(models.Model):
             ('ACTION', 'Best Action Shot'),
             ('COMPOSITION', 'Best Composition'),
             ('LIGHTING', 'Best Lighting'),
+            # Add problem categories
+            ('BLURRY', 'Blurry Images'),
+            ('UNDEREXPOSED', 'Underexposed Images'),
+            ('OVEREXPOSED', 'Overexposed Images'),
+            ('ACCIDENTAL', 'Accidental Shots'),
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)

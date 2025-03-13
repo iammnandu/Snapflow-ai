@@ -33,3 +33,5 @@ env/
 ENV/
 
 user_detaits.txt
+
+**/debug_faces/*
