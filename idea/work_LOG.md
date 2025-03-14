@@ -170,6 +170,12 @@
 - updated the additional nav item to include event highlights
 
 
+## 14 March
+### 11 30pm
+- corrected the notification detail
+- corrected notification sent funtion
+
+
 # To-Do List  
 
 ✅ **Completed**  

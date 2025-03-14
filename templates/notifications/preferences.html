@@ -1,127 +1,107 @@
-{% extends 'users/db_base.html' %}
+<!-- templates/notifications/preferences.html -->
+{% extends 'notifications/base_notifications.html' %}
 {% load notification_filters %}
-{% block content %}
-<div class="container-xxl flex-grow-1 container-p-y">
-  <h4 class="fw-bold py-3 mb-4">
-    <span class="text-muted fw-light">Account Settings /</span> Notifications
-  </h4>
 
-  <div class="row">
-    <div class="col-md-12">
-      <!-- Navigation tabs -->
-      <ul class="nav nav-pills flex-column flex-md-row mb-3">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'users:profile' %}">
-            <i class="bx bx-user me-1"></i> Account
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" href="javascript:void(0);">
-            <i class="bx bx-bell me-1"></i> Notifications
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'users:profile' %}">
-            <i class="bx bx-link-alt me-1"></i> Connections
-          </a>
-        </li>
-      </ul>
+{% block notification_content %}
+<div class="card">
+  <h5 class="card-header">
+    Notification Preferences
+  </h5>
 
-      <form method="post" class="notification-preferences-form">
-        {% csrf_token %}
-        
-        <div class="card mb-4">
-          <h5 class="card-header">Recent Devices</h5>
-          <div class="card-body">
-            <span>We need permission from your browser to show notifications. 
-              <span class="notificationRequest"><strong>Request Permission</strong></span>
-            </span>
-            <div class="error"></div>
+  <form method="post" class="notification-preferences-form">
+    {% csrf_token %}
+    
+    <div class="card-body">
+      <div class="alert alert-info mb-4">
+        <div class="d-flex">
+          <i class="bx bx-info-circle bx-sm me-2"></i>
+          <div>
+            <p class="mb-0">We need permission from your browser to show notifications.</p>
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2 notificationRequest">
+              Request Permission
+            </button>
+            <div class="error text-danger mt-2"></div>
           </div>
-          
-          <!-- Table Layout for Notification Types -->
-          <div class="table-responsive">
-            <table class="table table-striped table-borderless border-bottom">
-              <thead>
+        </div>
+      </div>
+      
+      <!-- Table Layout for Notification Types -->
+      <div class="table-responsive mb-4">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th class="text-nowrap">NOTIFICATION TYPE</th>
+              <th class="text-nowrap text-center">
+                <i class="bx bx-envelope me-1"></i> EMAIL
+              </th>
+              <th class="text-nowrap text-center">
+                <i class="bx bx-bell me-1"></i> IN-APP
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for email_field in form.email_fields %}
+              {% with app_field=form.app_fields|get_by_index:forloop.counter0 %}
                 <tr>
-                  <th class="text-nowrap">TYPE</th>
-                  <th class="text-nowrap text-center">
-                    <i class="bx bx-envelope me-1"></i> EMAIL
-                  </th>
-                  <th class="text-nowrap text-center">
-                    <i class="bx bx-desktop me-1"></i> BROWSER
-                  </th>
+                  <td class="text-nowrap">
+                    <label class="form-check-label" for="{{ email_field.id_for_label }}">
+                      {{ email_field.label }}
+                    </label>
+                  </td>
+                  <td>
+                    <div class="form-check d-flex justify-content-center">
+                      {{ email_field }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="form-check d-flex justify-content-center">
+                      {{ app_field }}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {% for email_field in form.email_fields %}
-                  {% with app_field=form.app_fields|get_by_index:forloop.counter0 %}
-                    <tr>
-                      <td class="text-nowrap">{{ email_field.label }}</td>
-                      <td>
-                        <div class="form-check d-flex justify-content-center">
-                          {{ email_field }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="form-check d-flex justify-content-center">
-                          <!-- Assuming browser notification field will be added later -->
-                          <input class="form-check-input" type="checkbox" id="browser_{{ email_field.id_for_label }}" checked />
-                        </div>
-                      </td>
-   
-                    </tr>
-                  {% endwith %}
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Notification Timing Preferences -->
-          <div class="card-body">
-            <h6>When should we send you notifications?</h6>
-            <div class="row mt-3">
-              <div class="col-sm-6">
-                <select id="sendNotification" class="form-select" name="sendNotification">
-                  <option selected>Only when I'm online</option>
-                  <option>Anytime</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Digest Preferences Card -->
-        <div class="card mb-4">
-          <h5 class="card-header">Digest Preferences</h5>
-          <div class="card-body">
-            <div class="row mb-3">
-              <div class="col-12">
-                <span>Choose how you want to receive notification summaries</span>
-              </div>
-            </div>
-            
-            {% for field in form.digest_fields %}
-              <div class="form-check mb-3">
-                {{ field }}
-                <label for="{{ field.id_for_label }}" class="form-check-label">
-                  {{ field.label }}
-                </label>
-                {% if field.help_text %}
-                  <small class="text-muted d-block mt-1">{{ field.help_text }}</small>
-                {% endif %}
-              </div>
+              {% endwith %}
             {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Notification Timing Preferences -->
+      <div class="mb-4">
+        <h6 class="fw-bold mb-3">When should we send you notifications?</h6>
+        <div class="row">
+          <div class="col-md-6">
+            <select id="sendNotification" class="form-select" name="sendNotification">
+              <option selected>Only when I'm online</option>
+              <option>Anytime</option>
+            </select>
           </div>
         </div>
-        
-        <!-- Form Actions -->
-        <div class="mt-4 mb-5">
-          <button type="submit" class="btn btn-primary me-2">Save changes</button>
-          <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary">Discard</a>
+      </div>
+      
+      <!-- Digest Preferences -->
+      <h6 class="fw-bold mb-3">Digest Preferences</h6>
+      <p class="text-muted mb-3">Choose how you want to receive notification summaries</p>
+      
+      {% for field in form.digest_fields %}
+        <div class="form-check mb-3">
+          {{ field }}
+          <label for="{{ field.id_for_label }}" class="form-check-label">
+            {{ field.label }}
+          </label>
+          {% if field.help_text %}
+            <small class="text-muted d-block mt-1">{{ field.help_text }}</small>
+          {% endif %}
         </div>
-      </form>
+      {% endfor %}
     </div>
-  </div>
+    
+    <!-- Form Actions -->
+    <div class="card-footer">
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary">Discard</a>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </form>
 </div>
 {% endblock %}

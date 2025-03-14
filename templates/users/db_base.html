@@ -163,79 +163,85 @@
               <!-- Search -->
               <div class="navbar-nav align-items-center">
                 <div class="nav-item d-flex align-items-center">
-                  <i class="bx bx-search fs-4 lh-0"></i>
-                  <input
-                    type="text"
-                    class="form-control border-0 shadow-none"
-                    placeholder="Search..."
-                    aria-label="Search..."
-                  />
+
                 </div>
               </div>
               <!-- /Search -->
 
-              <!-- In your base.html template, add this where you want the notification bell to appear -->
-              <div class="header-actions">
-                {% if user.is_authenticated %}
-                    {% include 'includes/notification_bell.html' %}
-                {% endif %}
-              </div>
+
 
               <ul class="navbar-nav flex-row align-items-center ms-auto">
                 <!-- Place this tag where you want the button to render. -->
 
 
-                <!-- User -->
-                <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="{% url 'users:profile'  %}" data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                      <img src="{{ user.avatar.url }}" alt class="w-px-40 h-px-40 rounded-circle object-fit-cover" />
-                    </div>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a class="dropdown-item" href="{% url 'users:profile'  %}">
-                        <div class="d-flex">
-                          <div class="flex-shrink-0 me-3">
-                            <div class="avatar avatar-online">
-                                <img src="{{ user.avatar.url }}" alt class="w-px-40 h-px-40 rounded-circle object-fit-cover" />
-
-                            </div>
-                          </div>
-                          <div class="flex-grow-1">
-                            <span class="fw-semibold d-block">{{ user.username }}</span>
-                            <small class="text-muted">{{ user.get_role_display }}</small>
-                          </div>
-                        </div>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="{% url 'users:profile'  %}">
-                        <i class="bx bx-user me-2"></i>
-                        <span class="align-middle">My Profile</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="bx bx-cog me-2"></i>
-                        <span class="align-middle">Settings</span>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="{% url 'users:logout' %}">
-                        <i class="bx bx-power-off me-2"></i>
-                        <span class="align-middle">Log Out</span>
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <!--/ User -->
+<!-- User -->
+<li class="nav-item navbar-dropdown dropdown-user dropdown">
+  <a class="nav-link dropdown-toggle hide-arrow position-relative" href="{% url 'users:profile'  %}" data-bs-toggle="dropdown">
+    <div class="avatar avatar-online">
+      <img src="{{ user.avatar.url }}" alt class="w-px-40 h-px-40 rounded-circle object-fit-cover" />
+      {% if unread_notifications_count > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          {% if unread_notifications_count > 99 %}99+{% else %}{{ unread_notifications_count }}{% endif %}
+        </span>
+      {% endif %}
+    </div>
+  </a>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li>
+      <a class="dropdown-item" href="{% url 'users:profile'  %}">
+        <div class="d-flex">
+          <div class="flex-shrink-0 me-3">
+            <div class="avatar avatar-online">
+                <img src="{{ user.avatar.url }}" alt class="w-px-40 h-px-40 rounded-circle object-fit-cover" />
+            </div>
+          </div>
+          <div class="flex-grow-1">
+            <span class="fw-semibold d-block">{{ user.username }}</span>
+            <small class="text-muted">{{ user.get_role_display }}</small>
+          </div>
+        </div>
+      </a>
+    </li>
+    <li>
+      <div class="dropdown-divider"></div>
+    </li>
+    <!-- Notifications Section -->
+    <li>
+      <a class="dropdown-item d-flex align-items-center" href="{% url 'notifications:list' %}">
+        <i class="bx bx-bell me-2"></i>
+        <span class="align-middle">Notifications</span>
+        {% if unread_notifications_count > 0 %}
+          <span class="badge rounded-pill bg-danger ms-auto">
+            {% if unread_notifications_count > 99 %}99+{% else %}{{ unread_notifications_count }}{% endif %}
+          </span>
+        {% endif %}
+      </a>
+    </li>
+    <!-- End Notifications Section -->
+    <li>
+      <a class="dropdown-item" href="{% url 'users:profile'  %}">
+        <i class="bx bx-user me-2"></i>
+        <span class="align-middle">My Profile</span>
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="#">
+        <i class="bx bx-cog me-2"></i>
+        <span class="align-middle">Settings</span>
+      </a>
+    </li>
+    <li>
+      <div class="dropdown-divider"></div>
+    </li>
+    <li>
+      <a class="dropdown-item" href="{% url 'users:logout' %}">
+        <i class="bx bx-power-off me-2"></i>
+        <span class="align-middle">Log Out</span>
+      </a>
+    </li>
+  </ul>
+</li>
+<!--/ User -->
               </ul>
             </div>
 

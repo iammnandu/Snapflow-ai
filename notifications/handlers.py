@@ -1,34 +1,29 @@
 # notifications/handlers.py
+from django.urls import reverse
+# Import at the top level instead of inside methods
 from .services import NotificationService
 
 class NotificationHandler:
     @staticmethod
     def handle_photo_upload(photo):
         """Notify relevant users when a new photo is uploaded"""
-        print("Inside handle_photo_upload")
         event = photo.event
         photographer = photo.uploaded_by
         
-        print(f"Event: {event}, Organizer: {event.organizer}, Photographer: {photographer}")
-        
         # Notify event organizer
         if event.organizer != photographer:
-            print(f"Creating notification for organizer: {event.organizer}")
-            # Import inside the method to avoid circular imports
-            from .services import NotificationService
             try:
                 notification = NotificationService.create_notification(
                     recipient=event.organizer,
                     notification_type='new_photo',
                     title=f"New photo uploaded for {event.title}",
                     message=f"{photographer.get_full_name()} has uploaded a new photo to your event.",
-                    related_object=photo
+                    related_object=photo,
+                    from_user=photographer,
+                    action_url=reverse('photos:detail', kwargs={'pk': photo.id})
                 )
-                print(f"Notification created: {notification}")
             except Exception as e:
                 print(f"Error in handle_photo_upload: {e}")
-                import traceback
-                traceback.print_exc()
 
                 
     @staticmethod

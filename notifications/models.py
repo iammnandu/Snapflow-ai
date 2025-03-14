@@ -54,6 +54,8 @@ class Notification(models.Model):
     )
     
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, 
+                                  related_name='sent_notifications', null=True, blank=True)
     notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPES)
     title = models.CharField(max_length=255)
     message = models.TextField()
@@ -62,6 +64,9 @@ class Notification(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
+    
+    # Direct URL for the notification target - simplifies template usage
+    action_url = models.CharField(max_length=255, blank=True, null=True)
     
     is_read = models.BooleanField(default=False)
     is_email_sent = models.BooleanField(default=False)
@@ -91,27 +96,45 @@ class Notification(models.Model):
             'system': 'fa-bell',
         }
         return icon_map.get(self.notification_type, 'fa-bell')
-    
+        
     def get_absolute_url(self):
-        """Return the URL for this notification's target"""
-        if not self.content_object:
-            return '#'
+        """Return the URL for this notification's target with fallback handling for deleted content"""
+        # First check if we have a direct action URL
+        if self.action_url and self.action_url.strip():
+            return self.action_url
+        
+        # Handle case where content_object is None (object was deleted)
+        try:
+            # Try to access content_object - this will reveal if it's missing
+            if self.content_object is None:
+                # The referenced object has been deleted
+                return reverse('notifications:list')
+        except:
+            # Any exception means we can't access the object
+            return reverse('notifications:list')
+        
+        # At this point we know content_object exists
+        try:
+            # If the content object has its own get_absolute_url method, use that
+            if hasattr(self.content_object, 'get_absolute_url'):
+                return self.content_object.get_absolute_url()
             
-        # Determine URL based on content object type
-        if self.notification_type == 'event_invite':
-            if hasattr(self.content_object, 'slug'):
-                return reverse('events:detail', kwargs={'slug': self.content_object.slug})
-        elif self.notification_type in ['photo_tag', 'comment', 'like', 'new_photo', 'face_recognized']:
-            return reverse('photos:detail', kwargs={'pk': self.content_object.id})
-        elif self.notification_type in ['event_update', 'crew_assignment']:
-            if hasattr(self.content_object, 'slug'):
-                return reverse('events:detail', kwargs={'slug': self.content_object.slug})
-        elif self.notification_type in ['access_request']:
-            return reverse('events:access_requests')
-        elif self.notification_type in ['request_approved']:
-            if hasattr(self.content_object, 'slug'):
-                return reverse('events:detail', kwargs={'slug': self.content_object.slug})
+            # Use specific logic based on notification type and model
+            model_name = self.content_type.model
             
+            if model_name == 'event':
+                if hasattr(self.content_object, 'slug') and self.content_object.slug:
+                    return reverse('events:detail', kwargs={'slug': self.content_object.slug})
+                else:
+                    return reverse('events:detail', kwargs={'pk': self.content_object.id})
+                    
+            elif model_name == 'photo' or model_name == 'eventphoto':
+                # Handle both Photo and EventPhoto models
+                return reverse('photos:detail', kwargs={'pk': self.content_object.id})
+        except:
+            # If anything fails, fall back to notifications list
+            return reverse('notifications:list')
+        
         # Default fallback
         return reverse('notifications:list')
 
@@ -123,6 +146,7 @@ class EmailLog(models.Model):
     body = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, default='sent')
+    error_message = models.TextField(blank=True, null=True)
     
     def __str__(self):
         return f"Email to {self.recipient_email}: {self.subject}"

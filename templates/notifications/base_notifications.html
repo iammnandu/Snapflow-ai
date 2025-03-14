@@ -3,25 +3,62 @@
 
 {% block title %}Notifications - SnapFlow{% endblock %}
 
+
 {% block content %}
-<div class="notification-container">
-    <div class="notification-sidebar">
-        <h3>Notification Center</h3>
-        <ul class="notification-nav">
-            <li><a href="{% url 'notifications:list' %}" class="{% if request.resolver_match.url_name == 'list' %}active{% endif %}">All Notifications</a></li>
-            <li><a href="{% url 'notifications:preferences' %}" class="{% if request.resolver_match.url_name == 'preferences' %}active{% endif %}">Preferences</a></li>
-        </ul>
-        
-        <div class="notification-actions">
-            <form method="post" action="{% url 'notifications:mark_all_read' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-secondary">Mark All as Read</button>
-            </form>
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="fw-bold py-3 mb-4">
+    <span class="text-muted fw-light">Account /</span> Notifications
+  </h4>
+
+  <div class="row">
+    <div class="col-md-3 mb-3">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Notification Center</h5>
         </div>
+        
+        <div class="list-group list-group-flush">
+          <a href="{% url 'notifications:list' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'list' and not request.GET.status and not request.GET.type %}active{% endif %}">
+            <i class="bx bx-bell me-2"></i> All Notifications
+          </a>
+          <a href="{% url 'notifications:list' %}?status=unread" class="list-group-item list-group-item-action {% if request.GET.status == 'unread' %}active{% endif %}">
+            <i class="bx bx-envelope me-2"></i> Unread
+          </a>
+          <a href="{% url 'notifications:preferences' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'preferences' %}active{% endif %}">
+            <i class="bx bx-cog me-2"></i> Preferences
+          </a>
+        </div>
+        
+        <div class="card-body">
+          <form method="post" action="{% url 'notifications:mark_all_read' %}" class="d-grid">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary">
+              <i class="bx bx-check-double me-1"></i> Mark All as Read
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Notification Types Filter -->
+      {% if notification_types %}
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="card-title">Filter By Type</h5>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for type_code, type_label in notification_types %}
+          <a href="{% url 'notifications:list' %}?type={{ type_code }}" class="list-group-item list-group-item-action {% if current_type == type_code %}active{% endif %}">
+            <i class="fa {{ notification.get_icon_class }}" aria-hidden="true"></i> {{ type_label }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
     </div>
     
-    <div class="notification-content">
-        {% block notification_content %}{% endblock %}
+    <div class="col-md-9">
+      {% block notification_content %}{% endblock %}
     </div>
+  </div>
 </div>
 {% endblock %}

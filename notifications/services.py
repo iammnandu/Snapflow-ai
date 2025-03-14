@@ -13,15 +13,12 @@ from django.db import transaction
 # notifications/services.py
 class NotificationService:
     @staticmethod
-    def create_notification(recipient, notification_type, title, message, related_object=None, send_now=True):
+    def create_notification(recipient, notification_type, title, message, related_object=None, from_user=None, action_url=None, send_now=True):
         """Create a notification and optionally send it immediately"""
         try:
-            print(f"Creating notification for {recipient.username} of type {notification_type}")
-            
             # Validate notification type
-            from .models import Notification
             valid_types = [choice[0] for choice in Notification.NOTIFICATION_TYPES]
-
+            
             if notification_type not in valid_types:
                 print(f"Invalid notification type: {notification_type}")
                 print(f"Valid types are: {valid_types}")
@@ -32,33 +29,25 @@ class NotificationService:
                 recipient=recipient,
                 notification_type=notification_type,
                 title=title,
-                message=message
+                message=message,
+                from_user=from_user,
+                action_url=action_url
             )
             
-            # Validate model fields
-            try:
-                notification.full_clean()
-            except Exception as validation_error:
-                print(f"Validation error: {validation_error}")
-                return None
-                
             # Link to related object if provided
             if related_object:
-                from django.contrib.contenttypes.models import ContentType
                 content_type = ContentType.objects.get_for_model(related_object)
                 notification.content_type = content_type
                 notification.object_id = related_object.id
             
             # Save the notification
             notification.save()
-            print(f"Notification created with ID: {notification.id}")
             
             # Send notification immediately if requested
             if send_now:
                 NotificationService.send_notification(notification)
             
             return notification
-            
         except Exception as e:
             print(f"ERROR creating notification: {e}")
             import traceback
@@ -110,6 +99,7 @@ class NotificationService:
             'notification': notification,
             'site_name': 'SnapFlow',
             'site_url': settings.SITE_URL,
+            'sender': notification.from_user,  # Include sender in context for email templates
         }
         
         # Get appropriate email template based on notification type
@@ -149,7 +139,8 @@ class NotificationService:
                 recipient_email=recipient.email,
                 subject=notification.title,
                 body=str(e),
-                status='error'
+                status='error',
+                error_message=str(e)
             )
     
     @staticmethod
@@ -166,4 +157,55 @@ class NotificationService:
     @staticmethod
     def mark_all_as_read(user):
         """Mark all notifications as read for a user"""
-        Notification.objects.filter(recipient=user, is_read=False).update(is_read=True)
+        count = Notification.objects.filter(recipient=user, is_read=False).update(is_read=True)
+        return count  # Return the count of updated notifications
+    
+    @staticmethod
+    def _send_digest_email(user_id, notifications, digest_type):
+        """Send digest email for a collection of notifications"""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        try:
+            user = User.objects.get(id=user_id)
+            
+            # Prepare email content
+            context = {
+                'user': user,
+                'notifications': notifications,
+                'digest_type': digest_type,
+                'site_name': 'SnapFlow',
+                'site_url': settings.SITE_URL,
+            }
+            
+            # Get appropriate email template
+            template_name = f'notifications/emails/{digest_type}_digest.html'
+            
+            # Render HTML email
+            html_message = render_to_string(template_name, context)
+            plain_message = strip_tags(html_message)
+            
+            # Send email
+            subject = f"Your {digest_type.capitalize()} SnapFlow Digest"
+            send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False
+            )
+            
+            # Log email
+            EmailLog.objects.create(
+                notification=None,  # No specific notification for digests
+                recipient_email=user.email,
+                subject=subject,
+                body=plain_message
+            )
+            
+            return True
+        except Exception as e:
+            print(f"Error sending digest email: {e}")
+            traceback.print_exc()
+            return False

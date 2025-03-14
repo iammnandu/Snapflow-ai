@@ -1,46 +1,70 @@
-# notifications/signals.py
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from photos.models import EventPhoto, PhotoComment, PhotoLike, UserPhotoMatch
-from events.models import EventCrew, EventParticipant, EventAccessRequest
-from .handlers import NotificationHandler
+# notifications/tasks.py
+from celery import shared_task
+from .services import NotificationService
 
-@receiver(post_save, sender=EventPhoto)
-def photo_created(sender, instance, created, **kwargs):
-    if created:
-        NotificationHandler.handle_photo_upload(instance)
+@shared_task
+def send_notification_email(notification_id):
+    """Background task to send notification email"""
+    from .models import Notification
+    try:
+        notification = Notification.objects.get(id=notification_id)
+        NotificationService._send_email_notification(notification)
+        return f"Email sent for notification {notification_id}"
+    except Notification.DoesNotExist:
+        return f"Notification {notification_id} not found"
+    except Exception as e:
+        return f"Error sending email for notification {notification_id}: {str(e)}"
 
-@receiver(post_save, sender=UserPhotoMatch)
-def face_recognized(sender, instance, created, **kwargs):
-    if created:
-        NotificationHandler.handle_face_recognition(instance)
+@shared_task
+def send_daily_digest():
+    """Send daily digest emails to users who have opted in"""
+    from .models import NotificationPreference, Notification
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Get users who want daily digests
+    users_with_daily_digest = NotificationPreference.objects.filter(
+        receive_daily_digest=True
+    ).values_list('user', flat=True)
+    
+    # Get notifications from the last 24 hours
+    yesterday = timezone.now() - timedelta(days=1)
+    
+    for user_id in users_with_daily_digest:
+        notifications = Notification.objects.filter(
+            recipient_id=user_id,
+            created_at__gte=yesterday
+        )
+        
+        if notifications.exists():
+            # Send digest email
+            NotificationService._send_digest_email(user_id, notifications, 'daily')
+    
+    return f"Daily digest sent to {len(users_with_daily_digest)} users"
 
-@receiver(post_save, sender=PhotoComment)
-def comment_created(sender, instance, created, **kwargs):
-    if created:
-        NotificationHandler.handle_photo_comment(instance)
-
-@receiver(post_save, sender=PhotoLike)
-def like_created(sender, instance, created, **kwargs):
-    if created:
-        NotificationHandler.handle_photo_like(instance)
-
-@receiver(post_save, sender=EventCrew)
-def crew_invited(sender, instance, created, **kwargs):
-    if created:
-        NotificationHandler.handle_event_invitation(instance)
-
-@receiver(post_save, sender=EventParticipant)
-def participant_invited(sender, instance, created, **kwargs):
-    if created and instance.user:
-        NotificationHandler.handle_participant_invitation(instance)
-
-@receiver(post_save, sender=EventAccessRequest)
-def access_requested(sender, instance, created, **kwargs):
-    if created:
-        NotificationHandler.handle_access_request(instance)
-
-@receiver(post_save, sender=EventAccessRequest)
-def request_status_changed(sender, instance, created, **kwargs):
-    if not created and instance.status == 'approved':
-        NotificationHandler.handle_request_approved(instance)
+@shared_task
+def send_weekly_digest():
+    """Send weekly digest emails to users who have opted in"""
+    from .models import NotificationPreference, Notification
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Get users who want weekly digests
+    users_with_weekly_digest = NotificationPreference.objects.filter(
+        receive_weekly_digest=True
+    ).values_list('user', flat=True)
+    
+    # Get notifications from the last 7 days
+    last_week = timezone.now() - timedelta(days=7)
+    
+    for user_id in users_with_weekly_digest:
+        notifications = Notification.objects.filter(
+            recipient_id=user_id,
+            created_at__gte=last_week
+        )
+        
+        if notifications.exists():
+            # Send digest email
+            NotificationService._send_digest_email(user_id, notifications, 'weekly')
+    
+    return f"Weekly digest sent to {len(users_with_weekly_digest)} users"
