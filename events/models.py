@@ -159,6 +159,16 @@ class EventParticipant(models.Model):
         SPEAKER = 'SPEAKER', _('Speaker')
         PERFORMER = 'PERFORMER', _('Performer')
         STAFF = 'STAFF', _('Staff')
+        ORGANIZER = 'ORGANIZER', _('Organizer')
+        SPONSOR = 'SPONSOR', _('Sponsor')
+        VENDOR = 'VENDOR', _('Vendor')
+        ATTENDEE = 'ATTENDEE', _('Attendee')
+        COMPETITOR = 'COMPETITOR', _('Competitor')
+        JUDGE = 'JUDGE', _('Judge')
+        EXHIBITOR = 'EXHIBITOR', _('Exhibitor')
+        VOLUNTEER = 'VOLUNTEER', _('Volunteer')
+        MEDIA = 'MEDIA', _('Media/Press')
+        RELATIVE = 'RELATIVE', _('Relative')
         OTHER = 'OTHER', _('Other')
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants')
@@ -254,6 +264,12 @@ class EventAccessRequest(models.Model):
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    participant_type = models.CharField(
+        max_length=20,
+        choices=EventParticipant.ParticipantTypes.choices,
+        blank=True,
+        null=True,
+        help_text="Selected participant type for this event"
+    )
     class Meta:
         unique_together = ['event', 'user']

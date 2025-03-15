@@ -209,3 +209,7 @@
 - handle the error when two events with same name is created.
 
 - correct and incorporate the notifications templates to dashbaord
+
+- modify the participant type selection
+
+- modify the website to use tumbnail image for showing in website to save data

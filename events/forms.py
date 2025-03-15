@@ -106,12 +106,18 @@ class EventAccessRequestForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'Enter 6-digit event code'}),
         validators=[RegexValidator(r'^[A-Z0-9]{6}$', message="Invalid format. Use only letters and numbers.")],
     )
+    participant_type = forms.ChoiceField(
+        choices=EventParticipant.ParticipantTypes.choices,
+        required=True,
+        help_text='Select your role for this event',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     message = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 3}),
         required=False,
         help_text='Optional message to the event organizer'
     )
-
+    
     def clean_event_code(self):
         code = self.cleaned_data['event_code'].upper()
         try:

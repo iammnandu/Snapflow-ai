@@ -23,7 +23,7 @@ from .forms import (
     ParticipantInvitationForm, EventThemeForm, PrivacySettingsForm
 )
 
-
+from .models import Event, EventAccessRequest, EventParticipant
 class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventCreationForm
@@ -506,6 +506,19 @@ class RequestEventAccessView(LoginRequiredMixin, FormView):
     form_class = EventAccessRequestForm
     success_url = reverse_lazy('users:dashboard')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add participant types to the context
+        context['participant_types'] = EventParticipant.ParticipantTypes.choices
+        return context
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Only show participant type field for participants, not photographers
+        if self.request.user.role == 'PHOTOGRAPHER':
+            del form.fields['participant_type']
+        return form
+
     def form_valid(self, form):
         event = form.cleaned_data['event']
         
@@ -520,22 +533,30 @@ class RequestEventAccessView(LoginRequiredMixin, FormView):
             return redirect('users:dashboard')
 
         # Create new request
-        EventAccessRequest.objects.create(
-            event=event,
-            user=self.request.user,
-            request_type='PHOTOGRAPHER' if self.request.user.role == 'PHOTOGRAPHER' else 'PARTICIPANT',
-            message=form.cleaned_data.get('message', '')
-        )
+        request_data = {
+            'event': event,
+            'user': self.request.user,
+            'request_type': 'PHOTOGRAPHER' if self.request.user.role == 'PHOTOGRAPHER' else 'PARTICIPANT',
+            'message': form.cleaned_data.get('message', ''),
+        }
+        
+        # Only add participant_type if user is a participant
+        if self.request.user.role != 'PHOTOGRAPHER' and 'participant_type' in form.cleaned_data:
+            request_data['participant_type'] = form.cleaned_data['participant_type']
+        
+        EventAccessRequest.objects.create(**request_data)
         
         messages.success(self.request, 'Access request sent successfully')
         return super().form_valid(form)
-
+    
 
 @login_required
 def request_access(request):
     """Simple form to request access to an event using event code"""
     if request.method == 'POST':
         event_code = request.POST.get('event_code', '').upper()
+        message = request.POST.get('message', '')
+        participant_type = request.POST.get('participant_type', '')
         
         try:
             event = Event.objects.get(event_code=event_code)
@@ -559,18 +580,28 @@ def request_access(request):
                 return redirect('users:dashboard')
             
             # Create new request
-            EventAccessRequest.objects.create(
-                event=event,
-                user=request.user,
-                request_type='PHOTOGRAPHER' if request.user.role == 'PHOTOGRAPHER' else 'PARTICIPANT',
-                message='Request via event code'
-            )
+            request_data = {
+                'event': event,
+                'user': request.user,
+                'request_type': 'PHOTOGRAPHER' if request.user.role == 'PHOTOGRAPHER' else 'PARTICIPANT',
+                'message': message,
+            }
+            
+            # Only add participant_type if the user is not a photographer
+            if request.user.role != 'PHOTOGRAPHER' and participant_type:
+                request_data['participant_type'] = participant_type
+            
+            EventAccessRequest.objects.create(**request_data)
             
             messages.success(request, f'Access request sent to "{event.title}" successfully!')
         except Event.DoesNotExist:
             messages.error(request, 'Invalid event code. Please check and try again.')
     
-    return redirect('users:dashboard')
+    # For GET requests or after processing POST, redirect to dashboard
+    participant_types = EventParticipant.ParticipantTypes.choices if request.user.role != 'PHOTOGRAPHER' else None
+    return render(request, 'events/request_access.html', {
+        'participant_types': participant_types
+    })
 
 @login_required
 def cancel_access_request(request, request_id):
@@ -650,8 +681,6 @@ def access_requests_list(request):
     
     return render(request, 'events/request_list.html', context)
 
-
-
 @login_required
 @require_http_methods(["POST"])
 def approve_request(request, request_id):
@@ -678,12 +707,16 @@ def approve_request(request, request_id):
             # Generate a unique registration code for the participant
             try:
                 unique_code = EventParticipant.generate_unique_code()
+                
+                # Use the participant_type from the request or default to 'GUEST'
+                participant_type = access_request.participant_type or 'GUEST'
+                
                 EventParticipant.objects.create(
                     event=access_request.event,
                     user=access_request.user,
                     email=access_request.user.email,
                     name=access_request.user.get_full_name() or access_request.user.username,
-                    participant_type='GUEST',
+                    participant_type=participant_type,
                     registration_code=unique_code,
                     is_registered=True 
                 )

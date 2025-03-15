@@ -61,7 +61,7 @@ class ProfileCompletionMiddleware:
             # Watermark is optional, so not checking for it
 
         elif user.role == 'PARTICIPANT':
-            if not user.participant_type or not user.image_visibility:
+            if not user.image_visibility:
                 return False
             # blur_requested and remove_requested are boolean fields 
             # that default to False, so no need to check them

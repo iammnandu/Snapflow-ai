@@ -204,20 +204,7 @@
                         {% endif %}
 
                         {% if user.role == 'PARTICIPANT' %}
-                        <div class="mb-3">
-                            <label class="form-label">Participant Type</label>
-                            <select class="form-control" name="participant_type">
-                                <option value="" disabled {% if not form.participant_type.value %}selected{% endif %}>Select Type</option>
-                                {% for value, label in form.participant_type.field.choices %}
-                                    <option value="{{ value }}" {% if value == form.participant_type.value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                            {% if form.participant_type.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.participant_type.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Image Visibility</label>
                             <select class="form-control" name="image_visibility">

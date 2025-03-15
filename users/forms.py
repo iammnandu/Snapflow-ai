@@ -68,11 +68,11 @@ class ParticipantProfileForm(forms.ModelForm):
     
     class Meta:
         model = CustomUser
-        fields = ['avatar', 'phone_number', 'participant_type', 'image_visibility', 'blur_requested', 'remove_requested']
+        fields = ['avatar', 'phone_number', 'image_visibility', 'blur_requested', 'remove_requested']
         widgets = {
             'avatar': forms.HiddenInput(),  # Changed to hidden input
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'participant_type': forms.Select(attrs={'class': 'form-control'}),
+
             'image_visibility': forms.Select(attrs={'class': 'form-control'}),
         }
     

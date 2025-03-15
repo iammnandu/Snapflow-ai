@@ -1,5 +1,5 @@
 {% extends "users/db_base.html" %}
-{% block title %}Crew Management - {{ event.title }}{% endblock %}
+{% block title %}Request Event Access{% endblock %}
 
 {% block content %}
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -27,6 +27,22 @@
                                 Enter the event code provided by the event organizer.
                             </div>
                         </div>
+                        
+                        <!-- Participant Type Selection -->
+                        {% if request.user.role == 'PARTICIPANT' %}
+                        <div class="mb-3">
+                            <label for="participant_type" class="form-label">Your Role In This Event</label>
+                            <select class="form-select form-select-lg" id="participant_type" name="participant_type">
+                                {% for value, label in participant_types %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Select your role or relationship to this event.
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">Request Access</button>
                         </div>
@@ -38,7 +54,6 @@
                         <ul class="mb-0">
                             <li>Make sure you have the correct event code</li>
                             <li>Your current role: {{ request.user.get_role_display }}</li>
-                            <li>You'll be added as a {{ request.user.role|lower }} to the event</li>
                             <li>The organizer will review your request</li>
                         </ul>
                     </div>
@@ -92,6 +107,7 @@
                             <thead>
                                 <tr>
                                     <th>Event</th>
+                                    <th>Your Role</th>
                                     <th>Date Requested</th>
                                     <th>Status</th>
                                 </tr>
@@ -100,6 +116,13 @@
                                 {% for request in user.event_access_requests.all %}
                                 <tr>
                                     <td>{{ request.event.title }}</td>
+                                    <td>
+                                        {% if request.participant_type %}
+                                            {{ request.get_participant_type_display }}
+                                        {% else %}
+                                            {{ request.get_request_type_display }}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ request.created_at|date:"M d, Y" }}</td>
                                     <td>
                                         <span class="badge bg-{% if request.status == 'PENDING' %}warning{% elif request.status == 'APPROVED' %}success{% else %}danger{% endif %}">
