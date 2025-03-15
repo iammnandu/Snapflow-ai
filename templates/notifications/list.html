@@ -2,129 +2,151 @@
 {% extends "notifications/base_notifications.html" %}
 
 {% block notification_content %}
-<div class="notification-header">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Your Notifications</h2>
-        {% if unread_count %}
-            <span class="badge badge-primary">{{ unread_count }} unread</span>
-        {% endif %}
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Your Notifications</h5>
+      {% if unread_count %}
+        <span class="badge bg-primary">{{ unread_count }} unread</span>
+      {% endif %}
     </div>
-    
+  </div>
+  
+  <div class="card-body">
     <!-- Filters -->
-    <div class="notification-filters mb-4">
-        <form method="get" class="d-flex flex-wrap gap-2">
-            <div class="form-group me-2">
-                <label for="type-filter" class="sr-only">Filter by type</label>
-                <select id="type-filter" name="type" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">All Types</option>
-                    {% for type_code, type_name in notification_types %}
-                        <option value="{{ type_code }}" {% if current_type == type_code %}selected{% endif %}>
-                            {{ type_name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="form-group me-2">
-                <label for="status-filter" class="sr-only">Filter by status</label>
-                <select id="status-filter" name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">All Status</option>
-                    <option value="unread" {% if current_status == 'unread' %}selected{% endif %}>Unread</option>
-                    <option value="read" {% if current_status == 'read' %}selected{% endif %}>Read</option>
-                </select>
-            </div>
-            
-            {% if current_type or current_status %}
-                <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
-            {% endif %}
-        </form>
+    <div class="mb-3">
+      <form method="get" class="row g-2">
+        <div class="col-md-4">
+          <label for="type-filter" class="form-label">Filter by type</label>
+          <select id="type-filter" name="type" class="form-select" onchange="this.form.submit()">
+            <option value="">All Types</option>
+            {% for type_code, type_name in notification_types %}
+              <option value="{{ type_code }}" {% if current_type == type_code %}selected{% endif %}>
+                {{ type_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-md-4">
+          <label for="status-filter" class="form-label">Filter by status</label>
+          <select id="status-filter" name="status" class="form-select" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="unread" {% if current_status == 'unread' %}selected{% endif %}>Unread</option>
+            <option value="read" {% if current_status == 'read' %}selected{% endif %}>Read</option>
+          </select>
+        </div>
+        
+        <div class="col-md-4 d-flex align-items-end">
+          {% if current_type or current_status %}
+            <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary">Clear Filters</a>
+          {% endif %}
+        </div>
+      </form>
     </div>
-</div>
 
-<div class="notification-list">
-    {% if page_obj %}
+    <!-- Notification List -->
+    <div class="notification-list">
+      {% if page_obj %}
         {% for notification in page_obj %}
-            <div class="notification-item {% if not notification.is_read %}unread{% endif %}" id="notification-{{ notification.id }}">
-                <div class="notification-icon">
-                    <i class="fas {{ notification.get_icon_class }}"></i>
+          <div class="card mb-3 border {% if not notification.is_read %}border-primary{% else %}border-light{% endif %}" id="notification-{{ notification.id }}">
+            <div class="card-body">
+              <div class="d-flex">
+                <div class="flex-shrink-0 me-3">
+                  <div class="avatar {% if not notification.is_read %}bg-primary{% else %}bg-light{% endif %} p-2 rounded">
+                    <i class="fas {{ notification.get_icon_class }} fa-lg"></i>
+                  </div>
                 </div>
                 
-                <div class="notification-content">
-                    <h4 class="notification-title">{{ notification.title }}</h4>
-                    <p class="notification-message">{{ notification.message }}</p>
-                    <div class="notification-meta">
-                        <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
-                        <span class="notification-type">{{ notification.get_notification_type_display }}</span>
-                        {% if notification.from_user %}
-                            <span class="notification-from">From: {{ notification.from_user.get_full_name|default:notification.from_user.username }}</span>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="notification-actions">
-                    <a href="{% url 'notifications:detail' notification.id %}" class="btn btn-sm btn-primary">View</a>
-                    <a href="{% url 'notifications:detail' notification.id %}?redirect=target" class="btn btn-sm btn-info">Go to Item</a>
-                    {% if not notification.is_read %}
-                        <form method="post" action="{% url 'notifications:mark_read' notification.id %}" class="d-inline mark-read-form">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-light">Mark Read</button>
-                        </form>
+                <div class="flex-grow-1">
+                  <h5 class="mb-1">{{ notification.title }}</h5>
+                  <p class="mb-2">{{ notification.message }}</p>
+                  <div class="d-flex flex-wrap text-muted small mb-2">
+                    <span class="me-3"><i class="bx bx-time me-1"></i>{{ notification.created_at|timesince }} ago</span>
+                    <span class="me-3"><i class="bx bx-category me-1"></i>{{ notification.get_notification_type_display }}</span>
+                    {% if notification.from_user %}
+                      <span><i class="bx bx-user me-1"></i>From: {{ notification.from_user.get_full_name|default:notification.from_user.username }}</span>
                     {% endif %}
-                    <form method="post" action="{% url 'notifications:delete' notification.id %}" class="d-inline delete-form" onsubmit="return confirm('Are you sure you want to delete this notification?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                    </form>
+                  </div>
                 </div>
+              </div>
+              
+              <div class="d-flex justify-content-end gap-2 mt-2">
+                <a href="{% url 'notifications:detail' notification.id %}" class="btn btn-sm btn-primary">
+                  <i class="bx bx-show me-1"></i> View
+                </a>
+                <a href="{% url 'notifications:detail' notification.id %}?redirect=target" class="btn btn-sm btn-info">
+                  <i class="bx bx-link-external me-1"></i> Go to Item
+                </a>
+                {% if not notification.is_read %}
+                  <form method="post" action="{% url 'notifications:mark_read' notification.id %}" class="d-inline mark-read-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-light">
+                      <i class="bx bx-check me-1"></i> Mark Read
+                    </button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{% url 'notifications:delete' notification.id %}" class="d-inline delete-form" onsubmit="return confirm('Are you sure you want to delete this notification?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="bx bx-trash me-1"></i> Delete
+                  </button>
+                </form>
+              </div>
             </div>
+          </div>
         {% endfor %}
         
         <!-- Pagination -->
         {% if page_obj.has_other_pages %}
-            <div class="pagination">
-                <nav aria-label="Notification page navigation">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="First">
-                                    <span aria-hidden="true">&laquo;&laquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                        
-                        <li class="page-item active">
-                            <span class="page-link">
-                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                            </span>
-                        </li>
-                        
-                        {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="Last">
-                                    <span aria-hidden="true">&raquo;&raquo;</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            </div>
+          <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Notification page navigation">
+              <ul class="pagination">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="First">
+                      <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                  <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                  </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" aria-label="Last">
+                      <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
         {% endif %}
         
-    {% else %}
-        <div class="empty-state">
-            <i class="fas fa-bell-slash"></i>
-            <p>You don't have any notifications yet.</p>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+          <h5>You don't have any notifications yet</h5>
+          <p class="text-muted">Notifications will appear here when you receive them</p>
         </div>
-    {% endif %}
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 <script>
@@ -149,11 +171,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.status === 'success') {
                     // Update UI
                     const notificationItem = document.getElementById(`notification-${notificationId}`);
-                    notificationItem.classList.remove('unread');
+                    notificationItem.classList.remove('border-primary');
+                    notificationItem.classList.add('border-light');
+                    notificationItem.querySelector('.avatar').classList.remove('bg-primary');
+                    notificationItem.querySelector('.avatar').classList.add('bg-light');
                     form.remove(); // Remove the mark as read button
                     
                     // Update unread count in header if present
-                    const unreadBadge = document.querySelector('.notification-header .badge');
+                    const unreadBadge = document.querySelector('.card-header .badge');
                     if (unreadBadge) {
                         const currentCount = parseInt(unreadBadge.textContent);
                         if (currentCount > 1) {
@@ -194,8 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     notificationItem.remove();
                     
                     // If this was an unread notification, update the count
-                    if (notificationItem.classList.contains('unread')) {
-                        const unreadBadge = document.querySelector('.notification-header .badge');
+                    if (notificationItem.classList.contains('border-primary')) {
+                        const unreadBadge = document.querySelector('.card-header .badge');
                         if (unreadBadge) {
                             const currentCount = parseInt(unreadBadge.textContent);
                             if (currentCount > 1) {
@@ -207,10 +232,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // If no more notifications, show empty state
-                    if (document.querySelectorAll('.notification-item').length === 0) {
+                    if (document.querySelectorAll('.card.mb-3').length === 0) {
                         const emptyState = document.createElement('div');
-                        emptyState.className = 'empty-state';
-                        emptyState.innerHTML = '<i class="fas fa-bell-slash"></i><p>You don\'t have any notifications yet.</p>';
+                        emptyState.className = 'text-center py-5';
+                        emptyState.innerHTML = '<i class="fas fa-bell-slash fa-3x text-muted mb-3"></i><h5>You don\'t have any notifications yet</h5><p class="text-muted">Notifications will appear here when you receive them</p>';
                         document.querySelector('.notification-list').appendChild(emptyState);
                     }
                 }

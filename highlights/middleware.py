@@ -1,3 +1,4 @@
+# highlights/middleware.py
 from events.models import Event
 from .models import BestShot, DuplicateGroup
 

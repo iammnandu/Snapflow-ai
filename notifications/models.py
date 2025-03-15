@@ -4,6 +4,10 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 class NotificationPreference(models.Model):
     """User notification preferences"""
@@ -98,44 +102,67 @@ class Notification(models.Model):
         return icon_map.get(self.notification_type, 'fa-bell')
         
     def get_absolute_url(self):
-        """Return the URL for this notification's target with fallback handling for deleted content"""
-        # First check if we have a direct action URL
-        if self.action_url and self.action_url.strip():
-            return self.action_url
-        
-        # Handle case where content_object is None (object was deleted)
+        """Return the URL for the notification's target"""
         try:
-            # Try to access content_object - this will reveal if it's missing
+            # First check if we have a direct action URL
+            if self.action_url and self.action_url.strip():
+                return self.action_url
+            
+            # If no content object, return to notifications list
             if self.content_object is None:
-                # The referenced object has been deleted
+                logger.debug(f"No content object for notification {self.id}")
                 return reverse('notifications:list')
-        except:
-            # Any exception means we can't access the object
-            return reverse('notifications:list')
-        
-        # At this point we know content_object exists
-        try:
-            # If the content object has its own get_absolute_url method, use that
-            if hasattr(self.content_object, 'get_absolute_url'):
-                return self.content_object.get_absolute_url()
-            
-            # Use specific logic based on notification type and model
+                
+            # Get the content type model name
             model_name = self.content_type.model
+            logger.debug(f"Content type model name: {model_name}")
             
-            if model_name == 'event':
+            # For EventPhoto or Photo objects
+            if model_name == 'eventphoto' or model_name == 'photo':
+                return reverse('photos:photo_detail', kwargs={'pk': self.object_id})
+                
+            # For Event objects
+            elif model_name == 'event':
+                # Try to get the slug first
                 if hasattr(self.content_object, 'slug') and self.content_object.slug:
-                    return reverse('events:detail', kwargs={'slug': self.content_object.slug})
+                    return reverse('events:event_dashboard', kwargs={'slug': self.content_object.slug})
                 else:
-                    return reverse('events:detail', kwargs={'pk': self.content_object.id})
+                    return reverse('events:event_dashboard', kwargs={'pk': self.object_id})
                     
-            elif model_name == 'photo' or model_name == 'eventphoto':
-                # Handle both Photo and EventPhoto models
-                return reverse('photos:detail', kwargs={'pk': self.content_object.id})
-        except:
-            # If anything fails, fall back to notifications list
+            # For PhotoComment objects
+            elif model_name == 'photocomment':
+                return reverse('photos:photo_detail', kwargs={'pk': self.content_object.photo.id})
+                    
+            # For PhotoLike objects
+            elif model_name == 'photolike':
+                return reverse('photos:photo_detail', kwargs={'pk': self.content_object.photo.id})
+                    
+            # For UserPhotoMatch objects
+            elif model_name == 'userphotomatch':
+                return reverse('photos:photo_detail', kwargs={'pk': self.content_object.photo.id})
+                    
+            # For EventAccessRequest objects
+            elif model_name == 'eventaccessrequest':
+                if self.notification_type == 'request_approved':
+                    event = self.content_object.event
+                    if hasattr(event, 'slug') and event.slug:
+                        return reverse('events:event_dashboard', kwargs={'slug': event.slug})
+                    else:
+                        return reverse('events:event_dashboard', kwargs={'pk': event.id})
+                else:
+                    return reverse('events:access_requests', kwargs={'pk': self.content_object.event.id})
+                    
+            # Fall back to content_object's method if it exists
+            elif hasattr(self.content_object, 'get_absolute_url'):
+                return self.content_object.get_absolute_url()
+        except Exception as e:
+            # Log the error properly
+            logger.error(f"Error in get_absolute_url for notification {self.id}: {e}")
+            logger.error(traceback.format_exc())
             return reverse('notifications:list')
         
         # Default fallback
+        logger.debug(f"Using default fallback URL for notification {self.id}")
         return reverse('notifications:list')
 
 class EmailLog(models.Model):

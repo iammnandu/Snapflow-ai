@@ -31,7 +31,7 @@ class EventGalleryView(DetailView):
        
         # Apply tag filter if specified
         if tag_filter:
-            # For SQLite: Filter at Python level instead of database level
+
             photo_ids = []
             for photo in photos_queryset:
                 if photo.scene_tags and tag_filter in photo.scene_tags:
@@ -95,26 +95,22 @@ class UploadPhotosView(LoginRequiredMixin, View):
         
         # Validate files
         for image in images:
-            # Check file size
             if image.size > event.configuration.max_upload_size:
                 messages.error(request, f"File {image.name} is too large.")
                 continue
-                
-            # Check file extension
+
             ext = image.name.split('.')[-1].lower()
             if ext not in event.configuration.allowed_formats.split(','):
                 messages.error(request, f"File {image.name} has an invalid format.")
                 continue
-            
-            # Create photo
+
             photo = EventPhoto.objects.create(
                 event=event,
                 image=image,
                 uploaded_by=request.user
             )
             uploaded_photos.append(photo)
-        
-        # Queue AI processing for each photo
+
         for photo in uploaded_photos:
             process_photo.delay(photo.id)
         
@@ -154,30 +150,27 @@ class PhotoDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         photo = self.get_object()
         context['event'] = photo.event
-        
-        # Increment view count
+
         photo.view_count += 1
         photo.save()
         
         context['can_download'] = photo.event.configuration.enable_download
-        
-        # Add AI-related context data
+
         context['has_enhanced_version'] = photo.has_enhanced_version()
         context['scene_tags'] = photo.get_tags()
-        
-        # Get recognized users (improved for DeepFace)
+    
         recognized_users = []
-        # Get matches directly from UserPhotoMatch rather than detected_faces
+
         matches = UserPhotoMatch.objects.filter(photo=photo).select_related('user')
         
         for match in matches:
             recognized_users.append({
                 'user': match.user,
                 'confidence': match.confidence_score,
-                'position': None  # Get position from detected_faces if needed
+                'position': None 
             })
             
-        # If we have facial_area data in detected_faces, add it to the matches
+
         if photo.detected_faces:
             for face_data in photo.detected_faces:
                 if face_data.get('user_id'):
@@ -204,23 +197,22 @@ class PhotoActionView(LoginRequiredMixin, View):
         action = request.POST.get('action')
         
         if action == 'like':
-            # Check if user has already liked the photo
+
             like = PhotoLike.objects.filter(photo=photo, user=request.user).first()
             
             if like:
-                # Unlike the photo
+
                 like.delete()
                 photo.like_count = F('like_count') - 1
                 photo.save()
                 liked = False
             else:
-                # Like the photo
+
                 PhotoLike.objects.create(photo=photo, user=request.user)
                 photo.like_count = F('like_count') + 1
                 photo.save()
                 liked = True
-            
-            # Refresh from db to get the updated like count
+
             photo.refresh_from_db()
             
             return JsonResponse({
@@ -243,9 +235,9 @@ class PhotoActionView(LoginRequiredMixin, View):
                 })
                 
         elif action == 'reprocess':
-            # Only allow reprocessing if user is organizer or crew member
+            
             if photo.event.organizer == request.user or photo.event.crew_members.filter(member=request.user).exists():
-                # Reset processing flag and queue for reprocessing
+
                 photo.processed = False
                 photo.save(update_fields=['processed'])
                 process_photo.delay(photo.id)
@@ -264,7 +256,7 @@ class DeletePhotoView(LoginRequiredMixin, View):
         photo = get_object_or_404(EventPhoto, pk=pk)
         event = photo.event
         
-        # Check permissions
+
         if not (event.organizer == request.user or 
                 event.crew_members.filter(member=request.user, role='LEAD').exists()):
             messages.error(request, "You don't have permission to delete photos.")
@@ -275,7 +267,7 @@ class DeletePhotoView(LoginRequiredMixin, View):
         return redirect('photos:event_gallery', slug=event.slug)
 
 
-# Personal Gallery Views
+
 class UserGalleryView(LoginRequiredMixin, ListView):
     model = EventPhoto
     template_name = 'photos/user_gallery.html'

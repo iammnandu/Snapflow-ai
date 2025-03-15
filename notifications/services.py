@@ -6,11 +6,11 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from .models import Notification, NotificationPreference, EmailLog
 import traceback
+import logging
 
-# notifications/services.py
-from django.db import transaction
+# Set up logger
+logger = logging.getLogger(__name__)
 
-# notifications/services.py
 class NotificationService:
     @staticmethod
     def create_notification(recipient, notification_type, title, message, related_object=None, from_user=None, action_url=None, send_now=True):
@@ -20,8 +20,8 @@ class NotificationService:
             valid_types = [choice[0] for choice in Notification.NOTIFICATION_TYPES]
             
             if notification_type not in valid_types:
-                print(f"Invalid notification type: {notification_type}")
-                print(f"Valid types are: {valid_types}")
+                logger.error(f"Invalid notification type: {notification_type}")
+                logger.error(f"Valid types are: {valid_types}")
                 return None
             
             # Create notification object
@@ -47,10 +47,10 @@ class NotificationService:
             if send_now:
                 NotificationService.send_notification(notification)
             
+            logger.info(f"Created notification ID: {notification.id} for {recipient.username}")
             return notification
         except Exception as e:
-            print(f"ERROR creating notification: {e}")
-            import traceback
+            logger.error(f"ERROR creating notification: {e}")
             traceback.print_exc()
             return None
         
@@ -86,7 +86,15 @@ class NotificationService:
         
         # Send email if needed
         if send_email and recipient.email:
-            NotificationService._send_email_notification(notification)
+            try:
+                from .tasks import send_notification_email
+                # Use Celery task for sending emails asynchronously
+                send_notification_email.delay(notification.id)
+                logger.info(f"Queued email notification ID: {notification.id} for {recipient.username}")
+            except Exception as e:
+                logger.error(f"Error queueing email notification: {e}")
+                # Fallback to synchronous email
+                NotificationService._send_email_notification(notification)
     
     @staticmethod
     def _send_email_notification(notification):
@@ -125,14 +133,18 @@ class NotificationService:
                 notification=notification,
                 recipient_email=recipient.email,
                 subject=notification.title,
-                body=plain_message
+                body=plain_message,
+                status='sent'
             )
             
             # Update notification
             notification.is_email_sent = True
             notification.save(update_fields=['is_email_sent'])
             
+            logger.info(f"Email sent for notification ID: {notification.id}")
+            
         except Exception as e:
+            logger.error(f"Error sending email for notification ID: {notification.id}: {e}")
             # Log error
             EmailLog.objects.create(
                 notification=notification,
@@ -150,14 +162,17 @@ class NotificationService:
             notification = Notification.objects.get(id=notification_id)
             notification.is_read = True
             notification.save(update_fields=['is_read'])
+            logger.info(f"Marked notification ID: {notification_id} as read")
             return True
         except Notification.DoesNotExist:
+            logger.warning(f"Notification ID: {notification_id} not found")
             return False
     
     @staticmethod
     def mark_all_as_read(user):
         """Mark all notifications as read for a user"""
         count = Notification.objects.filter(recipient=user, is_read=False).update(is_read=True)
+        logger.info(f"Marked {count} notifications as read for user: {user.username}")
         return count  # Return the count of updated notifications
     
     @staticmethod
@@ -201,11 +216,13 @@ class NotificationService:
                 notification=None,  # No specific notification for digests
                 recipient_email=user.email,
                 subject=subject,
-                body=plain_message
+                body=plain_message,
+                status='sent'
             )
             
+            logger.info(f"Sent {digest_type} digest email to user ID: {user_id}")
             return True
         except Exception as e:
-            print(f"Error sending digest email: {e}")
+            logger.error(f"Error sending {digest_type} digest email to user ID: {user_id}: {e}")
             traceback.print_exc()
             return False

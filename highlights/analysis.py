@@ -1,3 +1,4 @@
+# highlights/analysis.py
 def analyze_photo_advanced(photo):
     """Advanced analysis of photo quality with detection of shot types and problems."""
     import cv2

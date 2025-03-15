@@ -9,6 +9,10 @@ from django.views.decorators.http import require_POST
 from .models import Notification, NotificationPreference
 from .services import NotificationService
 from .forms import NotificationPreferenceForm
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 @login_required
 def notification_list(request):
@@ -59,27 +63,30 @@ def notification_detail(request, notification_id):
     # Check if the notification has a target URL to redirect to
     redirect_url = request.GET.get('redirect')
     if redirect_url == 'target':
-        # Check if content object exists
-        if hasattr(notification, 'content_object') and notification.content_object is not None:
-            target_url = notification.get_absolute_url()
-            # Only redirect if the target URL isn't the notifications list
-            if target_url != reverse('notifications:list'):
-                return HttpResponseRedirect(target_url)
-            else:
-                # Add a message to inform the user
-                messages.info(request, "The content this notification refers to is no longer available.")
+        target_url = notification.get_absolute_url()
+        logger.debug(f"Target URL for notification {notification_id}: {target_url}")
+        
+        # Only redirect if the target URL isn't the notifications list
+        if target_url != reverse('notifications:list'):
+            return HttpResponseRedirect(target_url)
         else:
             # Add a message to inform the user
             messages.info(request, "The content this notification refers to is no longer available.")
     
-    # Check if content object exists for the template
-    content_exists = hasattr(notification, 'content_object') and notification.content_object is not None
+    # Explicitly check content_object and debug output
+    content_exists = False
+    try:
+        if notification.content_object is not None:
+            content_exists = True
+    except Exception as e:
+        logger.error(f"Error checking content_object for notification {notification_id}: {e}")
+        content_exists = False
     
     return render(request, 'notifications/notification_detail.html', {
         'notification': notification,
-        'content_exists': content_exists
+        'content_exists': content_exists,
+        'target_url': notification.get_absolute_url() if content_exists else None
     })
-
 
 @login_required
 @require_POST
@@ -141,18 +148,3 @@ def preferences(request):
         'form': form,
         'preferences': preferences,
     })
-
-
-@login_required
-@require_POST
-def delete_notification(request, notification_id):
-    """Delete a specific notification"""
-    notification = get_object_or_404(Notification, id=notification_id, recipient=request.user)
-    notification.delete()
-    messages.success(request, "Notification deleted")
-    
-    # Support AJAX requests
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'status': 'success'})
-    
-    return redirect('notifications:list')

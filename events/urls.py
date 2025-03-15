@@ -33,7 +33,7 @@ urlpatterns = [
     path('access/request/', views.request_access, name='request_access'),  # done
 
     path('access/form/', views.RequestEventAccessView.as_view(), name='request_access_form'),  # done
-    path('events/requests/', views.access_requests_list, name='access_requests'),  # done
+    path('requests/', views.access_requests_list, name='access_requests'),  # done
     path('events/requests/<int:request_id>/approve/', views.approve_request, name='approve_request'),  # done
     path('events/requests/<int:request_id>/reject/', views.reject_request, name='reject_request'),  # done
 

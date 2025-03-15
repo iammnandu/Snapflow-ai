@@ -1,3 +1,4 @@
+# highlights/tasks.py
 import io
 import numpy as np
 from celery import shared_task
