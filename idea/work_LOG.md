@@ -181,6 +181,12 @@
 - updated the participation type while registering to an event
 
 
+## 18 March
+
+### 1 am
+- implemented the gallery request functionality for event participant.
+
+
 # To-Do List  
 
 ✅ **Completed**  

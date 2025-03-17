@@ -38,4 +38,11 @@ urlpatterns = [
     path('events/requests/<int:request_id>/reject/', views.reject_request, name='reject_request'),  # done
 
     path('requests/cancel/<int:request_id>/', views.cancel_access_request, name='cancel_access_request'), #done
+
+
+    # Gallery Access Management
+    path('<slug:slug>/gallery-access/request/', views.RequestGalleryAccessView.as_view(), name='request_gallery_access'),
+    path('<slug:slug>/gallery-access/manage/', views.ManageGalleryAccessView.as_view(), name='manage_gallery_access'),
+    path('<slug:slug>/gallery-access/approve/<int:participant_id>/', views.approve_gallery_access, name='approve_gallery_access'),
+    path('<slug:slug>/gallery-access/deny/<int:participant_id>/', views.deny_gallery_access, name='deny_gallery_access'),
 ]

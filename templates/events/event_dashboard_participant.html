@@ -219,7 +219,58 @@
           </div>
         </div>
       </div>
+
+
+
+
+
+
+
       
+
+{% if is_participant %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Gallery Access</h6>
+        </div>
+        <div class="card-body">
+            {% if gallery_access_status == 'NOT_REQUESTED' %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You need to request access to view the full event gallery.
+                </div>
+                <a href="{% url 'events:request_gallery_access' event.slug %}" class="btn btn-primary">
+                    <i class="fas fa-unlock-alt me-2"></i>Request Gallery Access
+                </a>
+            {% elif gallery_access_status == 'PENDING' %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-hourglass-half me-2"></i>
+                    Your gallery access request is pending approval.
+                </div>
+            {% elif gallery_access_status == 'APPROVED' %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    You have access to the full event gallery.
+                </div>
+                <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-success">
+                    <i class="fas fa-images me-2"></i>View Gallery
+                </a>
+            {% elif gallery_access_status == 'DENIED' %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    Your gallery access request was denied.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+
+
+
+
+
+
       <!-- Organizer Contact -->
       <div class="col-md-6 mb-4">
         <div class="card shadow-sm border-0 h-100">

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.utils import timezone
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -176,6 +178,16 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
             'is_participant': is_participant,  # Pass participant status
             'photos': photos
         })
+
+                        # Add gallery access request information
+        if context['is_organizer']:
+            context['pending_gallery_requests'] = event.participants.filter(gallery_access='PENDING').count()
+        
+        # If user is a participant, add their gallery access status
+        if context['is_participant']:
+            participant = event.participants.get(user=self.request.user)
+            context['gallery_access_status'] = participant.gallery_access
+
         return context
 
 
@@ -919,3 +931,138 @@ class ResendParticipantInviteView(LoginRequiredMixin, View):
         
         messages.success(request, f"Invitation has been resent to {participant.name}.")
         return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))
+    
+
+
+
+
+# In events/views.py
+
+class RequestGalleryAccessView(LoginRequiredMixin, View):
+    def get(self, request, slug):
+        event = get_object_or_404(Event, slug=slug)
+        
+        # Check if user is already a participant
+        try:
+            participant = event.participants.get(user=request.user)
+            status = participant.gallery_access
+            
+            if status == 'APPROVED':
+                messages.success(request, "You already have access to this gallery")
+                return redirect('photos:event_gallery', slug=event.slug)
+            elif status == 'PENDING':
+                return render(request, 'events/gallery_access_pending.html', {
+                    'event': event,
+                    'request_date': participant.gallery_access_requested_at
+                })
+            elif status == 'DENIED':
+                return render(request, 'events/gallery_access_denied.html', {
+                    'event': event
+                })
+            # For NOT_REQUESTED, continue to the request form
+            
+        except EventParticipant.DoesNotExist:
+            messages.warning(request, "You are not a participant in this event")
+            return redirect('events:event_list')
+        
+        return render(request, 'events/request_gallery_access.html', {'event': event})
+    
+    def post(self, request, slug):
+        event = get_object_or_404(Event, slug=slug)
+        
+        try:
+            participant = event.participants.get(user=request.user)
+            
+            # Update the participant's gallery access status
+            participant.gallery_access = 'PENDING'
+            participant.gallery_access_requested_at = timezone.now()
+            participant.save()
+            
+            # Send notification to event organizer
+            # TODO: Implement notification functionality
+            
+            messages.success(request, "Your gallery access request has been submitted")
+            return redirect('events:event_dashboard', slug=event.slug)
+            
+        except EventParticipant.DoesNotExist:
+            messages.warning(request, "You are not a participant in this event")
+            return redirect('events:event_list')
+
+class ManageGalleryAccessView(LoginRequiredMixin, View):
+    def get(self, request, slug):
+        event = get_object_or_404(Event, slug=slug)
+        
+        # Check if user is the event organizer
+        if event.organizer != request.user:
+            messages.error(request, "You don't have permission to manage gallery access")
+            return redirect('events:event_dashboard', slug=event.slug)
+        
+        # Get all participants with pending gallery access requests
+        pending_requests = event.participants.filter(gallery_access='PENDING')
+        approved_requests = event.participants.filter(gallery_access='APPROVED')
+        denied_requests = event.participants.filter(gallery_access='DENIED')
+        
+        return render(request, 'events/manage_gallery_access.html', {
+            'event': event,
+            'pending_requests': pending_requests,
+            'approved_requests': approved_requests,
+            'denied_requests': denied_requests
+        })
+
+from django.core.mail import send_mail
+
+
+def approve_gallery_access(request, slug, participant_id):
+    event = get_object_or_404(Event, slug=slug)
+    
+    # Check if user is the event organizer
+    if event.organizer != request.user:
+        messages.error(request, "You don't have permission to approve gallery access")
+        return redirect('events:event_dashboard', slug=event.slug)
+    
+    participant = get_object_or_404(EventParticipant, id=participant_id, event=event)
+    participant.gallery_access = 'APPROVED'
+    participant.gallery_access_updated_at = timezone.now()
+    participant.save()
+    
+    subject = f"Gallery Access Approved for {event.title}"
+    message = f"Your request to access the gallery for {event.title} has been approved. You can now view all photos from this event."
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [participant.email],
+        fail_silently=True,
+    )
+    
+    messages.success(request, f"Gallery access approved for {participant.name}")
+    return redirect('events:manage_gallery_access', slug=event.slug)
+
+
+
+def deny_gallery_access(request, slug, participant_id):
+    event = get_object_or_404(Event, slug=slug)
+    
+    # Check if user is the event organizer
+    if event.organizer != request.user:
+        messages.error(request, "You don't have permission to deny gallery access")
+        return redirect('events:event_dashboard', slug=event.slug)
+    
+    participant = get_object_or_404(EventParticipant, id=participant_id, event=event)
+    participant.gallery_access = 'DENIED'
+    participant.gallery_access_updated_at = timezone.now()
+    participant.save()
+
+        # Send email notification to the participant
+    subject = f"Gallery Access Request for {event.title}"
+    message = f"Your request to access the gallery for {event.title} has been denied. If you believe this is a mistake, please contact the event organizer directly."
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [participant.email],
+        fail_silently=True,
+    )
+    
+    messages.success(request, f"Gallery access denied for {participant.name}")
+    return redirect('events:manage_gallery_access', slug=event.slug)

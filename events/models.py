@@ -195,6 +195,21 @@ class EventParticipant(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+    # Gallery Access
+    gallery_access = models.CharField(
+        max_length=20,
+        choices=[
+            ('PENDING', _('Pending')),
+            ('APPROVED', _('Approved')),
+            ('DENIED', _('Denied')),
+        ],
+        default='NOT_REQUESTED',
+        help_text=_("Status of participant's gallery access request")
+    )
+    gallery_access_requested_at = models.DateTimeField(null=True, blank=True)
+    gallery_access_updated_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         unique_together = ['event', 'email']
 

@@ -1,0 +1,240 @@
+{% extends 'users/db_base.html' %}
+{% load static %}
+
+{% block title %}Manage Gallery Access - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'events:event_list' %}">Events</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'events:event_dashboard' event.slug %}">{{ event.title }}</a></li>
+                    <li class="breadcrumb-item active">Gallery Access</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 font-weight-bold text-primary">Manage Gallery Access</h5>
+                    <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="accessTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" 
+                                type="button" role="tab" aria-controls="pending" aria-selected="true">
+                                Pending
+                                {% if pending_requests %}
+                                <span class="badge bg-warning ms-2">{{ pending_requests|length }}</span>
+                                {% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" 
+                                type="button" role="tab" aria-controls="approved" aria-selected="false">
+                                Approved
+                                {% if approved_requests %}
+                                <span class="badge bg-success ms-2">{{ approved_requests|length }}</span>
+                                {% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="denied-tab" data-bs-toggle="tab" data-bs-target="#denied" 
+                                type="button" role="tab" aria-controls="denied" aria-selected="false">
+                                Denied
+                                {% if denied_requests %}
+                                <span class="badge bg-danger ms-2">{{ denied_requests|length }}</span>
+                                {% endif %}
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content p-3" id="accessTabsContent">
+                        <!-- Pending Requests Tab -->
+                        <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                            {% if pending_requests %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Participant</th>
+                                                <th>Type</th>
+                                                <th>Requested On</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for request in pending_requests %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if request.user.avatar %}
+                                                            <img src="{{ request.user.avatar.url }}" class="rounded-circle me-2" width="40" height="40">
+                                                        {% else %}
+                                                            <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                                style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-user text-white"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div>
+                                                            <div>{{ request.name }}</div>
+                                                            <small class="text-muted">{{ request.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ request.get_participant_type_display }}</td>
+                                                <td>{{ request.gallery_access_requested_at|date:"M d, Y" }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{% url 'events:approve_gallery_access' event.slug request.id %}" 
+                                                            class="btn btn-sm btn-success" title="Approve">
+                                                            <i class="fas fa-check"></i>
+                                                        </a>
+                                                        <a href="{% url 'events:deny_gallery_access' event.slug request.id %}" 
+                                                            class="btn btn-sm btn-danger" title="Deny">
+                                                            <i class="fas fa-times"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-light text-center">
+                                    <i class="fas fa-info-circle me-2"></i>No pending requests at this time
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Approved Requests Tab -->
+                        <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
+                            {% if approved_requests %}
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Participant</th>
+                                                <th>Type</th>
+                                                <th>Approved On</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for request in approved_requests %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if request.user.avatar %}
+                                                            <img src="{{ request.user.avatar.url }}" class="rounded-circle me-2" width="40" height="40">
+                                                        {% else %}
+                                                            <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                                style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-user text-white"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div>
+                                                            <div>{{ request.name }}</div>
+                                                            <small class="text-muted">{{ request.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ request.get_participant_type_display }}</td>
+                                                <td>{{ request.gallery_access_updated_at|date:"M d, Y" }}</td>
+                                                <td>
+                                                    <a href="{% url 'events:deny_gallery_access' event.slug request.id %}" 
+                                                        class="btn btn-sm btn-outline-danger" title="Revoke Access">
+                                                        <i class="fas fa-ban"></i> Revoke
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-light text-center">
+                                    <i class="fas fa-info-circle me-2"></i>No approved access requests
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Denied Requests Tab -->
+                        <div class="tab-pane fade" id="denied" role="tabpanel" aria-labelledby="denied-tab">
+                            {% if denied_requests %}
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Participant</th>
+                                                <th>Type</th>
+                                                <th>Denied On</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for request in denied_requests %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if request.user.avatar %}
+                                                            <img src="{{ request.user.avatar.url }}" class="rounded-circle me-2" width="40" height="40">
+                                                        {% else %}
+                                                            <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                                style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-user text-white"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div>
+                                                            <div>{{ request.name }}</div>
+                                                            <small class="text-muted">{{ request.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ request.get_participant_type_display }}</td>
+                                                <td>{{ request.gallery_access_updated_at|date:"M d, Y" }}</td>
+                                                <td>
+                                                    <a href="{% url 'events:approve_gallery_access' event.slug request.id %}" 
+                                                        class="btn btn-sm btn-outline-success" title="Approve Access">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-light text-center">
+                                    <i class="fas fa-info-circle me-2"></i>No denied access requests
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enable Bootstrap tabs
+    document.addEventListener('DOMContentLoaded', function() {
+        var triggerTabList = [].slice.call(document.querySelectorAll('#accessTabs button'))
+        triggerTabList.forEach(function(triggerEl) {
+            var tabTrigger = new bootstrap.Tab(triggerEl)
+            triggerEl.addEventListener('click', function(event) {
+                event.preventDefault()
+                tabTrigger.show()
+            })
+        })
+    });
+</script>
+{% endblock %}

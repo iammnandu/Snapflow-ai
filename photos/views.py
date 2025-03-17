@@ -9,19 +9,52 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import F, Q
 from django.contrib.auth.decorators import login_required
-from events.models import Event
+from events.models import Event, EventParticipant
 from .models import (
     EventPhoto, PhotoLike, PhotoComment, 
     UserPhotoMatch, UserGallery
 )
 from .tasks import *
 
+# In photos/views.py, m
 class EventGalleryView(DetailView):
     model = Event
     template_name = 'photos/gallery.html'
     context_object_name = 'event'
    
+    def get(self, request, *args, **kwargs):
+        event = self.get_object()
+        
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            messages.warning(request, "You must be logged in to view the gallery")
+            return redirect('login')
+            
+        # Always allow access to organizers and crew members
+        is_organizer = event.organizer == request.user
+        is_crew = event.crew_members.filter(member=request.user).exists()
+        
+        if not (is_organizer or is_crew):
+            # Check participant gallery access
+            try:
+                participant = event.participants.get(user=request.user)
+                if participant.gallery_access in ['NOT_REQUESTED', 'PENDING', 'DENIED']:
+                    # Redirect to event dashboard with appropriate message
+                    if participant.gallery_access == 'NOT_REQUESTED':
+                        messages.info(request, "You need to request access to view this gallery")
+                    elif participant.gallery_access == 'PENDING':
+                        messages.info(request, "Your gallery access request is pending")
+                    else:  # DENIED
+                        messages.error(request, "Your gallery access request has been denied")
+                    return redirect('events:event_dashboard', slug=event.slug)
+            except EventParticipant.DoesNotExist:
+                messages.warning(request, "You are not a participant in this event")
+                return redirect('events:event_list')
+        
+        return super().get(request, *args, **kwargs)
+    
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
         event = self.get_object()
        
@@ -77,6 +110,17 @@ class EventGalleryView(DetailView):
             'current_tag': tag_filter,
             'current_sort': sort_by,
         })
+
+
+        # Add gallery access status to context
+        if self.request.user.is_authenticated:
+            try:
+                participant = event.participants.get(user=self.request.user)
+                context['gallery_access_status'] = participant.gallery_access
+            except EventParticipant.DoesNotExist:
+                context['gallery_access_status'] = None
+        
+        # Rest of existing context data code...
         return context
 
 class UploadPhotosView(LoginRequiredMixin, View):
