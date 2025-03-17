@@ -1,6 +1,11 @@
 # notifications/handlers.py
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+import logging
 from .services import NotificationService
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 class NotificationHandler:
     @staticmethod
@@ -182,19 +187,82 @@ class NotificationHandler:
         requester = access_request.user
         
         try:
-            NotificationService.create_notification(
+            # Get the correct URL for action
+            if hasattr(event, 'slug') and event.slug:
+                action_url = reverse('events:access_requests_list', kwargs={'slug': event.slug})
+            else:
+                action_url = reverse('events:access_requests_list', kwargs={'pk': event.id})
+                
+            # Create notification for the organizer
+            notification = NotificationService.create_notification(
                 recipient=event.organizer,
                 notification_type='access_request',
                 title=f"New access request for {event.title}",
-                message=f"{requester.get_full_name()} has requested access to your event.",
+                message=f"{requester.get_full_name() or requester.username} has requested access to your event.",
                 related_object=access_request,
                 from_user=requester,
-                action_url=reverse('events:access_requests', kwargs={'slug': event.slug} if hasattr(event, 'slug') and event.slug else {'pk': event.id})
+                action_url=action_url,
+                send_now=True  # Ensure immediate sending
             )
+            
+            logger.info(f"Access request notification created: {notification.id if notification else 'Failed'}")
+            return notification
+            
         except Exception as e:
+            logger.error(f"Error in handle_access_request: {e}")
             import traceback
-            print(f"Error in handle_access_request: {e}")
-            traceback.print_exc()
+            logger.error(traceback.format_exc())
+            return None
+    
+    @staticmethod
+    def handle_access_request(access_request):
+        """Notify organizer about access requests"""
+        # Check if this is a duplicate notification request
+        from notifications.models import Notification
+        from django.contrib.contenttypes.models import ContentType
+        
+        event = access_request.event
+        requester = access_request.user
+        
+        # Get content type for the access request
+        content_type = ContentType.objects.get_for_model(access_request)
+        
+        # Check if notification already exists for this access request
+        existing_notification = Notification.objects.filter(
+            content_type=content_type,
+            object_id=access_request.id,
+            notification_type='access_request'
+        ).exists()
+        
+        if existing_notification:
+            # Notification already sent, don't send again
+            logger.info(f"Notification already exists for access request: {access_request.id}")
+            return None
+        
+        try:
+            # Get the correct URL for action
+            action_url = reverse('events:access_requests')
+                
+            # Create notification for the organizer
+            notification = NotificationService.create_notification(
+                recipient=event.organizer,
+                notification_type='access_request',
+                title=f"New access request for {event.title}",
+                message=f"{requester.get_full_name() or requester.username} has requested access to your event.",
+                related_object=access_request,
+                from_user=requester,
+                action_url=action_url,
+                send_now=True  # Ensure immediate sending
+            )
+            
+            logger.info(f"Access request notification created: {notification.id if notification else 'Failed'}")
+            return notification
+            
+        except Exception as e:
+            logger.error(f"Error in handle_access_request: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None
     
     @staticmethod
     def handle_request_approved(access_request):
@@ -203,16 +271,53 @@ class NotificationHandler:
         requester = access_request.user
         
         try:
-            NotificationService.create_notification(
+            # Get the correct URL for action
+            action_url = reverse('events:event_dashboard', kwargs={'slug': event.slug})
+                
+            # Create notification for the requester
+            notification = NotificationService.create_notification(
                 recipient=requester,
                 notification_type='request_approved',
                 title=f"Access granted to {event.title}",
                 message=f"Your request to access '{event.title}' has been approved.",
                 related_object=event,
                 from_user=event.organizer,
-                action_url=reverse('events:event_dashboard', kwargs={'slug': event.slug} if hasattr(event, 'slug') and event.slug else {'pk': event.id})
+                action_url=action_url,
+                send_now=True  # Ensure immediate sending
             )
+            
+            logger.info(f"Request approved notification created: {notification.id if notification else 'Failed'}")
+            return notification
+            
         except Exception as e:
+            logger.error(f"Error in handle_request_approved: {e}")
             import traceback
-            print(f"Error in handle_request_approved: {e}")
-            traceback.print_exc()
+            logger.error(traceback.format_exc())
+            return None
+            
+    @staticmethod
+    def handle_request_rejected(access_request):
+        """Notify user when their access request is rejected"""
+        event = access_request.event
+        requester = access_request.user
+        
+        try:
+            notification = NotificationService.create_notification(
+                recipient=requester,
+                notification_type='system',  # Using system type for important notifications
+                title=f"Access request denied for {event.title}",
+                message=f"Your request to access '{event.title}' was not approved.",
+                related_object=event,
+                from_user=event.organizer,
+                action_url=None,  # No action needed
+                send_now=True
+            )
+            
+            logger.info(f"Request rejected notification created: {notification.id if notification else 'Failed'}")
+            return notification
+            
+        except Exception as e:
+            logger.error(f"Error in handle_request_rejected: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None

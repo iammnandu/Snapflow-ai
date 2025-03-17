@@ -175,6 +175,11 @@
 - corrected the notification detail
 - corrected notification sent funtion
 
+## 15 March
+
+### 11 30 am
+- updated the participation type while registering to an event
+
 
 # To-Do List  
 
@@ -210,6 +215,6 @@
 
 - correct and incorporate the notifications templates to dashbaord
 
-- modify the participant type selection
+- modify the participant type selection **done**
 
 - modify the website to use tumbnail image for showing in website to save data

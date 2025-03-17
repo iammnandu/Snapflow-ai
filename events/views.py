@@ -24,6 +24,12 @@ from .forms import (
 )
 
 from .models import Event, EventAccessRequest, EventParticipant
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventCreationForm
@@ -544,12 +550,21 @@ class RequestEventAccessView(LoginRequiredMixin, FormView):
         if self.request.user.role != 'PHOTOGRAPHER' and 'participant_type' in form.cleaned_data:
             request_data['participant_type'] = form.cleaned_data['participant_type']
         
-        EventAccessRequest.objects.create(**request_data)
+        # Create the access request
+        access_request = EventAccessRequest.objects.create(**request_data)
+        
+        # Send notification to the event organizer
+        from notifications.handlers import NotificationHandler
+        notification = NotificationHandler.handle_access_request(access_request)
+        
+        if notification:
+            logger.info(f"Notification sent to organizer for access request: {access_request.id}")
+        else:
+            logger.warning(f"Failed to send notification for access request: {access_request.id}")
         
         messages.success(self.request, 'Access request sent successfully')
         return super().form_valid(form)
     
-
 @login_required
 def request_access(request):
     """Simple form to request access to an event using event code"""
@@ -575,7 +590,8 @@ def request_access(request):
                 return redirect('photos:event_gallery', slug=event.slug)
             
             # Check if request already exists
-            if EventAccessRequest.objects.filter(event=event, user=request.user).exists():
+            existing_request = EventAccessRequest.objects.filter(event=event, user=request.user).first()
+            if existing_request:
                 messages.warning(request, 'You have already requested access to this event.')
                 return redirect('users:dashboard')
             
@@ -591,7 +607,17 @@ def request_access(request):
             if request.user.role != 'PHOTOGRAPHER' and participant_type:
                 request_data['participant_type'] = participant_type
             
-            EventAccessRequest.objects.create(**request_data)
+            # Create the access request
+            access_request = EventAccessRequest.objects.create(**request_data)
+            
+            # Send notification to the event organizer
+            from notifications.handlers import NotificationHandler
+            notification = NotificationHandler.handle_access_request(access_request)
+            
+            if notification:
+                logger.info(f"Notification sent to organizer for access request: {access_request.id}")
+            else:
+                logger.warning(f"Failed to send notification for access request: {access_request.id}")
             
             messages.success(request, f'Access request sent to "{event.title}" successfully!')
         except Event.DoesNotExist:
@@ -602,6 +628,7 @@ def request_access(request):
     return render(request, 'events/request_access.html', {
         'participant_types': participant_types
     })
+
 
 @login_required
 def cancel_access_request(request, request_id):
@@ -680,7 +707,6 @@ def access_requests_list(request):
     }
     
     return render(request, 'events/request_list.html', context)
-
 @login_required
 @require_http_methods(["POST"])
 def approve_request(request, request_id):
@@ -725,6 +751,16 @@ def approve_request(request, request_id):
                 return redirect('events:access_requests')
         
         access_request.save()
+        
+        # Send notification to the requester
+        from notifications.handlers import NotificationHandler
+        notification = NotificationHandler.handle_request_approved(access_request)
+        
+        if notification:
+            logger.info(f"Notification sent to requester for approved request: {access_request.id}")
+        else:
+            logger.warning(f"Failed to send notification for approved request: {access_request.id}")
+        
         messages.success(request, 'Request approved successfully')
         
     except Exception as e:
@@ -746,6 +782,15 @@ def reject_request(request, request_id):
         # Handle reject action
         access_request.status = EventAccessRequest.RequestStatus.REJECTED
         access_request.save()
+        
+        # Send notification to the requester
+        from notifications.handlers import NotificationHandler
+        notification = NotificationHandler.handle_request_rejected(access_request)
+        
+        if notification:
+            logger.info(f"Notification sent to requester for rejected request: {access_request.id}")
+        else:
+            logger.warning(f"Failed to send notification for rejected request: {access_request.id}")
         
         messages.success(request, 'Request rejected successfully')
         

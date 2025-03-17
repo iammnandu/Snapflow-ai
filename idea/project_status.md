@@ -9,6 +9,10 @@ The application consists of three main Django apps:
 1. **Users** - Handles authentication and user management
 2. **Events** - Manages event creation and configuration
 3. **Photos** - Processes and organizes photos with AI capabilities
+4. **Notifications** - sent notifications to users through email or in app notifications
+5. **Highlights** - Find the best shots and categorize photos from the events.
+6. **Privacy** - handles the privacy for photos and events with users.
+
 
 Let's explore each module in detail:
 
