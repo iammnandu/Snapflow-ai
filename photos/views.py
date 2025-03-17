@@ -396,3 +396,78 @@ def reanalyze_faces(request, pk):
     
     messages.success(request, "Photo queued for face reanalysis.")
     return redirect('photos:photo_detail', pk=pk)
+
+
+
+
+# Add these imports at the top of your views.py file
+import os
+import zipfile
+from io import BytesIO
+from django.http import HttpResponse, FileResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.urls import path
+from django.core.files.storage import default_storage
+from django.views.decorators.http import require_POST
+
+@login_required
+@require_POST
+def download_photos(request, slug):
+    event = get_object_or_404(Event, slug=slug)
+    
+    # Check if user has permission to download photos
+    if not event.configuration.enable_download:
+        messages.error(request, "Downloads are not enabled for this event.")
+        return redirect('photos:event_gallery', slug=slug)
+    
+    # Get photo IDs from form data
+    photo_ids_str = request.POST.get('photo_ids', '')
+    if not photo_ids_str:
+        messages.error(request, "No photos selected for download.")
+        return redirect('photos:event_gallery', slug=slug)
+    
+    photo_ids = photo_ids_str.split(',')
+    download_type = request.POST.get('download_type', 'zip')
+    
+    # Get the photos
+    photos = EventPhoto.objects.filter(id__in=photo_ids, event=event)
+    
+    if not photos.exists():
+        messages.error(request, "No valid photos found to download.")
+        return redirect('photos:event_gallery', slug=slug)
+    
+    # If only one photo and download_type is 'single', download it directly
+    if download_type == 'single' and photos.count() == 1:
+        photo = photos.first()
+        file_path = photo.image.path
+        
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                file_data = f.read()
+            
+            # Get the file extension
+            file_name = os.path.basename(file_path)
+            
+            response = HttpResponse(file_data, content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            return response
+    
+    # For multiple photos or if download_type is 'zip', create a zip file
+    zip_buffer = BytesIO()
+    event_name = event.slug
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for photo in photos:
+            file_path = photo.image.path
+            
+            if os.path.exists(file_path):
+                file_name = os.path.basename(file_path)
+                with open(file_path, 'rb') as f:
+                    zip_file.writestr(file_name, f.read())
+    
+    zip_buffer.seek(0)
+    response = HttpResponse(zip_buffer, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{event_name}_photos.zip"'
+    
+    return response

@@ -186,6 +186,10 @@
 ### 1 am
 - implemented the gallery request functionality for event participant.
 
+### 2 am
+- implemented the download option for photos
+
+
 
 # To-Do List  
 

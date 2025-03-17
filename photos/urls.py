@@ -17,4 +17,6 @@ urlpatterns = [
     path('my-gallery/', views.UserGalleryView.as_view(), name='user_gallery'),
 
     path('photo/<int:pk>/reanalyze-faces/', views.reanalyze_faces, name='reanalyze_faces'),
+
+    path('event/<slug:slug>/download/', views.download_photos, name='download_photos'),
 ]
