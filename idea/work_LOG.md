@@ -230,4 +230,4 @@
 
 - modify the participant type selection **done**
 
-- modify the website to use tumbnail image for showing in website to save data
+- modify the website to use thumbnail image for showing in website to save data

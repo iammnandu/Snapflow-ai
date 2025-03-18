@@ -2,7 +2,7 @@
 {% load static %}
 {% load highlight_filters %}
 {% block title %}{{ event.title }} Highlights{% endblock %}
-
+{% load thumbnail %}
 
 {% block add_nav %}
 <li class="menu-header small text-uppercase">
@@ -110,7 +110,7 @@
                 <div class="col-md-4 mb-3">
                     <div class="card">
                         <a href="{% url 'photos:photo_detail' shot.photo.id %}">
-                            <img src="{{ shot.photo.image.url }}" class="card-img-top" alt="{{ shot.photo.caption|default:'Event photo' }}">
+                            <img src="{% thumbnail shot.photo.image 800x600 crop="center" quality=85 %}" class="card-img-top" alt="{{ shot.photo.caption|default:'Event photo' }}">
                         </a>
                         <div class="card-body">
                             <p class="card-text">
@@ -143,7 +143,7 @@
                 <div class="col-md-4 mb-3">
                     <div class="card">
                         <a href="{% url 'photos:photo_detail' shot.photo.id %}">
-                            <img src="{{ shot.photo.image.url }}" class="card-img-top" alt="{{ shot.photo.caption|default:'Event photo' }}">
+                            <img src="{% thumbnail shot.photo.image 800x600 crop="center" quality=85 %}" class="card-img-top" alt="{{ shot.photo.caption|default:'Event photo' }}">
                         </a>
                         <div class="card-body">
                             <p class="card-text">

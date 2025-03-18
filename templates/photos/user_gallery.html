@@ -1,6 +1,7 @@
 {% extends "users/db_base.html" %}
 {% load static %}
 {% block title %}My Photos Gallery{% endblock %}
+{% load thumbnail %}
 {% block content %}
 <style>
    .photo-card {
@@ -225,9 +226,9 @@
                   {% for photo in photos|slice:":5" %}
                   <div class="carousel-item {% if forloop.first %}active{% endif %}">
                      {% if photo.enhanced_image %}
-                     <img src="{{ photo.enhanced_image.url }}" class="d-block w-100" alt="Featured photo">
+                     <img src="{% thumbnail photo.enhanced_image 800x600 crop="center" quality=85 %}" class="d-block w-100" alt="Featured photo">
                      {% else %}
-                     <img src="{{ photo.image.url }}" class="d-block w-100" alt="Featured photo">
+                     <img src="{% thumbnail photo.image 800x600 crop="center" quality=85 %}" class="d-block w-100" alt="Featured photo">
                      {% endif %}
                      <div class="carousel-caption d-none d-md-block">
                         <h5>{{ photo.event.title }}</h5>
@@ -258,14 +259,14 @@
                </div>
                <div class="card-img-wrapper">
                   {% if photo.enhanced_image %}
-                  <img src="{{ photo.enhanced_image.url }}" class="card-img-top" alt="Event photo">
+                  <img src="{% thumbnail photo.enhanced_image 800x600 crop="center" quality=85 %}" class="card-img-top" alt="Event photo">
                   <div class="badge-position-top-right">
                      <span class="badge quality-enhanced-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
                      <i class='bx bx-image-alt'></i> Enhanced
                      </span>
                   </div>
                   {% else %}
-                  <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
+                  <img src="{% thumbnail photo.image 800x600 crop="center" quality=85 %}" class="card-img-top" alt="Event photo">
                   {% endif %}
                   <!-- Quality score badge -->
                   {% if photo.quality_score %}

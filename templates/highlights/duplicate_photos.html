@@ -1,6 +1,6 @@
 {% extends 'users/db_base.html' %}
 {% load static %}
-
+{% load thumbnail %}
 {% block title %}{{ event.title }} - Duplicate Photos{% endblock %}
 
 
@@ -102,7 +102,7 @@
                 
                 {% if group.primary_photo %}
                 <div class="card-img-top">
-                    <img src="{{ group.primary_photo.photo.image.url }}" class="img-fluid" alt="Primary photo">
+                    <img src="{% thumbnail group.primary_photo.photo.image 800x600 crop="center" quality=85 %}" class="img-fluid" alt="Primary photo">
                 </div>
                 {% endif %}
                 
@@ -116,7 +116,7 @@
                     <div class="row">
                         {% for dup_photo in group.photos.all|slice:"1:4" %}
                         <div class="col-4">
-                            <img src="{{ dup_photo.photo.image.url }}" class="img-thumbnail" 
+                            <img src="{% thumbnail dup_photo.photo.image 800x600 crop="center" quality=85 %}" class="img-thumbnail" 
                                  alt="Similar photo ({{ dup_photo.similarity_score|floatformat:0 }}% similar)">
                         </div>
                         {% endfor %}

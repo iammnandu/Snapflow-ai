@@ -54,6 +54,9 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'django_spaghetti',
+
+
+    'easy_thumbnails',
 ]
 
 MIDDLEWARE = [
@@ -262,3 +265,18 @@ SPAGHETTI_SAUCE = {
 
 
 SITE_URL = 'www.snapflow.com'
+
+
+
+
+# Thumbnail settings
+THUMBNAIL_ALIASES = {
+    '': {
+        'thumbnail': {'size': (300, 300), 'crop': True, 'quality': 75},
+        'preview': {'size': (800, 600), 'crop': False, 'quality': 85},
+        'gallery': {'size': (400, 400), 'crop': True, 'quality': 80},
+    },
+}
+
+# Optional: Cache thumbnails to improve performance
+THUMBNAIL_CACHE_TIMEOUT = 3600 * 24 * 30  # 30 days

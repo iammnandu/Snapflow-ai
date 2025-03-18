@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}Duplicate Group #{{ group.id }} - {{ event.title }}{% endblock %}
-
+{% load thumbnail %}
 {% block extra_css %}
 <style>
     .photo-card {
@@ -149,7 +149,7 @@
             <div class="col-md-4 mb-4">
                 <div class="card photo-card {% if dup_photo.is_primary %}primary{% endif %}">
                     <div class="position-relative">
-                        <img src="{{ dup_photo.photo.image.url }}" class="card-img-top" alt="Photo">
+                        <img src="{% thumbnail dup_photo.photo.image 800x600 crop="center" quality=85 %}" class="card-img-top" alt="Photo">
                         
                         {% if not dup_photo.is_primary %}
                         <div class="form-check position-absolute" style="top: 10px; left: 10px;">

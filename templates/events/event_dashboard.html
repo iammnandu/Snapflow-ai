@@ -1,6 +1,7 @@
 {% extends "users/db_base.html" %}
 {% load static %}
 {% load event_filters %}
+{% load thumbnail %}
 {% block add_nav %}
 <li class="menu-header small text-uppercase">
   <span class="menu-header-text">Event Actions</span>
@@ -197,7 +198,7 @@
                 <div class="carousel-inner rounded">
                   {% for photo in event.photos.all|slice:":5" %}
                     <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                      <img class="d-block w-100" src="{{ photo.image.url }}" alt="Event photo {{ forloop.counter }}" style="height: 300px; object-fit: cover;">
+                      <img class="d-block w-100" src="{% thumbnail photo.image 800x600 crop="center" quality=85 %}" alt="Event photo {{ forloop.counter }}" style="height: 300px; object-fit: cover;">
                       <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
                         <h5 class="text-white">{{ photo.title|default:"Event Photo" }}</h5>
                         <p class="text-white">Uploaded by {{ photo.uploaded_by.get_full_name|default:photo.uploaded_by.username }} {{ photo.upload_date|timesince }} ago</p>

@@ -1,5 +1,7 @@
 {% extends "users/db_base.html" %}
 {% load static %}
+{% load thumbnail %}
+
 {% block add_nav %}
 <li class="menu-header small text-uppercase">
     <span class="menu-header-text">Event Actions</span>
@@ -413,131 +415,133 @@
             </div>
             
             {% if photos %}
-                <!-- Photo Carousel for featured photos -->
-                <div class="photo-carousel">
-                    <div id="eventPhotoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                            {% for photo in photos|slice:":5" %}
-                                <button type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
-                                        {% if forloop.first %}class="active"{% endif %} aria-current="true" 
-                                        aria-label="Photo {{ forloop.counter }}"></button>
-                            {% endfor %}
-                        </div>
-                        <div class="carousel-inner">
-                            {% for photo in photos|slice:":5" %}
-                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                    <img src="{{ photo.image.url }}" class="d-block w-100" alt="Featured photo">
-                                    <div class="carousel-caption d-none d-md-block">
-                                        <h5>{{ event.title }} - Photo {{ forloop.counter }}</h5>
-                                        <p>Uploaded on {{ photo.upload_date|date:"M d, Y" }}</p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
+            <!-- Photo Carousel for featured photos -->
+            <div class="photo-carousel">
+                <div id="eventPhotoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        {% for photo in photos|slice:":5" %}
+                            <button type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+                                    {% if forloop.first %}class="active"{% endif %} aria-current="true" 
+                                    aria-label="Photo {{ forloop.counter }}"></button>
+                        {% endfor %}
                     </div>
+                    <div class="carousel-inner">
+                        {% for photo in photos|slice:":5" %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{% thumbnail photo.image 800x600 crop="center" quality=85 %}" class="d-block w-100" alt="Featured photo">
+                            <div class="carousel-caption d-none d-md-block">
+                                <h5>{{ event.title }} - Photo {{ forloop.counter }}</h5>
+                                <p>Uploaded on {{ photo.upload_date|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#eventPhotoCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
                 </div>
-                
-                <!-- Masonry grid for photos -->
-                <div class="masonry-grid">
-                    {% for photo in photos %}
-                    <div class="photo-card">
-                        <!-- Selection checkbox -->
-                        {% if can_download %}
-                        <div class="photo-select-checkbox position-absolute top-0 start-0 m-2" style="z-index: 20;">
-                            <div class="form-check">
-                                <input class="form-check-input photo-selector" type="checkbox" value="{{ photo.id }}" id="photo-select-{{ photo.id }}" data-photo-id="{{ photo.id }}" data-photo-url="{{ photo.image.url }}">
+            </div>
+            
+            <!-- Masonry grid for photos -->
+            <div class="masonry-grid">
+                {% for photo in photos %}
+                <div class="photo-card">
+                    <!-- Selection checkbox -->
+                    {% if can_download %}
+                    <div class="photo-select-checkbox position-absolute top-0 start-0 m-2" style="z-index: 20;">
+                        <div class="form-check">
+                            <input class="form-check-input photo-selector" type="checkbox" value="{{ photo.id }}" id="photo-select-{{ photo.id }}" data-photo-id="{{ photo.id }}" data-photo-url="{{ photo.image.url }}">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-img-wrapper">
+                        {% thumbnail photo.image "400x400" crop="center" quality=75 as thumb %}
+                            <img src="{{ thumb.url }}" class="card-img-top" alt="Event photo" data-full-img="{{ photo.image.url }}">
+             
+                        
+                        <!-- Updated badge layout with smaller font size and improved positioning -->
+                        <div class="badge-container">
+                            <div class="badge-left-container">
+                                {% if photo.detected_faces %}
+                                <span class="badge people-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
+                                    <i class='bx bx-user'></i> {{ photo.detected_faces|length }} 
+                                    {% if photo.detected_faces|length == 1 %}Person{% else %}People{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="badge-right-container" style="margin-left: 5px;">
+                                {% if photo.quality_score and photo.quality_score < 0.5 and photo.has_enhanced_version %}
+                                <span class="badge quality-enhanced-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
+                                    <i class='bx bx-image-alt'></i> Enhanced
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Tags overlay -->
+                        {% if photo.scene_tags %}
+                        <div class="photo-overlay">
+                            <div class="d-flex flex-wrap">
+                                {% for tag in photo.get_tags|slice:":3" %}
+                                <span class="tag-badge">{{ tag }}</span>
+                                {% endfor %}
+                                {% if photo.get_tags|length > 3 %}
+                                <span class="tag-badge">+{{ photo.get_tags|length|add:"-3" }}</span>
+                                {% endif %}
                             </div>
                         </div>
                         {% endif %}
                         
-                        <div class="card-img-wrapper">
-                            <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
-                            
-                            <!-- Updated badge layout with smaller font size and improved positioning -->
-                            <div class="badge-container">
-                                <div class="badge-left-container">
-                                    {% if photo.detected_faces %}
-                                    <span class="badge people-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
-                                        <i class='bx bx-user'></i> {{ photo.detected_faces|length }} 
-                                        {% if photo.detected_faces|length == 1 %}Person{% else %}People{% endif %}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="badge-right-container" style="margin-left: 5px;">
-                                    {% if photo.quality_score and photo.quality_score < 0.5 and photo.has_enhanced_version %}
-                                    <span class="badge quality-enhanced-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
-                                        <i class='bx bx-image-alt'></i> Enhanced
-                                    </span>
-                                    {% endif %}
-                                </div>
+                        <!-- Like button (now positioned separately from badges) -->
+                        {% if enable_likes %}
+                        <button class="btn btn-sm btn-light like-btn position-absolute top-0 end-0 m-2 {% if photo.liked_by_user %}liked{% endif %}" 
+                                data-photo-id="{{ photo.id }}"
+                                data-liked="{{ photo.liked_by_user|yesno:'true,false' }}"
+                                style="z-index: 10; margin-top: 2.5rem !important;"> <!-- Added higher z-index and adjusted margin -->
+                            <i class='bx {% if photo.liked_by_user %}bxs-heart{% else %}bx-heart{% endif %}'></i>
+                            <span class="like-count">{{ photo.like_count }}</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class='bx bx-calendar'></i> {{ photo.upload_date|date:"M d" }}
+                            </small>
+                            <div class="d-flex gap-2">
+                                <span title="Views">
+                                    <i class='bx bx-show'></i> {{ photo.view_count }}
+                                </span>
+                                <span title="Likes">
+                                    <i class='bx bx-heart'></i> {{ photo.like_count }}
+                                </span>
                             </div>
-                            
-                            <!-- Tags overlay -->
-                            {% if photo.scene_tags %}
-                            <div class="photo-overlay">
-                                <div class="d-flex flex-wrap">
-                                    {% for tag in photo.get_tags|slice:":3" %}
-                                    <span class="tag-badge">{{ tag }}</span>
-                                    {% endfor %}
-                                    {% if photo.get_tags|length > 3 %}
-                                    <span class="tag-badge">+{{ photo.get_tags|length|add:"-3" }}</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- Like button (now positioned separately from badges) -->
-                            {% if enable_likes %}
-                            <button class="btn btn-sm btn-light like-btn position-absolute top-0 end-0 m-2 {% if photo.liked_by_user %}liked{% endif %}" 
-                                    data-photo-id="{{ photo.id }}"
-                                    data-liked="{{ photo.liked_by_user|yesno:'true,false' }}"
-                                    style="z-index: 10; margin-top: 2.5rem !important;"> <!-- Added higher z-index and adjusted margin -->
-                                <i class='bx {% if photo.liked_by_user %}bxs-heart{% else %}bx-heart{% endif %}'></i>
-                                <span class="like-count">{{ photo.like_count }}</span>
-                            </button>
-                            {% endif %}
                         </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <i class='bx bx-calendar'></i> {{ photo.upload_date|date:"M d" }}
-                                </small>
-                                <div class="d-flex gap-2">
-                                    <span title="Views">
-                                        <i class='bx bx-show'></i> {{ photo.view_count }}
-                                    </span>
-                                    <span title="Likes">
-                                        <i class='bx bx-heart'></i> {{ photo.like_count }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="mt-2 d-flex justify-content-between">
-                                <a href="{% url 'photos:photo_detail' photo.id %}" class="btn btn-primary btn-sm">
-                                    <i class='bx bx-show'></i> View
-                                </a>
-                                {% if request.user == event.organizer or request.user in event.crew_members.all %}
-                                <form method="POST" action="{% url 'photos:delete_photo' photo.id %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" 
-                                            onclick="return confirm('Are you sure you want to delete this photo?')">
-                                        <i class='bx bx-trash'></i>
-                                    </button>
-                                </form>
-                                {% endif %}
-                            </div>
+                        <div class="mt-2 d-flex justify-content-between">
+                            <a href="{% url 'photos:photo_detail' photo.id %}" class="btn btn-primary btn-sm">
+                                <i class='bx bx-show'></i> View
+                            </a>
+                            {% if request.user == event.organizer or request.user in event.crew_members.all %}
+                            <form method="POST" action="{% url 'photos:delete_photo' photo.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                        onclick="return confirm('Are you sure you want to delete this photo?')">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </form>
+                            {% endif %}
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
+            </div>
             {% else %}
                 <!-- Improved Empty State -->
                 <div class="empty-state">
