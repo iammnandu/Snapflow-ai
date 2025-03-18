@@ -1,429 +1,557 @@
 {% extends "users/db_base.html" %}
 {% load static %}
-
 {% block title %}My Photos Gallery{% endblock %}
-
 {% block content %}
 <style>
-    .photo-card {
-        break-inside: avoid;
-        margin-bottom: 1.5rem;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
-    
-    .photo-card:hover {
-        transform: translateY(-4px);
-    }
-    
-    .photo-card .card-img-wrapper {
-        position: relative;
-        padding-top: 100%;
-        overflow: hidden;
-    }
-    
-    .photo-card .card-img-top {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .photo-card .card-body {
-        padding: 1rem;
-        background: white;
-    }
-    
-    .masonry-grid {
-        column-count: 3;
-        column-gap: 1.5rem;
-        padding: 1.5rem;
-    }
-    
-    @media (max-width: 992px) {
-        .masonry-grid {
-            column-count: 2;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .masonry-grid {
-            column-count: 1;
-        }
-    }
-    
-    .empty-state {
-        background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-        border-radius: 16px;
-        padding: 3rem 2rem;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-top: 2rem;
-    }
-    
-    .empty-state i {
-        font-size: 4rem;
-        color: #adb5bd;
-        margin-bottom: 1.5rem;
-        display: block;
-    }
-    
-    .empty-state h4 {
-        margin-bottom: 1rem;
-        color: #495057;
-    }
-    
-    .empty-state p {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    .tag-badge {
-        display: inline-block;
-        background-color: rgba(0,0,0,0.5);
-        color: white;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        margin-right: 0.25rem;
-        margin-bottom: 0.25rem;
-    }
-    
-    .photo-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 0.5rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-    }
-    
-    .badge-position-top-left {
-        position: absolute;
-        top: 0.5rem;
-        left: 0.5rem;
-    }
-    
-    .badge-position-top-right {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-    }
-    
-    .quality-enhanced-badge {
-        background-color: #4361ee;
-        color: white;
-    }
-    
-    .photo-carousel {
-        margin-bottom: 2rem;
-    }
-    
-    .photo-carousel .carousel-item img {
-        height: 400px;
-        object-fit: cover;
-    }
-    
-    .photo-carousel .carousel-caption {
-        background-color: rgba(0,0,0,0.5);
-        border-radius: 8px;
-        padding: 10px;
-        max-width: 80%;
-        margin: 0 auto;
-    }
-    
-    .carousel-inner {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+   .photo-card {
+   break-inside: avoid;
+   margin-bottom: 1.5rem;
+   border-radius: 12px;
+   overflow: hidden;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+   transition: transform 0.2s;
+   }
+   .photo-card:hover {
+   transform: translateY(-4px);
+   }
+   .photo-card .card-img-wrapper {
+   position: relative;
+   padding-top: 100%;
+   overflow: hidden;
+   }
+   .photo-card .card-img-top {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   }
+   .photo-card .card-body {
+   padding: 1rem;
+   background: white;
+   }
+   .masonry-grid {
+   column-count: 3;
+   column-gap: 1.5rem;
+   padding: 1.5rem;
+   }
+   @media (max-width: 992px) {
+   .masonry-grid {
+   column-count: 2;
+   }
+   }
+   @media (max-width: 576px) {
+   .masonry-grid {
+   column-count: 1;
+   }
+   }
+   .empty-state {
+   background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+   border-radius: 16px;
+   padding: 3rem 2rem;
+   text-align: center;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+   margin-top: 2rem;
+   }
+   .empty-state i {
+   font-size: 4rem;
+   color: #adb5bd;
+   margin-bottom: 1.5rem;
+   display: block;
+   }
+   .empty-state h4 {
+   margin-bottom: 1rem;
+   color: #495057;
+   }
+   .empty-state p {
+   color: #6c757d;
+   margin-bottom: 1.5rem;
+   max-width: 400px;
+   margin-left: auto;
+   margin-right: auto;
+   }
+   .tag-badge {
+   display: inline-block;
+   background-color: rgba(0,0,0,0.5);
+   color: white;
+   font-size: 0.75rem;
+   padding: 0.25rem 0.5rem;
+   border-radius: 0.25rem;
+   margin-right: 0.25rem;
+   margin-bottom: 0.25rem;
+   }
+   .photo-overlay {
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   right: 0;
+   padding: 0.5rem;
+   background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+   }
+   .badge-position-top-left {
+   position: absolute;
+   top: 0.5rem;
+   left: 0.5rem;
+   }
+   .badge-position-top-right {
+   position: absolute;
+   top: 0.5rem;
+   right: 0.5rem;
+   }
+   .quality-enhanced-badge {
+   background-color: #4361ee;
+   color: white;
+   }
+   .photo-carousel {
+   margin-bottom: 2rem;
+   }
+   .photo-carousel .carousel-item img {
+   height: 400px;
+   object-fit: cover;
+   }
+   .photo-carousel .carousel-caption {
+   background-color: rgba(0,0,0,0.5);
+   border-radius: 8px;
+   padding: 10px;
+   max-width: 80%;
+   margin: 0 auto;
+   }
+   .carousel-inner {
+   border-radius: 12px;
+   overflow: hidden;
+   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+   }
 </style>
-
 <div class="container-fluid">
-    <div class="row g-4">
-        <!-- Sidebar with filter options -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-4">
-                        <i class='bx bx-user-circle fs-3 me-2'></i>
-                        <h5 class="card-title mb-0">My Photos</h5>
-                    </div>
-                    <p class="text-muted">Photos where you appear</p>
-                    
-                    <!-- Gallery Stats -->
-                    <div class="card bg-light border-0 mb-3">
-                        <div class="card-body">
-                            <h6 class="mb-3">Gallery Stats</h6>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Total Photos</span>
-                                <span class="fw-bold">{{ photos.paginator.count }}</span>
-                            </div>
-                            {% if photos.paginator.count > 0 %}
-                            <a href="#" class="btn btn-outline-primary btn-sm w-100">
-                                <i class='bx bx-download me-2'></i>Download All
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <!-- Filtering Options -->
-                    <div class="card bg-light border-0">
-                        <div class="card-body">
-                            <h6 class="mb-3">Filter Options</h6>
-                            
-                            <!-- Event filter -->
-                            <div class="mb-3">
-                                <label for="eventFilter" class="form-label">Filter by Event</label>
-                                <select id="eventFilter" class="form-select">
-                                    <option value="">All Events</option>
-                                    {% for event in user_events %}
-                                        <option value="{{ event.id }}" {% if current_event == event.id|stringformat:"s" %}selected{% endif %}>
-                                            {{ event.title }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <!-- Tag filter -->
-                            <div class="mb-3">
-                                <label for="tagFilter" class="form-label">Filter by Tag</label>
-                                <select id="tagFilter" class="form-select">
-                                    <option value="">All Tags</option>
-                                    {% for tag in available_tags %}
-                                        <option value="{{ tag }}" {% if current_tag == tag %}selected{% endif %}>
-                                            {{ tag|title }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <!-- Sort options -->
-                            <div class="mb-3">
-                                <label for="sortOptions" class="form-label">Sort By</label>
-                                <select id="sortOptions" class="form-select">
-                                    <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
-                                    <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
-                                    <option value="quality" {% if current_sort == 'quality' %}selected{% endif %}>Highest Quality</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+   <div class="row g-4">
+      <!-- Sidebar with filter options -->
+      <div class="col-md-3">
+         <div class="card">
+            <div class="card-body">
+               <div class="d-flex align-items-center mb-4">
+                  <i class='bx bx-user-circle fs-3 me-2'></i>
+                  <h5 class="card-title mb-0">My Photos</h5>
+               </div>
+               <p class="text-muted">Photos where you appear</p>
+               <!-- Gallery Stats -->
+               <div class="card bg-light border-0 mb-3">
+                  <div class="card-body">
+                     <h6 class="mb-3">Gallery Stats</h6>
+                     <div class="d-flex justify-content-between mb-2">
+                        <span>Total Photos</span>
+                        <span class="fw-bold">{{ photos.paginator.count }}</span>
+                     </div>
+                     {% if photos.paginator.count > 0 %}
+                     <a href="#" id="download-all-btn" class="btn btn-outline-primary btn-sm w-100">
+                     <i class='bx bx-download me-2'></i>Download All
+                     </a>
+                     {% endif %}
+                  </div>
+               </div>
+               <!-- Filtering Options -->
+               <div class="card bg-light border-0">
+                  <div class="card-body">
+                     <h6 class="mb-3">Filter Options</h6>
+                     <!-- Event filter -->
+                     <div class="mb-3">
+                        <label for="eventFilter" class="form-label">Filter by Event</label>
+                        <select id="eventFilter" class="form-select">
+                           <option value="">All Events</option>
+                           {% for event in user_events %}
+                           <option value="{{ event.id }}" {% if current_event == event.id|stringformat:"s" %}selected{% endif %}>
+                           {{ event.title }}
+                           </option>
+                           {% endfor %}
+                        </select>
+                     </div>
+                     <!-- Tag filter -->
+                     <div class="mb-3">
+                        <label for="tagFilter" class="form-label">Filter by Tag</label>
+                        <select id="tagFilter" class="form-select">
+                           <option value="">All Tags</option>
+                           {% for tag in available_tags %}
+                           <option value="{{ tag }}" {% if current_tag == tag %}selected{% endif %}>
+                           {{ tag|title }}
+                           </option>
+                           {% endfor %}
+                        </select>
+                     </div>
+                     <!-- Sort options -->
+                     <div class="mb-3">
+                        <label for="sortOptions" class="form-label">Sort By</label>
+                        <select id="sortOptions" class="form-select">
+                        <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                        <option value="quality" {% if current_sort == 'quality' %}selected{% endif %}>Highest Quality</option>
+                        </select>
+                     </div>
+                  </div>
+               </div>
             </div>
-        </div>
-        
-        <!-- Main content area with photo display -->
-        <div class="col-md-9">
-            {% if photos %}
-                <!-- Photo Carousel for featured photos -->
-                <div class="photo-carousel">
-                    <div id="userPhotoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                            {% for photo in photos|slice:":5" %}
-                                <button type="button" data-bs-target="#userPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
-                                        {% if forloop.first %}class="active"{% endif %} aria-current="true" 
-                                        aria-label="Photo {{ forloop.counter }}"></button>
-                            {% endfor %}
-                        </div>
-                        <div class="carousel-inner">
-                            {% for photo in photos|slice:":5" %}
-                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                    {% if photo.enhanced_image %}
-                                        <img src="{{ photo.enhanced_image.url }}" class="d-block w-100" alt="Featured photo">
-                                    {% else %}
-                                        <img src="{{ photo.image.url }}" class="d-block w-100" alt="Featured photo">
-                                    {% endif %}
-                                    <div class="carousel-caption d-none d-md-block">
-                                        <h5>{{ photo.event.title }}</h5>
-                                        <p>Uploaded on {{ photo.upload_date|date:"M d, Y" }}</p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#userPhotoCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#userPhotoCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    </div>
-                </div>
-                
- <!-- Masonry grid for photos -->
-<div class="masonry-grid">
-    {% for photo in photos %}
-    <div class="photo-card">
-        <div class="card-img-wrapper">
-            {% if photo.enhanced_image %}
-                <img src="{{ photo.enhanced_image.url }}" class="card-img-top" alt="Event photo">
-                <div class="badge-position-top-right">
-                    <span class="badge quality-enhanced-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
-                        <i class='bx bx-image-alt'></i> Enhanced
-                    </span>
-                </div>
-            {% else %}
-                <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
-            {% endif %}
-            
-            <!-- Quality score badge -->
-            {% if photo.quality_score %}
-            <div class="badge-position-top-left">
-                <span class="badge {% if photo.quality_score >= 0.8 %}bg-success{% elif photo.quality_score >= 0.5 %}bg-warning{% else %}bg-danger{% endif %}" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
-                    <i class='bx bx-star'></i> {{ photo.quality_score|floatformat:2 }}
-                </span>
-            </div>
-            {% endif %}
-            
-            <!-- Tags overlay -->
-            {% if photo.scene_tags %}
-            <div class="photo-overlay">
-                <div class="d-flex flex-wrap">
-                    {% for tag in photo.scene_tags|slice:":3" %}
-                    <span class="tag-badge">{{ tag }}</span>
-                    {% endfor %}
-                    {% if photo.scene_tags|length > 3 %}
-                    <span class="tag-badge">+{{ photo.scene_tags|length|add:"-3" }}</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <small class="text-muted">
-                    {{ photo.event.title }}
-                </small>
-                <small class="text-muted">
-                    <i class='bx bx-calendar'></i> {{ photo.upload_date|date:"M d" }}
-                </small>
-            </div>
+         </div>
+      </div>
+      <!-- Main content area with photo display -->
+      <div class="col-md-9">
+         <!-- Selection control panel - initially hidden -->
+         <div id="selection-control-panel" class="d-none mb-3 p-3 bg-light rounded shadow-sm">
             <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex gap-2">
-                    <span title="Views">
-                        <i class='bx bx-show'></i> {{ photo.view_count }}
-                    </span>
-                    <span title="Likes">
-                        <i class='bx bx-heart'></i> {{ photo.like_count }}
-                    </span>
-                </div>
-                <a href="{% url 'photos:photo_detail' pk=photo.id %}" class="btn btn-primary btn-sm">
-                    <i class='bx bx-show'></i> View
-                </a>
+               <div>
+                  <span id="selected-count" class="fw-bold">0</span> photos selected
+                  <button id="clear-selection-btn" class="btn btn-link btn-sm text-muted p-0 ms-2">Clear</button>
+               </div>
+               <div>
+                  <button id="select-all-btn" class="btn btn-outline-secondary btn-sm me-2">
+                  <i class='bx bx-select-multiple me-1'></i>Select All
+                  </button>
+                  <button id="download-selected-btn" class="btn btn-primary btn-sm" disabled>
+                  <i class='bx bx-download me-1'></i>Download Selected
+                  </button>
+               </div>
             </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-            {% else %}
-                <!-- Empty State -->
-                <div class="empty-state">
-                    <i class='bx bx-user-circle'></i>
-                    <h4>No Photos Found</h4>
-                    <p>You don't appear in any photos yet. Once the AI identifies you in event photos, they'll show up here.</p>
-                    <p class="mt-3">Make sure your profile picture clearly shows your face to help the AI recognize you.</p>
-                </div>
-            {% endif %}
-            
-            <!-- Pagination -->
-            {% if photos.has_other_pages %}
-            <nav class="mt-4" aria-label="Gallery navigation">
-                <ul class="pagination justify-content-center">
-                    {% if photos.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ photos.previous_page_number }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                            <i class='bx bx-chevron-left'></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for i in photos.paginator.page_range %}
-                        {% if photos.number == i %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ i }}</span>
-                        </li>
-                        {% elif i > photos.number|add:'-3' and i < photos.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ i }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                                {{ i }}
-                            </a>
-                        </li>
+         </div>
+         {% if photos %}
+         <!-- Photo Carousel for featured photos -->
+         <div class="photo-carousel">
+            <div id="userPhotoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+               <div class="carousel-indicators">
+                  {% for photo in photos|slice:":5" %}
+                  <button type="button" data-bs-target="#userPhotoCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+                  {% if forloop.first %}class="active"{% endif %} aria-current="true" 
+                  aria-label="Photo {{ forloop.counter }}"></button>
+                  {% endfor %}
+               </div>
+               <div class="carousel-inner">
+                  {% for photo in photos|slice:":5" %}
+                  <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                     {% if photo.enhanced_image %}
+                     <img src="{{ photo.enhanced_image.url }}" class="d-block w-100" alt="Featured photo">
+                     {% else %}
+                     <img src="{{ photo.image.url }}" class="d-block w-100" alt="Featured photo">
+                     {% endif %}
+                     <div class="carousel-caption d-none d-md-block">
+                        <h5>{{ photo.event.title }}</h5>
+                        <p>Uploaded on {{ photo.upload_date|date:"M d, Y" }}</p>
+                     </div>
+                  </div>
+                  {% endfor %}
+               </div>
+               <button class="carousel-control-prev" type="button" data-bs-target="#userPhotoCarousel" data-bs-slide="prev">
+               <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+               <span class="visually-hidden">Previous</span>
+               </button>
+               <button class="carousel-control-next" type="button" data-bs-target="#userPhotoCarousel" data-bs-slide="next">
+               <span class="carousel-control-next-icon" aria-hidden="true"></span>
+               <span class="visually-hidden">Next</span>
+               </button>
+            </div>
+         </div>
+         <!-- Masonry grid for photos -->
+         <div class="masonry-grid">
+            {% for photo in photos %}
+            <div class="photo-card">
+               <!-- Selection checkbox -->
+               <div class="photo-select-checkbox position-absolute top-0 start-0 m-2" style="z-index: 20;">
+                  <div class="form-check">
+                     <input class="form-check-input photo-selector" type="checkbox" value="{{ photo.id }}" id="photo-select-{{ photo.id }}" data-photo-id="{{ photo.id }}" data-photo-url="{% if photo.enhanced_image %}{{ photo.enhanced_image.url }}{% else %}{{ photo.image.url }}{% endif %}">
+                  </div>
+               </div>
+               <div class="card-img-wrapper">
+                  {% if photo.enhanced_image %}
+                  <img src="{{ photo.enhanced_image.url }}" class="card-img-top" alt="Event photo">
+                  <div class="badge-position-top-right">
+                     <span class="badge quality-enhanced-badge" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
+                     <i class='bx bx-image-alt'></i> Enhanced
+                     </span>
+                  </div>
+                  {% else %}
+                  <img src="{{ photo.image.url }}" class="card-img-top" alt="Event photo">
+                  {% endif %}
+                  <!-- Quality score badge -->
+                  {% if photo.quality_score %}
+                  <div class="badge-position-top-left">
+                     <span class="badge {% if photo.quality_score >= 0.8 %}bg-success{% elif photo.quality_score >= 0.5 %}bg-warning{% else %}bg-danger{% endif %}" style="font-size: 0.65rem; padding: 0.25rem 0.5rem; line-height: 1;">
+                     <i class='bx bx-star'></i> {{ photo.quality_score|floatformat:2 }}
+                     </span>
+                  </div>
+                  {% endif %}
+                  <!-- Tags overlay -->
+                  {% if photo.scene_tags %}
+                  <div class="photo-overlay">
+                     <div class="d-flex flex-wrap">
+                        {% for tag in photo.scene_tags|slice:":3" %}
+                        <span class="tag-badge">{{ tag }}</span>
+                        {% endfor %}
+                        {% if photo.scene_tags|length > 3 %}
+                        <span class="tag-badge">+{{ photo.scene_tags|length|add:"-3" }}</span>
                         {% endif %}
-                    {% endfor %}
-                    
-                    {% if photos.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ photos.next_page_number }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                            <i class='bx bx-chevron-right'></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
-        </div>
-    </div>
+                     </div>
+                  </div>
+                  {% endif %}
+               </div>
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                     <small class="text-muted">
+                     {{ photo.event.title }}
+                     </small>
+                     <small class="text-muted">
+                     <i class='bx bx-calendar'></i> {{ photo.upload_date|date:"M d" }}
+                     </small>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                     <div class="d-flex gap-2">
+                        <span title="Views">
+                        <i class='bx bx-show'></i> {{ photo.view_count }}
+                        </span>
+                        <span title="Likes">
+                        <i class='bx bx-heart'></i> {{ photo.like_count }}
+                        </span>
+                     </div>
+                     <a href="{% url 'photos:photo_detail' pk=photo.id %}" class="btn btn-primary btn-sm">
+                     <i class='bx bx-show'></i> View
+                     </a>
+                  </div>
+               </div>
+            </div>
+            {% endfor %}
+         </div>
+         {% else %}
+         <!-- Empty State -->
+         <div class="empty-state">
+            <i class='bx bx-user-circle'></i>
+            <h4>No Photos Found</h4>
+            <p>You don't appear in any photos yet. Once the AI identifies you in event photos, they'll show up here.</p>
+            <p class="mt-3">Make sure your profile picture clearly shows your face to help the AI recognize you.</p>
+         </div>
+         {% endif %}
+         <!-- Pagination -->
+         {% if photos.has_other_pages %}
+         <nav class="mt-4" aria-label="Gallery navigation">
+            <ul class="pagination justify-content-center">
+               {% if photos.has_previous %}
+               <li class="page-item">
+                  <a class="page-link" href="?page={{ photos.previous_page_number }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                  <i class='bx bx-chevron-left'></i>
+                  </a>
+               </li>
+               {% endif %}
+               {% for i in photos.paginator.page_range %}
+               {% if photos.number == i %}
+               <li class="page-item active">
+                  <span class="page-link">{{ i }}</span>
+               </li>
+               {% elif i > photos.number|add:'-3' and i < photos.number|add:'3' %}
+               <li class="page-item">
+                  <a class="page-link" href="?page={{ i }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                  {{ i }}
+                  </a>
+               </li>
+               {% endif %}
+               {% endfor %}
+               {% if photos.has_next %}
+               <li class="page-item">
+                  <a class="page-link" href="?page={{ photos.next_page_number }}{% if current_event %}&event={{ current_event }}{% endif %}{% if current_tag %}&tag={{ current_tag }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                  <i class='bx bx-chevron-right'></i>
+                  </a>
+               </li>
+               {% endif %}
+            </ul>
+         </nav>
+         {% endif %}
+      </div>
+   </div>
 </div>
-
+<!-- Hidden form for downloading photos -->
+<form id="download-form" action="{% url 'photos:download_photos' %}" method="POST" class="d-none">
+   {% csrf_token %}
+   <input type="hidden" name="photo_ids" id="photo-ids-input">
+   <input type="hidden" name="download_type" id="download-type-input">
+</form>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize carousel if it exists
-    const carousel = document.getElementById('userPhotoCarousel');
-    if (carousel) {
-        new bootstrap.Carousel(carousel, {
-            interval: 5000,
-            wrap: true
-        });
-    }
-    
-    // Handle filter changes
-    const eventFilter = document.getElementById('eventFilter');
-    const tagFilter = document.getElementById('tagFilter');
-    const sortOptions = document.getElementById('sortOptions');
-    
-    eventFilter.addEventListener('change', function() {
-        applyFilters();
-    });
-    
-    tagFilter.addEventListener('change', function() {
-        applyFilters();
-    });
-    
-    sortOptions.addEventListener('change', function() {
-        applyFilters();
-    });
-    
-    function applyFilters() {
-        const eventValue = eventFilter.value;
-        const tagValue = tagFilter.value;
-        const sortValue = sortOptions.value;
-        
-        let url = '{% url "photos:user_gallery" %}?';
-        const params = [];
-        
-        if (eventValue) {
-            params.push('event=' + eventValue);
-        }
-        
-        if (tagValue) {
-            params.push('tag=' + tagValue);
-        }
-        
-        if (sortValue) {
-            params.push('sort=' + sortValue);
-        }
-        
-        window.location.href = url + params.join('&');
-    }
-});
+   document.addEventListener('DOMContentLoaded', function() {
+       // Initialize carousel if it exists
+       const carousel = document.getElementById('userPhotoCarousel');
+       if (carousel) {
+           new bootstrap.Carousel(carousel, {
+               interval: 5000,
+               wrap: true
+           });
+       }
+       
+       // Handle filter changes
+       const eventFilter = document.getElementById('eventFilter');
+       const tagFilter = document.getElementById('tagFilter');
+       const sortOptions = document.getElementById('sortOptions');
+       
+       if (eventFilter) {
+           eventFilter.addEventListener('change', function() {
+               applyFilters();
+           });
+       }
+       
+       if (tagFilter) {
+           tagFilter.addEventListener('change', function() {
+               applyFilters();
+           });
+       }
+       
+       if (sortOptions) {
+           sortOptions.addEventListener('change', function() {
+               applyFilters();
+           });
+       }
+       
+       function applyFilters() {
+           const eventValue = eventFilter ? eventFilter.value : '';
+           const tagValue = tagFilter ? tagFilter.value : '';
+           const sortValue = sortOptions ? sortOptions.value : '';
+           
+           let url = '{% url "photos:user_gallery" %}?';
+           const params = [];
+           
+           if (eventValue) {
+               params.push('event=' + eventValue);
+           }
+           
+           if (tagValue) {
+               params.push('tag=' + tagValue);
+           }
+           
+           if (sortValue) {
+               params.push('sort=' + sortValue);
+           }
+           
+           window.location.href = url + params.join('&');
+       }
+       
+       // Photo selection and download functionality
+       // Elements
+       const selectionPanel = document.getElementById('selection-control-panel');
+       const selectedCountEl = document.getElementById('selected-count');
+       const clearSelectionBtn = document.getElementById('clear-selection-btn');
+       const selectAllBtn = document.getElementById('select-all-btn');
+       const downloadSelectedBtn = document.getElementById('download-selected-btn');
+       const downloadAllBtn = document.getElementById('download-all-btn');
+       const photoCheckboxes = document.querySelectorAll('.photo-selector');
+       const downloadForm = document.getElementById('download-form');
+       const photoIdsInput = document.getElementById('photo-ids-input');
+       const downloadTypeInput = document.getElementById('download-type-input');
+       
+       // Make sure the selection checkboxes are visible
+       document.querySelectorAll('.photo-select-checkbox').forEach(checkbox => {
+           checkbox.style.opacity = '1';
+       });
+       
+       // State
+       let selectedPhotos = new Set();
+       
+       // Photo selection functions
+       function updateSelectionUI() {
+           const count = selectedPhotos.size;
+           
+           if (count > 0 && selectionPanel) {
+               selectionPanel.classList.remove('d-none');
+               if (selectedCountEl) {
+                   selectedCountEl.textContent = count;
+               }
+               if (downloadSelectedBtn) {
+                   downloadSelectedBtn.disabled = false;
+               }
+           } else if (selectionPanel) {
+               selectionPanel.classList.add('d-none');
+               if (downloadSelectedBtn) {
+                   downloadSelectedBtn.disabled = true;
+               }
+           }
+       }
+       
+       function togglePhotoSelection(photoId, checked) {
+           if (checked) {
+               selectedPhotos.add(photoId);
+           } else {
+               selectedPhotos.delete(photoId);
+           }
+           updateSelectionUI();
+       }
+       
+       function clearSelection() {
+           selectedPhotos.clear();
+           photoCheckboxes.forEach(checkbox => {
+               checkbox.checked = false;
+           });
+           updateSelectionUI();
+       }
+       
+       function selectAll() {
+           photoCheckboxes.forEach(checkbox => {
+               checkbox.checked = true;
+               selectedPhotos.add(checkbox.value);
+           });
+           updateSelectionUI();
+       }
+       
+       // Download functions
+       function downloadSelected() {
+           if (selectedPhotos.size === 0) return;
+           
+           const photoIds = Array.from(selectedPhotos).join(',');
+           if (photoIdsInput) {
+               photoIdsInput.value = photoIds;
+           }
+           
+           // Set download type based on selection count
+           if (downloadTypeInput) {
+               downloadTypeInput.value = selectedPhotos.size === 1 ? 'single' : 'zip';
+           }
+           
+           // Submit the form
+           if (downloadForm) {
+               downloadForm.submit();
+           }
+       }
+       
+       function downloadAll() {
+           // Select all photos first
+           selectAll();
+           
+           // Then download them
+           const photoIds = Array.from(selectedPhotos).join(',');
+           if (photoIdsInput) {
+               photoIdsInput.value = photoIds;
+           }
+           if (downloadTypeInput) {
+               downloadTypeInput.value = 'zip';
+           }
+           if (downloadForm) {
+               downloadForm.submit();
+           }
+       }
+       
+       // Add event listeners
+       photoCheckboxes.forEach(checkbox => {
+           checkbox.addEventListener('change', function() {
+               togglePhotoSelection(this.value, this.checked);
+           });
+       });
+       
+       if (clearSelectionBtn) {
+           clearSelectionBtn.addEventListener('click', clearSelection);
+       }
+       
+       if (selectAllBtn) {
+           selectAllBtn.addEventListener('click', selectAll);
+       }
+       
+       if (downloadSelectedBtn) {
+           downloadSelectedBtn.addEventListener('click', downloadSelected);
+       }
+       
+       if (downloadAllBtn) {
+           downloadAllBtn.addEventListener('click', downloadAll);
+       }
+       
+       // Initialize UI
+       updateSelectionUI();
+   });
 </script>
 {% endblock %}

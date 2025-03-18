@@ -471,3 +471,69 @@ def download_photos(request, slug):
     response['Content-Disposition'] = f'attachment; filename="{event_name}_photos.zip"'
     
     return response
+
+
+
+from django.http import FileResponse, HttpResponse
+from django.views.generic import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.core.files.base import ContentFile
+import zipfile
+import io
+import os
+
+class DownloadPhotosView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        # Get the photo IDs from the form
+        photo_ids_str = request.POST.get('photo_ids', '')
+        download_type = request.POST.get('download_type', 'zip')
+        
+        if not photo_ids_str:
+            return HttpResponse("No photos selected for download", status=400)
+        
+        photo_ids = [int(id) for id in photo_ids_str.split(',')]
+        
+        # Get the photos
+        photos = EventPhoto.objects.filter(
+            id__in=photo_ids,
+            user_matches__user=request.user
+        )
+        
+        # If no photos found or unauthorized
+        if not photos:
+            return HttpResponse("No photos found or unauthorized", status=404)
+        
+        # Handle single photo download
+        if download_type == 'single' and len(photos) == 1:
+            photo = photos.first()
+            # Use enhanced image if available, otherwise use original
+            image_file = photo.enhanced_image if photo.enhanced_image else photo.image
+            file_name = os.path.basename(image_file.name)
+            
+            # Serve the file
+            response = FileResponse(
+                image_file.open('rb'),
+                content_type='image/jpeg'  # Adjust if needed
+            )
+            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            return response
+        
+        # Handle zip download for multiple photos
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for photo in photos:
+                image_file = photo.enhanced_image if photo.enhanced_image else photo.image
+                file_name = os.path.basename(image_file.name)
+                
+                # Add file to zip
+                zipf.writestr(file_name, image_file.read())
+        
+        # Reset file pointer to beginning
+        memory_file.seek(0)
+        
+        # Set proper response headers
+        response = HttpResponse(memory_file, content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename="user_gallery.zip"'
+        return response

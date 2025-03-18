@@ -189,6 +189,9 @@
 ### 2 am
 - implemented the download option for photos
 
+### 1 pm
+- implemented the download photos option for user gallery
+- updated the gallery template
 
 
 # To-Do List  
