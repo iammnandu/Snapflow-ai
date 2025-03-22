@@ -193,6 +193,15 @@
 - implemented the download photos option for user gallery
 - updated the gallery template
 
+### 3pm
+- thumbnails for photos in the gallery and event dashboard implemented
+
+
+## 23 March
+
+### 12 30 am
+- contact form modified
+
 
 # To-Do List  
 

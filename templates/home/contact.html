@@ -67,30 +67,30 @@
             {% endfor %}
           {% endif %}
 
-          <form method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+          <form action="{% url 'home:contact' %}" method="post" id="contactForm">
             {% csrf_token %}
             <div class="row gy-4">
 
               <div class="col-md-6">
-                <input type="text" name="name" class="form-control" placeholder="Your Name" required="">
+                <input type="text" name="name" class="form-control" placeholder="Your Name" required>
               </div>
 
-              <div class="col-md-6 ">
-                <input type="email" class="form-control" name="email" placeholder="Your Email" required="">
-              </div>
-
-              <div class="col-12">
-                <input type="text" class="form-control" name="subject" placeholder="Subject" required="">
+              <div class="col-md-6">
+                <input type="email" class="form-control" name="email" placeholder="Your Email" required>
               </div>
 
               <div class="col-12">
-                <textarea class="form-control" name="message" rows="6" placeholder="Message" required=""></textarea>
+                <input type="text" class="form-control" name="subject" placeholder="Subject" required>
+              </div>
+
+              <div class="col-12">
+                <textarea class="form-control" name="message" rows="6" placeholder="Message" required></textarea>
               </div>
 
               <div class="col-12 text-center">
-                <div class="loading">Loading</div>
+                <div class="loading d-none">Loading</div>
                 <div class="error-message"></div>
-                <div class="sent-message">Your message has been sent. Thank you!</div>
+                <div class="sent-message d-none">Your message has been sent. Thank you!</div>
 
                 <button type="submit" class="btn">Send Message</button>
               </div>
@@ -106,4 +106,18 @@
   </div>
 
 </section><!-- /Contact Section -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contactForm');
+    
+    form.addEventListener('submit', function(e) {
+      // We'll let Django handle the form submission normally
+      // Just hide any previous error messages
+      document.querySelector('.error-message').textContent = '';
+    });
+  });
+</script>
 {% endblock %}

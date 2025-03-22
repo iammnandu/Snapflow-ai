@@ -30,16 +30,18 @@
 </head>
 
 <body class="{% block bodyclass %}index-page{% endblock %}">
-
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-
-      <a href="{% url 'home:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+  
+      <a href="{% url 'home:index' %}" class="logo d-flex align-items-center me-auto me-lg-0">
         <!-- Uncomment the line below if you also wish to use an image logo -->
         <!-- <img src="assets/img/logo.png" alt=""> -->
         <h1 class="sitename">SnapFlow</h1>
       </a>
-
+  
+      <!-- Mobile Nav Toggle moved to left of the user menu for better visibility -->
+      <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+  
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="{% url 'home:index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">Home</a></li>
@@ -47,23 +49,24 @@
           <li><a href="#features" class="{% if request.resolver_match.url_name == 'features' %}active{% endif %}">Features</a></li>
           <li><a href="{% url 'home:contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a></li>
           {% if user.is_authenticated %}
-          <li><a href="{% url 'users:dashboard' %}">Dashboard</a
+          <li class="d-xl-none"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+          <li class="d-xl-none"><a href="{% url 'users:profile' %}">Profile</a></li>
+          <li class="d-xl-none"><a href="{% url 'users:logout' %}">Logout</a></li>
           {% endif %}
         </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
+  
       {% if user.is_authenticated %}
-      <div class="d-flex align-items-center">
-        <div class="dropdown">
-          <a class="btn btn-outline-primary dropdown-toggle me-2 d-flex align-items-center" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      <div class="d-flex align-items-center ms-auto ms-xl-0">
+        <div class="dropdown d-none d-xl-block">
+          <a class="dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: block; border: 2px solid #4154f1;" data-bs-auto-close="outside">
             {% if user.avatar %}
-              <img src="{{ user.avatar.url }}" alt="Profile" class="rounded-circle me-2" width="30" height="30">
+              <img src="{{ user.avatar.url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
             {% else %}
-              <img src="{% static 'images/default-profile.png' %}" alt="Profile" class="rounded-circle me-2" width="30" height="30">
+              <img src="{% static 'images/default-profile.png' %}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
             {% endif %}
-            <span>{% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}</span>
           </a>
-          <ul class="dropdown-menu" aria-labelledby="userDropdown">
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
             {% if user.role == 'ORGANIZER' %}
               <li><a class="dropdown-item" href="{% url 'events:event_list'  %}">My Events</a></li>
               <li><a class="dropdown-item" href="{% url 'events:event_create'  %}">Create Event</a></li>
@@ -81,9 +84,9 @@
           </ul>
         </div>
       </div>
-    {% else %}
+      {% else %}
       <a class="btn-getstarted" href="{% url 'users:login'  %}">Get Started</a>
-    {% endif %}
+      {% endif %}
     </div>
   </header>
 

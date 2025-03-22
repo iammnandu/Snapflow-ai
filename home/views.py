@@ -94,6 +94,18 @@ class AboutView(TemplateView):
             'Collaborative Workflow'
         ]
         return context
+    
+
+
+
+from django.conf import settings
+from django.contrib import messages
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.html import strip_tags
+from django.urls import reverse_lazy
+from django.views.generic import FormView
 
 class ContactView(FormView):
     template_name = 'home/contact.html'
@@ -115,14 +127,32 @@ class ContactView(FormView):
         subject = form.cleaned_data['subject']
         message = form.cleaned_data['message']
         
-        # Send email
-        send_mail(
-            f'Contact Form: {subject}',
-            f'From: {name} <{email}>\n\n{message}',
-            email,
-            ['admin@snapflow.com'],
-            fail_silently=False,
-        )
+        # Create email context
+        email_context = {
+            'name': name,
+            'email': email,
+            'subject': subject,
+            'message': message,
+            'date': timezone.now().strftime("%B %d, %Y at %H:%M")
+        }
         
-        messages.success(self.request, 'Thank you for contacting us! We will get back to you soon.')
+        # Create HTML email
+        html_content = render_to_string('email/contact_form_email.html', email_context)
+        text_content = strip_tags(html_content)  # Create plain text version for email clients that don't support HTML
+        
+        try:
+            # Create email message with both HTML and plain text versions
+            email = EmailMultiAlternatives(
+                f'SnapFlow Contact: {subject}',
+                text_content,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.CONTACT_EMAIL]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+            
+            messages.success(self.request, 'Thank you for contacting us! We will get back to you soon.')
+        except Exception as e:
+            messages.error(self.request, f'There was an error sending your message. Please try again later.')
+            
         return super().form_valid(form)
