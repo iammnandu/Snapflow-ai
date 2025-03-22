@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapFlow Contact Form</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #4a4a4a;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .email-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .email-header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 24px;
+            letter-spacing: 0.5px;
+        }
+        
+        .email-content {
+            padding: 30px;
+        }
+        
+        .contact-info {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .contact-info p {
+            margin: 8px 0;
+        }
+        
+        .contact-label {
+            font-weight: 600;
+            color: #6a11cb;
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .message-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2575fc;
+            padding: 20px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 25px;
+        }
+        
+        .response-options {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        
+        .response-options h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #4a4a4a;
+        }
+        
+        .response-options ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+        
+        .response-options li {
+            margin-bottom: 12px;
+        }
+        
+        .response-category {
+            font-weight: 600;
+            color: #6a11cb;
+        }
+        
+        .email-footer {
+            text-align: center;
+            padding: 20px 30px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #eeeeee;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            color: #6a11cb;
+            font-size: 16px;
+            margin: 0;
+        }
+        
+        .company-tagline {
+            font-style: italic;
+            color: #777;
+            margin: 8px 0 0 0;
+            font-size: 14px;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #eeeeee;
+            margin: 25px 0;
+        }
+        
+        .note {
+            font-size: 13px;
+            font-style: italic;
+            color: #777;
+            text-align: center;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>SnapFlow Contact Form Submission</h1>
+        </div>
+        
+        <div class="email-content">
+            <div class="contact-info">
+                <p><span class="contact-label">From:</span> {{name}} ({{email}})</p>
+                <p><span class="contact-label">Subject:</span> {{subject}}</p>
+                <p><span class="contact-label">Date:</span> {{date}}</p>
+            </div>
+            
+            <h2>Message:</h2>
+            <div class="message-box">
+                <p>{{message}}</p>
+            </div>
+            
+            <p class="note">This inquiry was submitted through the SnapFlow website contact form.</p>
+            
+            <div class="divider"></div>
+            
+            <div class="response-options">
+                <h2>Quick Response Options:</h2>
+                <ul>
+                    <li><span class="response-category">Personalized Gallery Questions:</span> Direct them to our FAQ page or offer a demo call</li>
+                    <li><span class="response-category">Face Recognition Concerns:</span> Provide information about our privacy policy and data handling practices</li>
+                    <li><span class="response-category">Event Booking:</span> Connect them with our events team (events@snapflow.com)</li>
+                    <li><span class="response-category">Technical Support:</span> Forward to tech support if needed (support@snapflow.com)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="email-footer">
+            <p class="company-name">SnapFlow | Intelligent Event Photography</p>
+            <p class="company-tagline">Capturing moments, recognizing faces, delivering memories</p>
+        </div>
+    </div>
+</body>
+</html>

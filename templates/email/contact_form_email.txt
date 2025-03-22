@@ -1,0 +1,27 @@
+# SnapFlow Contact Form Submission
+
+**From:** {{name}} ({{email}})  
+**Subject:** {{subject}}  
+**Date:** {{date}}  
+
+---
+
+## Message:
+
+{{message}}
+
+---
+
+*This inquiry was submitted through the SnapFlow website contact form.*
+
+## Quick Response Options:
+
+- **Personalized Gallery Questions**: Direct them to our FAQ page or offer a demo call
+- **Face Recognition Concerns**: Provide information about our privacy policy and data handling practices
+- **Event Booking**: Connect them with our events team (events@snapflow.com)
+- **Technical Support**: Forward to tech support if needed (support@snapflow.com)
+
+---
+
+**SnapFlow** | Intelligent Event Photography  
+*Capturing moments, recognizing faces, delivering memories*
