@@ -203,6 +203,12 @@
 - contact form modified
 
 
+## 25 March
+
+### 11 30 pm
+- added the privacy blur and hide feature for participants
+
+
 # To-Do List  
 
 ✅ **Completed**  

@@ -1,10 +1,9 @@
 folder : project root folder
 
 
-3 terminal needed
+2 terminal needed
 
 run the django using : python manage.py runserver
 
 run the celery using : celery -A SnapFlow worker -l INFO -P eventlet
 
-run the celery flower  ( optional )  : celery -A SnapFlow flower 

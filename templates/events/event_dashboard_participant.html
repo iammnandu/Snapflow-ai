@@ -186,39 +186,7 @@
     <!-- Event Information Cards -->
     <div class="row mb-4">
       <!-- Event Details -->
-      <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-header border-0 bg-transparent">
-            <h5 class="mb-0">Event Details</h5>
-          </div>
-          <div class="card-body">
-            <div class="mb-3">
-              <h6 class="text-muted mb-2"><i class="bi bi-info-circle me-2"></i>Description</h6>
-              <p>{{ event.description }}</p>
-            </div>
-            
-            <div class="mb-3">
-              <h6 class="text-muted mb-2"><i class="bi bi-newspaper me-2"></i>Important Information</h6>
-              <div class="alert alert-light border">
-                {% if event.important_info %}
-                  {{ event.important_info|linebreaks }}
-                {% else %}
-                  <p class="mb-0">No special instructions provided for this event.</p>
-                {% endif %}
-              </div>
-            </div>
-            
-            {% if event.schedule %}
-            <div class="mb-3">
-              <h6 class="text-muted mb-2"><i class="bi bi-clock me-2"></i>Event Schedule</h6>
-              <div class="schedule-timeline">
-                {{ event.schedule|linebreaks }}
-              </div>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+      
 
 
 
@@ -364,6 +332,39 @@
       </div>
     </div>
   
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header border-0 bg-transparent">
+          <h5 class="mb-0">Event Details</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="text-muted mb-2"><i class="bi bi-info-circle me-2"></i>Description</h6>
+            <p>{{ event.description }}</p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-muted mb-2"><i class="bi bi-newspaper me-2"></i>Important Information</h6>
+            <div class="alert alert-light border">
+              {% if event.important_info %}
+                {{ event.important_info|linebreaks }}
+              {% else %}
+                <p class="mb-0">No special instructions provided for this event.</p>
+              {% endif %}
+            </div>
+          </div>
+          
+          {% if event.schedule %}
+          <div class="mb-3">
+            <h6 class="text-muted mb-2"><i class="bi bi-clock me-2"></i>Event Schedule</h6>
+            <div class="schedule-timeline">
+              {{ event.schedule|linebreaks }}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
     <!-- Quick Links -->
     <div class="row mb-4">
       <div class="col-12">
