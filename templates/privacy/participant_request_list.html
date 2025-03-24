@@ -1,0 +1,114 @@
+<!-- templates/privacy/participant_request_list.html -->
+{% extends "users/db_base.html" %}
+{% load static %}
+
+{% block title %}My Privacy Requests | SnapFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">My Privacy Requests</h1>
+            <p class="text-muted">Manage your privacy settings for events you participate in</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if privacy_requests %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Your Privacy Requests</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Event</th>
+                                        <th>Request Type</th>
+                                        <th>Status</th>
+                                        <th>Date Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in privacy_requests %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'events:event_dashboard' request.event.slug %}">
+                                                {{ request.event.title }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            {% if request.request_type == 'blur' %}
+                                                <span class="badge bg-info text-white">Blur Face</span>
+                                            {% elif request.request_type == 'hide' %}
+                                                <span class="badge bg-warning text-dark">Hide Photos</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="badge bg-secondary">Pending</span>
+                                            {% elif request.status == 'approved' %}
+                                                <span class="badge bg-success">Approved</span>
+                                            {% elif request.status == 'processing' %}
+                                                <span class="badge bg-primary">Processing</span>
+                                            {% elif request.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif request.status == 'rejected' %}
+                                                <span class="badge bg-danger">Rejected</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ request.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'privacy:request_detail' request.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h5 class="alert-heading">No privacy requests yet</h5>
+            <p>You haven't made any privacy requests for any events. You can request to blur your face or hide photos that include you by visiting an event's page.</p>
+        </div>
+    {% endif %}
+    
+    <div class="mt-4 bg-light p-4 rounded shadow-sm">
+        <h4>About Privacy Requests</h4>
+        <p>SnapFlow allows you to protect your privacy in event photos with two types of requests:</p>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Blur Face</h5>
+                        <p class="card-text">We'll identify your face in all event photos and apply blurring to make you unrecognizable while keeping you in the photos.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Hide Photos</h5>
+                        <p class="card-text">Photos containing you will be completely hidden from the event gallery. Only event organizers will be able to see these photos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'photos',
     'notifications',
     'highlights',
-    'privacy',
+    
+    'privacy.apps.PrivacyConfig',
 
 
     'crispy_forms',

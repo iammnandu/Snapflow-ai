@@ -162,9 +162,6 @@ def logout_view(request):
     messages.success(request, 'You have been successfully logged out.')
     return redirect('users:login')
 
-
-# users/views.py (Add these functions)
-
 @login_required
 def dashboard(request):
     """Main dashboard view that shows different content based on user role"""

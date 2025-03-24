@@ -62,6 +62,11 @@ class EventPhoto(models.Model):
         """Check if an enhanced version exists"""
         return bool(self.enhanced_image)
 
+    def check_privacy(self, user=None):
+        """Check if this photo should be hidden due to privacy requests."""
+        from privacy.tasks import check_photo_privacy
+        return check_photo_privacy(self, user)
+
 class PhotoLike(models.Model):
     photo = models.ForeignKey(EventPhoto, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

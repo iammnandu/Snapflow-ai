@@ -1,0 +1,117 @@
+<!-- templates/privacy/request_response_form.html -->
+{% extends "users/db_base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Respond to Privacy Request | SnapFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">Respond to Privacy Request</h1>
+            <p class="text-muted">
+                Event: <a href="{% url 'events:event_dashboard' object.event.slug %}">{{ object.event.title }}</a> |
+                Participant: {{ object.user.get_full_name }}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'privacy:request_detail' object.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Request
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Request Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Request Type:</div>
+                        <div class="col-sm-8">
+                            {% if object.request_type == 'blur' %}
+                                <span class="badge bg-info text-white">Blur Face</span>
+                            {% elif object.request_type == 'hide' %}
+                                <span class="badge bg-warning text-dark">Hide Photos</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Submitted On:</div>
+                        <div class="col-sm-8">{{ object.created_at|date:"F j, Y, g:i a" }}</div>
+                    </div>
+                    
+                    {% if object.reason %}
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Reason:</div>
+                        <div class="col-sm-8">{{ object.reason }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="alert alert-info mt-4">
+                            <h6 class="alert-heading">Important Information:</h6>
+                            <ul class="mb-0">
+                                <li>Approving this request will start automatic photo processing</li>
+                                <li>Processing may take several minutes depending on the number of photos</li>
+                                <li>The participant will be notified of your decision</li>
+                                {% if object.request_type == 'hide' %}
+                                <li>Hidden photos will only be visible to you as the event organizer</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" name="status" value="approved" class="btn btn-success">
+                                <i class="fas fa-check"></i> Approve Request
+                            </button>
+                            <button type="submit" name="status" value="rejected" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Reject Request
+                            </button>
+                            <a href="{% url 'privacy:request_detail' object.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">What Happens Next</h5>
+                </div>
+                <div class="card-body">
+                    <h6>If Approved:</h6>
+                    <ul class="mb-3">
+                        <li>The system will identify all photos containing the participant</li>
+                        {% if object.request_type == 'blur' %}
+                        <li>The participant's face will be blurred in all identified photos</li>
+                        <li>Blurred versions will be displayed in the gallery instead of originals</li>
+                        {% elif object.request_type == 'hide' %}
+                        <li>All photos containing the participant will be hidden from the gallery</li>
+                        <li>Only you as the organizer will still be able to see these photos</li>
+                        {% endif %}
+                        <li>The participant will be notified when processing is complete</li>
+                    </ul>
+                    
+                    <h6>If Rejected:</h6>
+                    <ul class="mb-0">
+                        <li>No changes will be made to the photos</li>
+                        <li>The participant will be notified with your rejection reason</li>
+                        <li>They may contact you directly with further questions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

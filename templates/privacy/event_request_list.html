@@ -1,0 +1,87 @@
+<!-- templates/privacy/event_request_list.html -->
+{% extends "users/db_base.html" %}
+{% load static %}
+
+{% block title %}Privacy Requests for {{ event.title }} | SnapFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">Privacy Requests</h1>
+            <p class="text-muted">Event: <a href="{% url 'events:event_dashboard' event.slug %}">{{ event.title }}</a></p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Event Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if privacy_requests %}
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Privacy Requests</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Request Type</th>
+                                <th>Status</th>
+                                <th>Date Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in privacy_requests %}
+                            <tr>
+                                <td>{{ request.user.get_full_name }}</td>
+                                <td>
+                                    {% if request.request_type == 'blur' %}
+                                        <span class="badge bg-info text-white">Blur Face</span>
+                                    {% elif request.request_type == 'hide' %}
+                                        <span class="badge bg-warning text-dark">Hide Photos</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% elif request.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif request.status == 'processing' %}
+                                        <span class="badge bg-primary">Processing</span>
+                                    {% elif request.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif request.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'privacy:request_detail' request.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if request.status == 'pending' %}
+                                    <a href="{% url 'privacy:respond_to_request' request.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-reply"></i> Respond
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h5 class="alert-heading">No privacy requests</h5>
+            <p>This event hasn't received any privacy requests yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

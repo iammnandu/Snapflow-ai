@@ -1,0 +1,72 @@
+<!-- templates/privacy/request_form.html -->
+{% extends "users/db_base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Submit Privacy Request | {{ event.title }} | SnapFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">Submit Privacy Request</h1>
+            <p class="text-muted">Event: <a href="{% url 'events:event_dashboard' event.slug %}">{{ event.title }}</a></p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Event
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Privacy Request Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="alert alert-info mt-3">
+                            <h6 class="alert-heading">Important Information:</h6>
+                            <ul class="mb-0">
+                                <li>Privacy requests are reviewed by event organizers</li>
+                                <li>Processing may take time once approved</li>
+                                <li>"Blur Face" will keep you in photos but make you unrecognizable</li>
+                                <li>"Hide Photos" will remove photos containing you from the event gallery</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                            <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Privacy Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Blur My Face</h6>
+                        <p class="text-muted small">Your face will be blurred in all event photos where you appear, while keeping the photos visible in the gallery.</p>
+                    </div>
+                    
+                    <div>
+                        <h6>Hide Photos With Me</h6>
+                        <p class="text-muted small">All photos where you appear will be completely hidden from the event gallery. Only the event organizer will be able to see them.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}d

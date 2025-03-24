@@ -461,8 +461,12 @@
                     {% endif %}
                     
                     <div class="card-img-wrapper">
-                        {% thumbnail photo.image "400x400" crop="center" quality=75 as thumb %}
-                            <img src="{{ thumb.url }}" class="card-img-top" alt="Event photo" data-full-img="{{ photo.image.url }}">
+                        
+                    {% if photo.privacy_status.has_blurred_version %}
+                        <img src="{{ photo.privacy_status.blurred_image.url }}" alt="{{ photo.caption }}" class="img-fluid">
+                    {% else %}
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" class="img-fluid">
+                    {% endif %}
              
                         
                         <!-- Updated badge layout with smaller font size and improved positioning -->

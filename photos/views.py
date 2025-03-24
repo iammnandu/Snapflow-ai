@@ -16,7 +16,6 @@ from .models import (
 )
 from .tasks import *
 
-# In photos/views.py, m
 class EventGalleryView(DetailView):
     model = Event
     template_name = 'photos/gallery.html'
@@ -54,17 +53,38 @@ class EventGalleryView(DetailView):
         return super().get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
         event = self.get_object()
+        user = self.request.user
        
         # Get tag filter
         tag_filter = self.request.GET.get('tag')
         photos_queryset = event.photos.all()
+        
+        # Get the list of hidden photo IDs for this event
+        from privacy.models import ProcessedPhoto
+        hidden_photos = ProcessedPhoto.objects.filter(
+            privacy_request__event=event,
+            privacy_request__request_type='hide',
+            privacy_request__status__in=['approved', 'processing', 'completed']
+        ).values_list('original_photo_id', flat=True)
+        
+        # Exclude hidden photos from the queryset
+        photos_queryset = photos_queryset.exclude(id__in=hidden_photos)
+        
+        # If user is not the organizer, also exclude photos that the user has requested to hide
+        if not event.organizer == user:
+            user_hidden_photos = ProcessedPhoto.objects.filter(
+                privacy_request__event=event,
+                privacy_request__user=user,
+                privacy_request__request_type='hide',
+                privacy_request__status__in=['approved', 'processing', 'completed']
+            ).values_list('original_photo_id', flat=True)
+            
+            photos_queryset = photos_queryset.exclude(id__in=user_hidden_photos)
        
         # Apply tag filter if specified
         if tag_filter:
-
             photo_ids = []
             for photo in photos_queryset:
                 if photo.scene_tags and tag_filter in photo.scene_tags:
@@ -83,13 +103,19 @@ class EventGalleryView(DetailView):
         # Get unique tags across all event photos
         all_tags = set()
         for photo in event.photos.exclude(scene_tags__isnull=True):
-            if photo.scene_tags:
+            if photo.scene_tags and photo.id not in hidden_photos:
                 all_tags.update(photo.scene_tags)
        
         # Get photos with pagination
         paginator = Paginator(photos_queryset, 12)  # Show 12 photos per page
         page = self.request.GET.get('page')
         photos = paginator.get_page(page)
+        
+        # Load blurred versions of photos if available
+        from privacy.tasks import check_photo_privacy
+        
+        for photo in photos:
+            photo.privacy_status = check_photo_privacy(photo, user)
        
         # Check user permissions
         can_upload = False
@@ -111,7 +137,6 @@ class EventGalleryView(DetailView):
             'current_sort': sort_by,
         })
 
-
         # Add gallery access status to context
         if self.request.user.is_authenticated:
             try:
@@ -119,9 +144,32 @@ class EventGalleryView(DetailView):
                 context['gallery_access_status'] = participant.gallery_access
             except EventParticipant.DoesNotExist:
                 context['gallery_access_status'] = None
+                
+        # Add privacy request button status
+        if self.request.user.is_authenticated and self.request.user.role == 'PARTICIPANT':
+            from privacy.models import PrivacyRequest
+            
+            # Check for existing privacy requests by this user for this event
+            blur_request = PrivacyRequest.objects.filter(
+                user=self.request.user,
+                event=event,
+                request_type='blur'
+            ).first()
+            
+            hide_request = PrivacyRequest.objects.filter(
+                user=self.request.user,
+                event=event,
+                request_type='hide'
+            ).first()
+            
+            context['has_blur_request'] = blur_request is not None
+            context['blur_request_status'] = blur_request.status if blur_request else None
+            context['has_hide_request'] = hide_request is not None
+            context['hide_request_status'] = hide_request.status if hide_request else None
         
-        # Rest of existing context data code...
         return context
+    
+
 
 class UploadPhotosView(LoginRequiredMixin, View):
     def post(self, request, slug):
