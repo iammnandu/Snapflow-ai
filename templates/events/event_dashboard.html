@@ -1,6 +1,7 @@
 {% extends "users/db_base.html" %}
 {% load static %}
 {% load event_filters %}
+{% block title %}<title>SnapFlow : Event Dashboard</title>{% endblock %}
 {% load thumbnail %}
 {% block add_nav %}
 
@@ -176,7 +177,7 @@
       </div>
     </div>
   </div>
-  {% include 'highlights/snippets/dashboard_card.html' %}
+
   <!-- Photo Carousel Section - Made Smaller -->
   <div class="row mb-4">
     <div class="col-12">
@@ -236,7 +237,7 @@
       </div>
     </div>
   </div>
-
+  {% include 'highlights/snippets/dashboard_card.html' %}
   <!-- Statistics Cards in Masonry Layout -->
   <div class="row mb-4" data-masonry='{"percentPosition": true }'>
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">

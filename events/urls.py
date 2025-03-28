@@ -26,9 +26,6 @@ urlpatterns = [
     # Equipment Configuration
     path('<slug:slug>/equipment/', views.EquipmentConfigurationView.as_view(), name='equipment_config'),  # done
 
-    # Temporary Profiles
-    path('<slug:slug>/temp-profile/', views.create_temp_profile, name='create_temp_profile'),
-
     # Access Requests
     path('access/request/', views.request_access, name='request_access'),  # done
 

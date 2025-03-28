@@ -115,9 +115,9 @@ class ContactView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['contact_info'] = {
-            'address': 'A108 Adam Street, New York, NY 535022',
-            'phone': '+1 5589 55488 55',
-            'email': 'info@snapflow.com'
+            'address': 'Cochi Dhanushkodi Road, Varikoli, Puthenkurish, Kochi, Kerala 682308 ',
+            'phone': '+91 8547193672',
+            'email': 'snapflow.service@gmail.com'
         }
         return context
     

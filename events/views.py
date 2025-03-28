@@ -420,23 +420,6 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
             
         return context
 
-
-@login_required
-def create_temp_profile(request, slug):
-    event = get_object_or_404(Event, slug=slug)
-    if request.method == 'POST':
-        # Create temporary participant profile
-        participant = EventParticipant.objects.create(
-            event=event,
-            user=request.user,
-            email=request.user.email,
-            name=request.user.get_full_name(),
-            registration_code=get_random_string(20)
-        )
-        messages.success(request, 'Temporary profile created successfully!')
-        return redirect('photos:event_gallery', slug=slug)
-    return render(request, 'events/create_temp_profile.html', {'event': event})
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json

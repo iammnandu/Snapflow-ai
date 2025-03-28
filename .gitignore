@@ -34,4 +34,9 @@ ENV/
 
 user_detaits.txt
 
-**/debug_faces/*
+
+# Ignore media folder
+media/
+
+# Ignore SQLite database
+db.sqlite3
