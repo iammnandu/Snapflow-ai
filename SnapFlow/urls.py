@@ -30,6 +30,6 @@ urlpatterns = [
     path('privacy/', include('privacy.urls')),
 
 
-    path('plate/', include('django_spaghetti.urls')),
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
