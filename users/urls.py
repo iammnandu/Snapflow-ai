@@ -19,7 +19,6 @@ urlpatterns = [
     
     # New dashboard URLs
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('privacy/update/', views.update_privacy, name='update_privacy'),
 
     path("delete-account/", views.delete_account, name="delete_account"),
 ]

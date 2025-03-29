@@ -188,11 +188,104 @@ def dashboard(request):
             status='PENDING'
         )
         
+        # Calculate total photos across all organizer's events
+        total_photos = EventPhoto.objects.filter(event__organizer=user).count()
+        
+        # Get year-over-year event analytics
+        current_year = timezone.now().year
+        previous_year = current_year - 1
+        
+        # Get events by year
+        current_year_events = events.filter(start_date__year=current_year).count()
+        previous_year_events = events.filter(start_date__year=previous_year).count()
+        
+        # Calculate event growth percentage
+        event_growth_percentage = 0
+        if previous_year_events > 0:
+            event_growth_percentage = int((current_year_events - previous_year_events) / previous_year_events * 100)
+        
+        # Get available years for dropdown
+        available_years = events.dates('start_date', 'year').order_by('-start_date__year')
+        available_years = [date.year for date in available_years]
+        
+        # Calculate photo growth
+        current_year_photos = EventPhoto.objects.filter(
+            event__organizer=user,
+            upload_date__year=current_year
+        ).count()
+        
+        previous_year_photos = EventPhoto.objects.filter(
+            event__organizer=user,
+            upload_date__year=previous_year
+        ).count()
+        
+        photo_growth = 0
+        if previous_year_photos > 0:
+            photo_growth = int((current_year_photos - previous_year_photos) / previous_year_photos * 100)
+        
+        # Get monthly event data for chart
+        monthly_event_data = []
+        for month in range(1, 13):
+            count = events.filter(
+                start_date__year=current_year,
+                start_date__month=month
+            ).count()
+            monthly_event_data.append(count)
+            
+        # Get monthly photo data for chart
+        monthly_photo_data = []
+        for month in range(1, 13):
+            count = EventPhoto.objects.filter(
+                event__organizer=user,
+                upload_date__year=current_year,
+                upload_date__month=month
+            ).count()
+            monthly_photo_data.append(count)
+            
+        # Calculate popular event types
+        event_types = {}
+        for event in events:
+            event_type = event.get_event_type_display()
+            event_types[event_type] = event_types.get(event_type, 0) + 1
+            
+        # Sort event types by count
+        sorted_event_types = sorted(event_types.items(), key=lambda x: x[1], reverse=True)
+        top_event_types = sorted_event_types[:5]  # Get top 5 event types
+        
+        # Calculate upcoming events
+        upcoming_events = events.filter(
+            start_date__gt=timezone.now()
+        ).order_by('start_date')[:5]  # Get 5 nearest upcoming events
+        
+        # Calculate popular events (by participant count)
+        popular_events = []
+        for event in events:
+            participant_count = event.participants.count()
+            popular_events.append({
+                'event': event,
+                'participant_count': participant_count
+            })
+        
+        popular_events = sorted(popular_events, key=lambda x: x['participant_count'], reverse=True)[:5]
+        
         context.update({
             'events': events,
             'total_participants': total_participants,
             'total_photographers': total_photographers,
             'pending_requests': pending_requests,
+            'total_photos': total_photos,
+            'current_year': current_year,
+            'previous_year': previous_year,
+            'current_year_events': current_year_events,
+            'previous_year_events': previous_year_events,
+            'event_growth_percentage': event_growth_percentage,
+            'available_years': available_years,
+            'photo_growth': photo_growth,
+            'monthly_event_data': monthly_event_data,
+            'monthly_photo_data': monthly_photo_data,
+            'top_event_types': top_event_types,
+            'upcoming_events': upcoming_events,
+            'popular_events': popular_events,
         })
         template_name = 'users/dashboard_organizer.html'
         
@@ -275,25 +368,6 @@ def dashboard(request):
         template_name = 'users/dashboard_participant.html'
     
     return render(request, template_name, context)
-
-@login_required
-def update_privacy(request):
-    """Update user privacy settings"""
-    if request.method == 'POST':
-        user = request.user
-        
-        # Update privacy settings
-        user.blur_requested = 'blur_requested' in request.POST
-        user.remove_requested = 'remove_requested' in request.POST
-        user.image_visibility = request.POST.get('image_visibility', 'PRIVATE')
-        user.save()
-        
-        messages.success(request, 'Privacy settings updated successfully!')
-    
-    return redirect('users:dashboard')
-
-
-
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
