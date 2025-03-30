@@ -1,90 +1,42 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en" class="light-style customizer-hide" dir="ltr" data-theme="theme-default">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    
-    {% block title %}{% endblock title %}
-    
-    <meta name="description" content="" />
-
-    <!-- Favicon -->
-    <link href="{% static 'home/camera-lens.png' %}" rel="icon">
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-    <!-- Icons -->
-    <link rel="stylesheet" href="{% static 'users/assets/vendor/fonts/boxicons.css' %}" />
-
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="{% static 'users/assets/vendor/css/core.css' %}" class="template-customizer-core-css" />
-    <link rel="stylesheet" href="{% static 'users/assets/vendor/css/theme-default.css' %}" class="template-customizer-theme-css" />
-    <link rel="stylesheet" href="{% static 'users/assets/css/demo.css' %}" />
-
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="{% static 'users/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
-
-    <!-- Page CSS -->
-    <link rel="stylesheet" href="{% static 'users/assets/vendor/css/pages/page-auth.css' %}" />
-
-    <!-- Helpers -->
-    <script src="{% static 'users/assets/vendor/js/helpers.js' %}"></script>
-    <script src="{% static 'users/assets/js/config.js' %}"></script>
-
-    {% block extra_head %}{% endblock %}
-</head>
-<body>
-    {% if messages %}
-    <div class="messages-container">
-        {% for message in messages %}
-            {% if message.tags %}
-                {% with message_tags=message.tags.split %}
-                    {% if 'error' in message_tags %}
-                        <div class="alert alert-danger alert-dismissible" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    {% elif 'success' in message_tags %}
-                        <div class="alert alert-success alert-dismissible" role="alert">
-                            <i class="bi bi-check-circle-fill me-2"></i>
-                    {% elif 'warning' in message_tags %}
-                        <div class="alert alert-warning alert-dismissible" role="alert">
-                            <i class="bi bi-exclamation-circle me-2"></i>
-                    {% elif 'info' in message_tags %}
-                        <div class="alert alert-info alert-dismissible" role="alert">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                    {% elif 'debug' in message_tags %}
-                        <div class="alert alert-secondary alert-dismissible" role="alert">
-                            <i class="bi bi-bug-fill me-2"></i>
-                    {% else %}
-                        <div class="alert alert-primary alert-dismissible" role="alert">
-                            <i class="bi bi-bell-fill me-2"></i>
-                    {% endif %}
-                {% endwith %}
-            {% else %}
-                <div class="alert alert-primary alert-dismissible" role="alert">
-                    <i class="bi bi-bell-fill me-2"></i>
-            {% endif %}
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
-    {% block body_block %}{% endblock %}
-
-    <!-- Core JS -->
-    <script src="{% static 'users/assets/vendor/libs/jquery/jquery.js' %}"></script>
-    <script src="{% static 'users/assets/vendor/libs/popper/popper.js' %}"></script>
-    <script src="{% static 'users/assets/vendor/js/bootstrap.js' %}"></script>
-    <script src="{% static 'users/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
-    <script src="{% static 'users/assets/vendor/js/menu.js' %}"></script>
-
-    <!-- Main JS -->
-    <script src="{% static 'users/assets/js/main.js' %}"></script>
-
-    {% block extra_scripts %}{% endblock %}
-</body>
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+      {% block title %}{% endblock title %}
+      <meta name="description" content="" />
+      <!-- Favicon -->
+      <link href="{% static 'home/camera-lens.png' %}" rel="icon">
+      <!-- Fonts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <!-- Icons -->
+      <link rel="stylesheet" href="{% static 'users/assets/vendor/fonts/boxicons.css' %}" />
+      <!-- Core CSS -->
+      <link rel="stylesheet" href="{% static 'users/assets/vendor/css/core.css' %}" class="template-customizer-core-css" />
+      <link rel="stylesheet" href="{% static 'users/assets/vendor/css/theme-default.css' %}" class="template-customizer-theme-css" />
+      <link rel="stylesheet" href="{% static 'users/assets/css/demo.css' %}" />
+      <!-- Vendors CSS -->
+      <link rel="stylesheet" href="{% static 'users/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+      <!-- Page CSS -->
+      <link rel="stylesheet" href="{% static 'users/assets/vendor/css/pages/page-auth.css' %}" />
+      <!-- Helpers -->
+      <script src="{% static 'users/assets/vendor/js/helpers.js' %}"></script>
+      <script src="{% static 'users/assets/js/config.js' %}"></script>
+      {% block extra_head %}{% endblock %}
+   </head>
+   <body>
+      {% block body_block %}{% endblock %}
+      <!-- Core JS -->
+      <script src="{% static 'users/assets/vendor/libs/jquery/jquery.js' %}"></script>
+      <script src="{% static 'users/assets/vendor/libs/popper/popper.js' %}"></script>
+      <script src="{% static 'users/assets/vendor/js/bootstrap.js' %}"></script>
+      <script src="{% static 'users/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+      <script src="{% static 'users/assets/vendor/js/menu.js' %}"></script>
+      <!-- Main JS -->
+      <script src="{% static 'users/assets/js/main.js' %}"></script>
+      {% block extra_scripts %}{% endblock %}
+   </body>
 </html>

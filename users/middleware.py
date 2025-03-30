@@ -22,6 +22,8 @@ class ProfileCompletionMiddleware:
             reverse('users:complete_profile'),
             reverse('users:logout'),
             '/admin/',  # Admin URLs should be accessible
+            '/home/',  # Home page should be accessible
+            
         ]
 
         # Check if current URL is exempt
@@ -42,28 +44,32 @@ class ProfileCompletionMiddleware:
 
         return None
 
+    # users/middleware.py
     def is_profile_complete(self, user):
         """
         Check if user profile is complete based on role-specific requirements
         """
-        # Common required fields for all users
-        if not user.avatar or not user.phone_number:
+        # Avatar is mandatory for all users
+        if not user.avatar:
+            return False
+            
+        # Phone number is required for all users
+        if not user.phone_number:
             return False
 
         # Role-specific checks
         if user.role == 'ORGANIZER':
-            if not user.company_name or not user.website:
+            # Only company_name is required, website is optional
+            if not user.company_name:
                 return False
 
         elif user.role == 'PHOTOGRAPHER':
-            if not user.portfolio_url or not user.photographer_role:
+            # Only photographer_role is required, portfolio_url is optional
+            if not user.photographer_role:
                 return False
-            # Watermark is optional, so not checking for it
 
         elif user.role == 'PARTICIPANT':
-            if not user.image_visibility:
-                return False
-            # blur_requested and remove_requested are boolean fields 
-            # that default to False, so no need to check them
+            # No additional checks for participants
+            pass
 
         return True

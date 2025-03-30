@@ -1,111 +1,100 @@
 {% extends 'users/auth_base.html' %}
 {% load static %}
-
-{% block title %}SnapFlow : Register {% endblock %}
-
+{% block title %} 
+<title>SnapFlow : Register </title>
+{% endblock title %}
 {% block body_block %}
 <div class="container-xxl">
-    <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner">
-            <div class="card">
-                <div class="card-body">
-                    <div class="app-brand justify-content-center">
-                        <a href="{% url 'home:landing' %}" class="app-brand-link gap-2">
-                            <span class="app-brand-text demo text-body fw-bolder">SnapFlow</span>
-                        </a>
-                    </div>
-                    <h4 class="mb-2">Join Us Today 🚀</h4>
-                    <p class="mb-4">Create an account to start your journey</p>
-
-                    <form method="post" action="{% url 'users:register' %}" class="mb-3">
-                        {% csrf_token %}
-                        
-                        {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
-                        </div>
+   <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+         <div class="card">
+            <div class="card-body">
+               <div class="app-brand justify-content-center">
+                  <a href="{% url 'home:landing' %}" class="app-brand-link gap-2">
+                  <span class="app-brand-text demo text-body fw-bolder">SnapFlow</span>
+                  </a>
+               </div>
+               <h4 class="mb-2">Join Us Today 🚀</h4>
+               <p class="mb-4">Create an account to start your journey</p>
+               <form method="post" action="{% url 'users:register' %}" class="mb-3">
+                  {% csrf_token %}
+                  {% if form.non_field_errors %}
+                  <div class="alert alert-danger">
+                     {{ form.non_field_errors }}
+                  </div>
+                  {% endif %}
+                  <div class="mb-3">
+                     <label for="role" class="form-label">User Type</label>
+                     <select class="form-control" name="role" required>
+                        <option value="" disabled selected>Select User Type</option>
+                        <option value="ORGANIZER">Event Organizer</option>
+                        <option value="PHOTOGRAPHER">Photographer</option>
+                        <option value="PARTICIPANT">Event Participant</option>
+                     </select>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-md-6">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter your first name" required />
+                        {% if form.first_name.errors %}
+                        <div class="text-danger">{{ form.first_name.errors }}</div>
                         {% endif %}
-                    
-                        <div class="mb-3">
-                            <label for="role" class="form-label">User Type</label>
-                            <select class="form-control" name="role" required>
-                                <option value="" disabled selected>Select User Type</option>
-                                <option value="ORGANIZER">Event Organizer</option>
-                                <option value="PHOTOGRAPHER">Photographer</option>
-                                <option value="PARTICIPANT">Event Participant</option>
-                            </select>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter your first name" required />
-                                {% if form.first_name.errors %}
-                                <div class="text-danger">{{ form.first_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Enter your last name" required />
-                                {% if form.last_name.errors %}
-                                <div class="text-danger">{{ form.last_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required />
-                            {% if form.username.errors %}
-                            <div class="text-danger">{{ form.username.errors }}</div>
-                            {% endif %}
-                        </div>
-                    
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required />
-                            {% if form.email.errors %}
-                            <div class="text-danger">{{ form.email.errors }}</div>
-                            {% endif %}
-                        </div>
-                    
-                        <div class="mb-3 form-password-toggle">
-                            <label class="form-label" for="password1">Password</label>
-                            <div class="input-group input-group-merge">
-                                <input type="password" id="password1" class="form-control" name="password1" placeholder="••••••••" required />
-                                <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
-                            </div>
-                            {% if form.password1.errors %}
-                            <div class="text-danger">{{ form.password1.errors }}</div>
-                            {% endif %}
-                        </div>
-                    
-                        <div class="mb-3 form-password-toggle">
-                            <label class="form-label" for="password2">Confirm Password</label>
-                            <div class="input-group input-group-merge">
-                                <input type="password" id="password2" class="form-control" name="password2" placeholder="••••••••" required />
-                                <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
-                            </div>
-                            {% if form.password2.errors %}
-                            <div class="text-danger">{{ form.password2.errors }}</div>
-                            {% endif %}
-                        </div>
-                    
-                        <div class="mb-3">
-                            <button class="btn btn-primary d-grid w-100" type="submit">Sign up</button>
-                        </div>
-                    </form>
-                    
-
-                    <p class="text-center">
-                        <span>Already have an account?</span>
-                        <a href="{% url 'users:login' %}">
-                            <span>Sign in instead</span>
-                        </a>
-                    </p>
-                </div>
+                     </div>
+                     <div class="col-md-6">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Enter your last name" required />
+                        {% if form.last_name.errors %}
+                        <div class="text-danger">{{ form.last_name.errors }}</div>
+                        {% endif %}
+                     </div>
+                  </div>
+                  <div class="mb-3">
+                     <label for="username" class="form-label">Username</label>
+                     <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required />
+                     {% if form.username.errors %}
+                     <div class="text-danger">{{ form.username.errors }}</div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3">
+                     <label for="email" class="form-label">Email</label>
+                     <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required />
+                     {% if form.email.errors %}
+                     <div class="text-danger">{{ form.email.errors }}</div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3 form-password-toggle">
+                     <label class="form-label" for="password1">Password</label>
+                     <div class="input-group input-group-merge">
+                        <input type="password" id="password1" class="form-control" name="password1" placeholder="••••••••" required />
+                        <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                     </div>
+                     {% if form.password1.errors %}
+                     <div class="text-danger">{{ form.password1.errors }}</div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3 form-password-toggle">
+                     <label class="form-label" for="password2">Confirm Password</label>
+                     <div class="input-group input-group-merge">
+                        <input type="password" id="password2" class="form-control" name="password2" placeholder="••••••••" required />
+                        <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                     </div>
+                     {% if form.password2.errors %}
+                     <div class="text-danger">{{ form.password2.errors }}</div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3">
+                     <button class="btn btn-primary d-grid w-100" type="submit">Sign up</button>
+                  </div>
+               </form>
+               <p class="text-center">
+                  <span>Already have an account?</span>
+                  <a href="{% url 'users:login' %}">
+                  <span>Sign in instead</span>
+                  </a>
+               </p>
             </div>
-        </div>
-    </div>
+         </div>
+      </div>
+   </div>
 </div>
 {% endblock %}

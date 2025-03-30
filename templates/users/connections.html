@@ -1,0 +1,257 @@
+{% extends "users/db_base.html" %}
+{% load static %}
+{% block title %} 
+<title>SnapFlow : Profile | Connections </title>
+{% endblock title %}
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+   <h4 class="fw-bold py-3 mb-4">
+      <span class="text-muted fw-light">Account Settings / </span> Connections
+   </h4>
+   <div class="row">
+      <div class="col-md-12">
+         <ul class="nav nav-pills flex-column flex-md-row mb-3">
+            <li class="nav-item">
+               <a class="nav-link" href="{% url 'users:profile' %}">
+               <i class="bx bx-user me-1"></i> Account
+               </a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link" href="{% url 'notifications:list' %}">
+               <i class="bx bx-bell me-1"></i> Notifications
+               </a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link active" href="javascript:void(0);">
+               <i class="bx bx-link-alt me-1"></i> Connections
+               </a>
+            </li>
+         </ul>
+         {% if messages %}
+         <div class="row mb-4">
+            <div class="col-md-12">
+               {% for message in messages %}
+               <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+               </div>
+               {% endfor %}
+            </div>
+         </div>
+         {% endif %}
+         <div class="row">
+            <!-- Connected Accounts Section -->
+            <div class="col-md-6 col-12 mb-md-0 mb-4">
+               <div class="card">
+                  <h5 class="card-header">Connected Accounts</h5>
+                  <div class="card-body">
+                     <p>Display content from your connected accounts on your site</p>
+                     <!-- Connections -->
+                     {% for connection in app_connections %}
+                     <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                           <img src="{% static 'users/assets/img/icons/brands/'|add:connection.platform|lower|add:'.png' %}" 
+                              alt="{{ connection.platform|lower }}" class="me-3" height="30" />
+                        </div>
+                        <div class="flex-grow-1 row">
+                           <div class="col-9 mb-sm-0 mb-2">
+                              <h6 class="mb-0">{{ connection.label }}</h6>
+                              {% if connection.is_connected and connection.connection.username %}
+                              <small>{{ connection.connection.username }}</small>
+                              {% else %}
+                              <small class="text-muted">
+                              {% if connection.platform == 'GOOGLE' %}Calendar and contacts
+                              {% elif connection.platform == 'SLACK' %}Communication
+                              {% elif connection.platform == 'GITHUB' %}Manage your Git repositories
+                              {% elif connection.platform == 'MAILCHIMP' %}Email marketing service
+                              {% elif connection.platform == 'ASANA' %}Communication
+                              {% endif %}
+                              </small>
+                              {% endif %}
+                           </div>
+                           <div class="col-3 text-end">
+                              {% if connection.is_connected %}
+                              <form method="post">
+                                 {% csrf_token %}
+                                 <input type="hidden" name="platform" value="{{ connection.platform }}">
+                                 <input type="hidden" name="action" value="disconnect">
+                                 <button type="submit" class="btn btn-icon btn-outline-danger">
+                                 <i class="bx bx-trash-alt"></i>
+                                 </button>
+                              </form>
+                              {% else %}
+                              <button type="button" class="btn btn-icon btn-outline-secondary" 
+                                 data-bs-toggle="modal" data-bs-target="#connectModal{{ connection.platform }}">
+                              <i class="bx bx-link-alt"></i>
+                              </button>
+                              <!-- Modal for manual connection -->
+                              <div class="modal fade" id="connectModal{{ connection.platform }}" tabindex="-1" aria-hidden="true">
+                                 <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                       <form method="post">
+                                          {% csrf_token %}
+                                          <input type="hidden" name="platform" value="{{ connection.platform }}">
+                                          <input type="hidden" name="action" value="connect">
+                                          <div class="modal-header">
+                                             <h5 class="modal-title">Connect to {{ connection.label }}</h5>
+                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                          </div>
+                                          <div class="modal-body">
+                                             <div class="row">
+                                                <div class="col-12 mb-3">
+                                                   <label for="id_username" class="form-label">Username</label>
+                                                   {{ connection.form.username }}
+                                                   {% if connection.form.username.errors %}
+                                                   <div class="invalid-feedback d-block">
+                                                      {{ connection.form.username.errors }}
+                                                   </div>
+                                                   {% endif %}
+                                                </div>
+                                                <div class="col-12 mb-3">
+                                                   <label for="id_profile_url" class="form-label">Profile URL</label>
+                                                   {{ connection.form.profile_url }}
+                                                   {% if connection.form.profile_url.errors %}
+                                                   <div class="invalid-feedback d-block">
+                                                      {{ connection.form.profile_url.errors }}
+                                                   </div>
+                                                   {% endif %}
+                                                </div>
+                                             </div>
+                                          </div>
+                                          <div class="modal-footer">
+                                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                             Cancel
+                                             </button>
+                                             <button type="submit" class="btn btn-primary">Connect</button>
+                                          </div>
+                                       </form>
+                                    </div>
+                                 </div>
+                              </div>
+                              {% endif %}
+                           </div>
+                        </div>
+                     </div>
+                     {% endfor %}
+                     <!-- /Connections -->
+                  </div>
+               </div>
+            </div>
+            <!-- Social Accounts Section -->
+            <div class="col-md-6 col-12">
+               <div class="card">
+                  <h5 class="card-header">Social Accounts</h5>
+                  <div class="card-body">
+                     <p>Display content from social accounts on your site</p>
+                     <!-- Social Accounts -->
+                     {% for social in social_media %}
+                     <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                           <img src="{% static 'users/assets/img/icons/brands/'|add:social.platform|lower|add:'.png' %}" 
+                              alt="{{ social.platform|lower }}" class="me-3" height="30" />
+                        </div>
+                        <div class="flex-grow-1 row">
+                           <div class="col-8 col-sm-7 mb-sm-0 mb-2">
+                              <h6 class="mb-0">{{ social.label }}</h6>
+                              {% if social.is_connected %}
+                              {% if social.connection.profile_url %}
+                              <a href="{{ social.connection.profile_url }}" target="_blank">
+                              @{{ social.connection.username }}
+                              </a>
+                              {% else %}
+                              <span>{{ social.connection.username }}</span>
+                              {% endif %}
+                              {% else %}
+                              <small class="text-muted">Not Connected</small>
+                              {% endif %}
+                           </div>
+                           <div class="col-4 col-sm-5 text-end">
+                              {% if social.is_connected %}
+                              <form method="post">
+                                 {% csrf_token %}
+                                 <input type="hidden" name="platform" value="{{ social.platform }}">
+                                 <input type="hidden" name="action" value="disconnect">
+                                 <button type="submit" class="btn btn-icon btn-outline-danger">
+                                 <i class="bx bx-trash-alt"></i>
+                                 </button>
+                              </form>
+                              {% else %}
+                              <button type="button" class="btn btn-icon btn-outline-secondary" 
+                                 data-bs-toggle="modal" data-bs-target="#connectModal{{ social.platform }}">
+                              <i class="bx bx-link-alt"></i>
+                              </button>
+                              <!-- Modal for manual connection -->
+                              <div class="modal fade" id="connectModal{{ social.platform }}" tabindex="-1" aria-hidden="true">
+                                 <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                       <form method="post">
+                                          {% csrf_token %}
+                                          <input type="hidden" name="platform" value="{{ social.platform }}">
+                                          <input type="hidden" name="action" value="connect">
+                                          <div class="modal-header">
+                                             <h5 class="modal-title">Connect to {{ social.label }}</h5>
+                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                          </div>
+                                          <div class="modal-body">
+                                             <div class="row">
+                                                <div class="col-12 mb-3">
+                                                   <label for="id_username" class="form-label">Username</label>
+                                                   {{ social.form.username }}
+                                                   {% if social.form.username.errors %}
+                                                   <div class="invalid-feedback d-block">
+                                                      {{ social.form.username.errors }}
+                                                   </div>
+                                                   {% endif %}
+                                                </div>
+                                                <div class="col-12 mb-3">
+                                                   <label for="id_profile_url" class="form-label">Profile URL</label>
+                                                   {{ social.form.profile_url }}
+                                                   {% if social.form.profile_url.errors %}
+                                                   <div class="invalid-feedback d-block">
+                                                      {{ social.form.profile_url.errors }}
+                                                   </div>
+                                                   {% endif %}
+                                                </div>
+                                             </div>
+                                          </div>
+                                          <div class="modal-footer">
+                                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                             Cancel
+                                             </button>
+                                             <button type="submit" class="btn btn-primary">Connect</button>
+                                          </div>
+                                       </form>
+                                    </div>
+                                 </div>
+                              </div>
+                              {% endif %}
+                           </div>
+                        </div>
+                     </div>
+                     {% endfor %}
+                     <!-- /Social Accounts -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+   document.addEventListener('DOMContentLoaded', function() {
+     // Show any modals that need to be displayed on page load
+     const urlParams = new URLSearchParams(window.location.search);
+     const showModal = urlParams.get('show_modal');
+     
+     if (showModal) {
+       const modalElement = document.getElementById('connectModal' + showModal);
+       if (modalElement) {
+         const modal = new bootstrap.Modal(modalElement);
+         modal.show();
+       }
+     }
+   });
+</script>
+{% endblock %}

@@ -1,363 +1,338 @@
 {% extends "users/auth_base.html" %}
 {% load static %}
-
-{% block title %} <title>SnapFlow : Complete Profile </title>{% endblock title %}
-
+{% block title %} 
+<title>SnapFlow : Complete Profile </title>
+{% endblock title %}
 {% block extra_head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <style>
-    .image-container {
-        max-width: 100%;
-        position: relative;
-    }
-    #preview {
-        display: block;
-        max-width: 100%;
-    }
-    .preview-container {
-        overflow: hidden;
-        width: 150px;
-        height: 150px;
-        margin: 10px auto;
-        border-radius: 50%;
-        border: 2px solid #ccc;
-    }
-    .cropper-container {
-        margin-bottom: 20px;
-    }
-    .btn-crop {
-        margin-top: 10px;
-    }
-    .img-preview {
-        display: none;
-    }
-    /* Debug styles for development */
-    .form-errors {
-        color: red;
-        font-weight: bold;
-    }
+   .image-container {
+   max-width: 100%;
+   position: relative;
+   }
+   #preview {
+   display: block;
+   max-width: 100%;
+   }
+   .preview-container {
+   overflow: hidden;
+   width: 150px;
+   height: 150px;
+   margin: 10px auto;
+   border-radius: 50%;
+   border: 2px solid #ccc;
+   }
+   .cropper-container {
+   margin-bottom: 20px;
+   }
+   .btn-crop {
+   margin-top: 10px;
+   }
+   .img-preview {
+   display: none;
+   }
+   /* Debug styles for development */
+   .form-errors {
+   color: red;
+   font-weight: bold;
+   }
 </style>
 {% endblock %}
-
 {% block body_block %}
 <div class="container-xxl">
-    <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner">
-            <div class="card">
-                <div class="card-body">
-                    <div class="app-brand justify-content-center">
-                        <a href="{% url 'home:landing' %}" class="app-brand-link gap-2">
-                            <span class="app-brand-text demo text-body fw-bolder">SnapFlow</span>
-                        </a>
-                    </div>
-                    <h4 class="mb-2">Complete Your Profile</h4>
-                    <p class="mb-4">Fill in the required details to complete your account setup.</p>
-
-                    <!-- Display Django Messages -->
-                    {% if messages %}
-                    <div class="messages-container">
-                        {% for message in messages %}
-                            {% if message.tags %}
-                                {% with message_tags=message.tags.split %}
-                                    {% if 'error' in message_tags %}
-                                        <div class="alert alert-danger alert-dismissible" role="alert">
-                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    {% elif 'success' in message_tags %}
-                                        <div class="alert alert-success alert-dismissible" role="alert">
-                                            <i class="bi bi-check-circle-fill me-2"></i>
-                                    {% elif 'warning' in message_tags %}
-                                        <div class="alert alert-warning alert-dismissible" role="alert">
-                                            <i class="bi bi-exclamation-circle me-2"></i>
-                                    {% elif 'info' in message_tags %}
-                                        <div class="alert alert-info alert-dismissible" role="alert">
-                                            <i class="bi bi-info-circle-fill me-2"></i>
-                                    {% elif 'debug' in message_tags %}
-                                        <div class="alert alert-secondary alert-dismissible" role="alert">
-                                            <i class="bi bi-bug-fill me-2"></i>
-                                    {% else %}
-                                        <div class="alert alert-primary alert-dismissible" role="alert">
-                                            <i class="bi bi-bell-fill me-2"></i>
-                                    {% endif %}
-                                {% endwith %}
-                            {% else %}
-                                <div class="alert alert-primary alert-dismissible" role="alert">
-                                    <i class="bi bi-bell-fill me-2"></i>
-                            {% endif %}
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
-                    <form method="POST" enctype="multipart/form-data" class="mb-3" id="profile-form">
-                        {% csrf_token %}
-
-                        <!-- Show Form Errors -->
-                        {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <strong>Please correct the following errors:</strong>
-                            <ul>
-                                {% for field, errors in form.errors.items %}
-                                    {% for error in errors %}
-                                        <li>{{ field }}: {{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-
-                        <!-- Avatar Upload with Cropping -->
-                        <div class="mb-3">
-                            <label class="form-label">Profile Picture</label>
-                            <input type="file" class="form-control" name="avatar_input" id="avatar-input" accept="image/*">
-                            <input type="hidden" name="avatar_data" id="avatar-data">
-                            {{ form.avatar }}
-                            
-                            <!-- Image Preview and Cropping Area -->
-                            <div class="image-container mt-3" id="cropper-container" style="display: none;">
-                                <img id="preview" src="#" alt="Preview">
-                                <div class="btn-toolbar mt-2">
-                                    <button type="button" class="btn btn-primary btn-crop" id="crop-btn">Crop Image</button>
-                                    <button type="button" class="btn btn-outline-secondary ms-2" id="cancel-crop">Cancel</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Cropped Preview -->
-                            <div class="preview-container mt-3" id="cropped-preview-container" style="display: none;">
-                                <img id="cropped-preview" src="#" alt="Cropped Preview" style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                            
-                            {% if form.avatar.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.avatar.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Phone Number -->
-                        <div class="mb-3">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" name="phone_number" placeholder="Enter your phone number" value="{{ form.phone_number.value|default:'' }}" />
-                            {% if form.phone_number.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.phone_number.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Role-Specific Fields -->
-                        {% if user.role == 'ORGANIZER' %}
-                        <div class="mb-3">
-                            <label class="form-label">Company Name</label>
-                            <input type="text" class="form-control" name="company_name" placeholder="Company Name" value="{{ form.company_name.value|default:'' }}" />
-                            {% if form.company_name.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.company_name.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Website URL</label>
-                            <input type="url" class="form-control" name="website" placeholder="Website URL" value="{{ form.website.value|default:'' }}" />
-                            {% if form.website.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.website.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-
-                        {% if user.role == 'PHOTOGRAPHER' %}
-                        <div class="mb-3">
-                            <label class="form-label">Portfolio URL</label>
-                            <input type="url" class="form-control" name="portfolio_url" placeholder="Portfolio URL" value="{{ form.portfolio_url.value|default:'' }}" />
-                            {% if form.portfolio_url.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.portfolio_url.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Photography Role</label>
-                            <select class="form-control" name="photographer_role">
-                                <option value="" disabled {% if not form.photographer_role.value %}selected{% endif %}>Select Role</option>
-                                {% for value, label in form.photographer_role.field.choices %}
-                                    <option value="{{ value }}" {% if value == form.photographer_role.value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                            {% if form.photographer_role.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.photographer_role.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Use Watermark?</label>
-                            {{ form.watermark }}
-                            {% if form.watermark.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.watermark.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-
-                        {% if user.role == 'PARTICIPANT' %}
-
-                        <div class="mb-3">
-                            <label class="form-label">Image Visibility</label>
-                            <select class="form-control" name="image_visibility">
-                                <option value="PUBLIC" {% if form.image_visibility.value == 'PUBLIC' %}selected{% endif %}>Public</option>
-                                <option value="PRIVATE" {% if form.image_visibility.value == 'PRIVATE' %}selected{% endif %}>Private</option>
-                                <option value="EVENT_ONLY" {% if form.image_visibility.value == 'EVENT_ONLY' %}selected{% endif %}>Event Only</option>
-                            </select>
-                            {% if form.image_visibility.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.image_visibility.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input class="form-check-input" type="checkbox" name="blur_requested" {% if form.blur_requested.value %}checked{% endif %} />
-                            <label class="form-check-label">Request Face Blur in Photos</label>
-                            {% if form.blur_requested.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.blur_requested.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input class="form-check-input" type="checkbox" name="remove_requested" {% if form.remove_requested.value %}checked{% endif %} />
-                            <label class="form-check-label">Request Photo Removal Option</label>
-                            {% if form.remove_requested.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.remove_requested.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-
-                        <!-- Non-Field Errors -->
-                        {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                <p class="error-message">{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <button type="submit" class="btn btn-primary d-grid w-100">Complete Profile</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="authentication-wrapper authentication-basic container-p-y">
+<div class="authentication-inner">
+<div class="card">
+<div class="card-body">
+<div class="app-brand justify-content-center">
+   <a href="{% url 'home:landing' %}" class="app-brand-link gap-2">
+   <span class="app-brand-text demo text-body fw-bolder">SnapFlow</span>
+   </a>
 </div>
-
+<h4 class="mb-2">Complete Your Profile</h4>
+<p class="mb-4">Fill in the required details to complete your account setup.</p>
+<!-- Display Django Messages -->
+{% if messages %}
+<div class="messages-container">
+{% for message in messages %}
+{% if message.tags %}
+{% with message_tags=message.tags.split %}
+{% if 'error' in message_tags %}
+<div class="alert alert-danger alert-dismissible" role="alert">
+   <i class="bi bi-exclamation-triangle-fill me-2"></i>
+   {% elif 'success' in message_tags %}
+   <div class="alert alert-success alert-dismissible" role="alert">
+      <i class="bi bi-check-circle-fill me-2"></i>
+      {% elif 'warning' in message_tags %}
+      <div class="alert alert-warning alert-dismissible" role="alert">
+         <i class="bi bi-exclamation-circle me-2"></i>
+         {% elif 'info' in message_tags %}
+         <div class="alert alert-info alert-dismissible" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            {% elif 'debug' in message_tags %}
+            <div class="alert alert-secondary alert-dismissible" role="alert">
+               <i class="bi bi-bug-fill me-2"></i>
+               {% else %}
+               <div class="alert alert-primary alert-dismissible" role="alert">
+                  <i class="bi bi-bell-fill me-2"></i>
+                  {% endif %}
+                  {% endwith %}
+                  {% else %}
+                  <div class="alert alert-primary alert-dismissible" role="alert">
+                     <i class="bi bi-bell-fill me-2"></i>
+                     {% endif %}
+                     {{ message }}
+                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                  {% endfor %}
+               </div>
+               {% endif %}
+               <form method="POST" enctype="multipart/form-data" class="mb-3" id="profile-form">
+                  {% csrf_token %}
+                  <!-- Avatar Upload with Cropping -->
+                  <div class="mb-3 {% if form.avatar.errors %}has-error{% endif %}">
+                     <label class="form-label">Profile Picture <span class="text-danger">*</span></label>
+                     <input type="file" class="form-control" name="avatar_input" id="avatar-input" accept="image/*">
+                     <input type="hidden" name="avatar_data" id="avatar-data" value="{{ form.avatar_data.value|default:'' }}">
+                     {{ form.avatar }}
+                     <small class="form-text text-muted">Upload a profile image (required)</small>
+                     <!-- Image Preview and Cropping Area -->
+                     <div class="image-container mt-3" id="cropper-container" style="display: none;">
+                        <img id="preview" src="#" alt="Preview">
+                        <div class="btn-toolbar mt-2">
+                           <button type="button" class="btn btn-primary btn-crop" id="crop-btn">Crop Image</button>
+                           <button type="button" class="btn btn-outline-secondary ms-2" id="cancel-crop">Cancel</button>
+                        </div>
+                     </div>
+                     <!-- Cropped Preview -->
+                     <div class="preview-container mt-3" id="cropped-preview-container" style="display: none;">
+                        <img id="cropped-preview" src="#" alt="Cropped Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                     </div>
+                     {% if form.avatar.errors %}
+                     <div class="text-danger mt-1 field-error">
+                        {{ form.avatar.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  <!-- Phone Number -->
+                  <div class="mb-3 {% if form.phone_number.errors %}has-error{% endif %}">
+                     <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                     <input type="tel" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" name="phone_number" placeholder="Enter your phone number (e.g., +1234567890)" value="{{ form.phone_number.value|default:'' }}" required />
+                     <small class="form-text text-muted">Format: +999999999 (up to 15 digits)</small>
+                     {% if form.phone_number.errors %}
+                     <div class="invalid-feedback">
+                        {{ form.phone_number.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  <!-- Role-Specific Fields -->
+                  {% if user.role == 'ORGANIZER' %}
+                  <div class="mb-3 {% if form.company_name.errors %}has-error{% endif %}">
+                     <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                     <input type="text" class="form-control {% if form.company_name.errors %}is-invalid{% endif %}" name="company_name" placeholder="Company Name" value="{{ form.company_name.value|default:'' }}" required />
+                     {% if form.company_name.errors %}
+                     <div class="invalid-feedback">
+                        {{ form.company_name.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3 {% if form.website.errors %}has-error{% endif %}">
+                     <label class="form-label">Website URL</label>
+                     <input type="url" class="form-control {% if form.website.errors %}is-invalid{% endif %}" name="website" placeholder="Website URL (optional)" value="{{ form.website.value|default:'' }}" />
+                     <small class="form-text text-muted">Format: https://example.com</small>
+                     {% if form.website.errors %}
+                     <div class="invalid-feedback">
+                        {{ form.website.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  {% endif %}
+                  {% if user.role == 'PHOTOGRAPHER' %}
+                  <div class="mb-3 {% if form.portfolio_url.errors %}has-error{% endif %}">
+                     <label class="form-label">Portfolio URL</label>
+                     <input type="url" class="form-control {% if form.portfolio_url.errors %}is-invalid{% endif %}" name="portfolio_url" placeholder="Portfolio URL (optional)" value="{{ form.portfolio_url.value|default:'' }}" />
+                     <small class="form-text text-muted">Format: https://example.com</small>
+                     {% if form.portfolio_url.errors %}
+                     <div class="invalid-feedback">
+                        {{ form.portfolio_url.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3 {% if form.photographer_role.errors %}has-error{% endif %}">
+                     <label class="form-label">Photography Role <span class="text-danger">*</span></label>
+                     <select class="form-control {% if form.photographer_role.errors %}is-invalid{% endif %}" name="photographer_role" required>
+                     <option value="" disabled {% if not form.photographer_role.value %}selected{% endif %}>Select Role</option>
+                     {% for value, label in form.photographer_role.field.choices %}
+                     <option value="{{ value }}" {% if value == form.photographer_role.value %}selected{% endif %}>{{ label }}</option>
+                     {% endfor %}
+                     </select>
+                     {% if form.photographer_role.errors %}
+                     <div class="invalid-feedback">
+                        {{ form.photographer_role.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  <div class="mb-3 {% if form.watermark.errors %}has-error{% endif %}">
+                     <label class="form-label">Watermark (optional)</label>
+                     <input type="file" class="form-control {% if form.watermark.errors %}is-invalid{% endif %}" name="watermark" accept=".png" />
+                     <small class="form-text text-muted">Upload a PNG image to use as your watermark</small>
+                     {% if form.watermark.errors %}
+                     <div class="invalid-feedback">
+                        {{ form.watermark.errors }}
+                     </div>
+                     {% endif %}
+                  </div>
+                  {% endif %}
+                  {% if user.role == 'PARTICIPANT' %}
+                  <!-- Participant-specific fields have been removed as requested -->
+                  {% endif %}
+                  <!-- Non-Field Errors -->
+                  {% if form.non_field_errors %}
+                  <div class="alert alert-danger">
+                     {% for error in form.non_field_errors %}
+                     <p class="error-message">{{ error }}</p>
+                     {% endfor %}
+                  </div>
+                  {% endif %}
+                  <button type="submit" class="btn btn-primary d-grid w-100">Complete Profile</button>
+               </form>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+<!-- Add this CSS to the head or your CSS file -->
+<style>
+   .has-error .form-control {
+   border-color: #dc3545;
+   }
+   .field-error, .invalid-feedback {
+   color: #dc3545;
+   display: block;
+   margin-top: 0.25rem;
+   font-size: 0.875em;
+   }
+</style>
+<!-- Add this script to preserve the cropped image when form validation fails -->
+<script>
+   document.addEventListener('DOMContentLoaded', function() {
+       // Check if there's a value in the avatar_data hidden field
+       const avatarData = document.getElementById('avatar-data').value;
+       if (avatarData) {
+           // Show the cropped preview
+           const croppedPreviewContainer = document.getElementById('cropped-preview-container');
+           const croppedPreview = document.getElementById('cropped-preview');
+           
+           if (croppedPreviewContainer && croppedPreview) {
+               croppedPreview.src = avatarData;
+               croppedPreviewContainer.style.display = 'block';
+           }
+       }
+   });
+</script>
 <!-- JavaScript for Image Cropping -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const avatarInput = document.getElementById('avatar-input');
-        const avatarData = document.getElementById('avatar-data');
-        const preview = document.getElementById('preview');
-        const cropperContainer = document.getElementById('cropper-container');
-        const croppedPreviewContainer = document.getElementById('cropped-preview-container');
-        const croppedPreview = document.getElementById('cropped-preview');
-        const cropBtn = document.getElementById('crop-btn');
-        const cancelBtn = document.getElementById('cancel-btn');
-        let cropper;
-
-        // Show preview and initialize cropper when image is selected
-        avatarInput.addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (!files || !files.length) return;
-            
-            const file = files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                cropperContainer.style.display = 'block';
-                croppedPreviewContainer.style.display = 'none';
-                
-                // Destroy existing cropper if it exists
-                if (cropper) {
-                    cropper.destroy();
-                }
-                
-                // Initialize cropper
-                cropper = new Cropper(preview, {
-                    aspectRatio: 1, // Square aspect ratio for profile picture
-                    viewMode: 1,    // Restrict the crop box to not exceed the size of the canvas
-                    guides: true,   // Show guides
-                    center: true,   // Show center indicator
-                    background: false, // Hide the black modal
-                    autoCropArea: 0.8, // Define default size of the cropping area
-                    movable: true,
-                    zoomable: true,
-                    rotatable: true,
-                });
-            };
-            
-            reader.readAsDataURL(file);
-        });
-        
-        // Crop the image when crop button is clicked
-        cropBtn.addEventListener('click', function() {
-            if (!cropper) return;
-            
-            // Get cropped image as a canvas
-            const canvas = cropper.getCroppedCanvas({
-                width: 300,
-                height: 300,
-                fillColor: '#fff',
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high',
-            });
-            
-            // Show the cropped image
-            croppedPreview.src = canvas.toDataURL('image/jpeg', 0.9);
-            croppedPreviewContainer.style.display = 'block';
-            
-            // Store the cropped image data in the hidden input
-            avatarData.value = canvas.toDataURL('image/jpeg', 0.9);
-            
-            // Hide the cropper
-            cropperContainer.style.display = 'none';
-            
-            // Destroy the cropper
-            cropper.destroy();
-            cropper = null;
-        });
-        
-        // Fix for the cancel button - wrong ID in event listener
-        document.getElementById('cancel-crop').addEventListener('click', function() {
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-            
-            cropperContainer.style.display = 'none';
-            avatarInput.value = '';
-        });
-        
-        // Validate form submission
-        document.getElementById('profile-form').addEventListener('submit', function(e) {
-            console.log("Form submission triggered");
-            // If a file was selected but not cropped, show an alert
-            if (avatarInput.files.length > 0 && !avatarData.value) {
-                e.preventDefault();
-                alert('Please crop your profile picture before submitting.');
-            } else {
-                console.log("Form validation passed, submitting...");
-                // Log the avatar data for debugging (truncated)
-                if (avatarData.value) {
-                    console.log("Avatar data length: " + avatarData.value.length);
-                }
-            }
-        });
-    });
+   document.addEventListener('DOMContentLoaded', function() {
+       const avatarInput = document.getElementById('avatar-input');
+       const avatarData = document.getElementById('avatar-data');
+       const preview = document.getElementById('preview');
+       const cropperContainer = document.getElementById('cropper-container');
+       const croppedPreviewContainer = document.getElementById('cropped-preview-container');
+       const croppedPreview = document.getElementById('cropped-preview');
+       const cropBtn = document.getElementById('crop-btn');
+       const cancelBtn = document.getElementById('cancel-btn');
+       let cropper;
+   
+       // Show preview and initialize cropper when image is selected
+       avatarInput.addEventListener('change', function(e) {
+           const files = e.target.files;
+           if (!files || !files.length) return;
+           
+           const file = files[0];
+           const reader = new FileReader();
+           
+           reader.onload = function(e) {
+               preview.src = e.target.result;
+               cropperContainer.style.display = 'block';
+               croppedPreviewContainer.style.display = 'none';
+               
+               // Destroy existing cropper if it exists
+               if (cropper) {
+                   cropper.destroy();
+               }
+               
+               // Initialize cropper
+               cropper = new Cropper(preview, {
+                   aspectRatio: 1, // Square aspect ratio for profile picture
+                   viewMode: 1,    // Restrict the crop box to not exceed the size of the canvas
+                   guides: true,   // Show guides
+                   center: true,   // Show center indicator
+                   background: false, // Hide the black modal
+                   autoCropArea: 0.8, // Define default size of the cropping area
+                   movable: true,
+                   zoomable: true,
+                   rotatable: true,
+               });
+           };
+           
+           reader.readAsDataURL(file);
+       });
+       
+       // Crop the image when crop button is clicked
+       cropBtn.addEventListener('click', function() {
+           if (!cropper) return;
+           
+           // Get cropped image as a canvas
+           const canvas = cropper.getCroppedCanvas({
+               width: 300,
+               height: 300,
+               fillColor: '#fff',
+               imageSmoothingEnabled: true,
+               imageSmoothingQuality: 'high',
+           });
+           
+           // Show the cropped image
+           croppedPreview.src = canvas.toDataURL('image/jpeg', 0.9);
+           croppedPreviewContainer.style.display = 'block';
+           
+           // Store the cropped image data in the hidden input
+           avatarData.value = canvas.toDataURL('image/jpeg', 0.9);
+           
+           // Hide the cropper
+           cropperContainer.style.display = 'none';
+           
+           // Destroy the cropper
+           cropper.destroy();
+           cropper = null;
+       });
+       
+       // Fix for the cancel button - wrong ID in event listener
+       document.getElementById('cancel-crop').addEventListener('click', function() {
+           if (cropper) {
+               cropper.destroy();
+               cropper = null;
+           }
+           
+           cropperContainer.style.display = 'none';
+           avatarInput.value = '';
+       });
+       
+       // Validate form submission
+       document.getElementById('profile-form').addEventListener('submit', function(e) {
+           console.log("Form submission triggered");
+           // If a file was selected but not cropped, show an alert
+           if (avatarInput.files.length > 0 && !avatarData.value) {
+               e.preventDefault();
+               alert('Please crop your profile picture before submitting.');
+           } else {
+               console.log("Form validation passed, submitting...");
+               // Log the avatar data for debugging (truncated)
+               if (avatarData.value) {
+                   console.log("Avatar data length: " + avatarData.value.length);
+               }
+           }
+       });
+   });
 </script>
 {% endblock %}

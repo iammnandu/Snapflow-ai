@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-5v*(2m)bqta+1_4!c85nxiiga+nnti8h!(=-x8e23xx)7t2s&0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.128.197','192.168.164.197','175.20.1.194','192.168.1.3']   # localhost, Poco C55, Samsung F41, CS Lab, GNXS-57E610
+ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.164.197','192.168.195.197','175.20.1.194','192.168.1.3']   # localhost, Poco C55, Samsung F41, CS Lab, GNXS-57E610
 
 
 # Application definition
@@ -282,3 +282,20 @@ THUMBNAIL_ALIASES = {
 
 # Optional: Cache thumbnails to improve performance
 THUMBNAIL_CACHE_TIMEOUT = 3600 * 24 * 30  # 30 days
+
+
+
+
+# Add to settings.py
+
+# OAuth settings
+FACEBOOK_CLIENT_ID = 'your-facebook-client-id'
+FACEBOOK_CLIENT_SECRET = 'your-facebook-client-secret'
+
+GITHUB_CLIENT_ID = 'your-github-client-id'
+GITHUB_CLIENT_SECRET = 'your-github-client-secret'
+
+GOOGLE_CLIENT_ID = 'your-google-client-id'
+GOOGLE_CLIENT_SECRET = 'your-google-client-secret'
+
+# You can add other OAuth providers as needed

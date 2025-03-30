@@ -1,5 +1,7 @@
 # users/views.py
 from datetime import timezone
+import base64
+import logging
 from django.views.generic import TemplateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -9,12 +11,16 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-
-
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.base import ContentFile
+from .models import SocialConnection
 from photos.models import EventPhoto
 from events.models import Event, EventAccessRequest, EventCrew, EventParticipant
+from .forms import BasicRegistrationForm, OrganizerProfileForm, ParticipantProfileForm, PhotographerProfileForm, SocialConnectionForm
+from django.urls import reverse
 
-from .forms import BasicRegistrationForm, OrganizerProfileForm, ParticipantProfileForm, PhotographerProfileForm
+logger = logging.getLogger(__name__)
+
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'users/profile.html'
@@ -63,7 +69,6 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-from django.contrib import messages
 
 def register(request):
     if request.method == 'POST':
@@ -84,16 +89,6 @@ def register(request):
     return render(request, 'users/register.html', {'form': form})
 
 
-import base64
-import io
-import logging
-from django.core.files.base import ContentFile
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
-
-logger = logging.getLogger(__name__)
-
 @login_required
 def complete_profile(request):
     user = request.user
@@ -107,12 +102,7 @@ def complete_profile(request):
     FormClass = form_classes.get(user.role)
     
     if request.method == 'POST':
-        # Log form data for debugging (exclude image data for brevity)
-        post_data = {k: v for k, v in request.POST.items() if k != 'avatar_data'}
-        logger.debug(f"Form POST data: {post_data}")
-        logger.debug(f"Files: {request.FILES}")
-        
-        # Create form without saving it yet
+        # Create form with POST data and FILES
         form = FormClass(request.POST, request.FILES, instance=user)
         
         # Manually handle the cropped image
@@ -124,7 +114,6 @@ def complete_profile(request):
                 # Remove the data URL prefix
                 if ',' in avatar_data:
                     format_info, avatar_data = avatar_data.split(',', 1)
-                    logger.debug(f"Image format info: {format_info}")
                 
                 # Decode base64 data
                 avatar_image = base64.b64decode(avatar_data)
@@ -134,20 +123,20 @@ def complete_profile(request):
                 
                 # Assign the file to the form instance
                 form.instance.avatar = avatar_file
-                logger.debug("Successfully processed avatar image")
             except Exception as e:
                 logger.error(f"Error processing avatar: {str(e)}")
                 messages.error(request, f"Error processing profile image: {str(e)}")
         
-        # Check form validity and display errors
+        # Check form validity and save
         if form.is_valid():
-            logger.debug("Form is valid, saving...")
             form.save()
             messages.success(request, 'Profile completed successfully!')
             return redirect('users:dashboard')
         else:
-            logger.error(f"Form validation errors: {form.errors}")
-            messages.error(request, f"Please correct the errors below: {form.errors}")
+            # Form is invalid but data will be preserved in the form instance
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = FormClass(instance=user)
     
@@ -369,11 +358,6 @@ def dashboard(request):
     
     return render(request, template_name, context)
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import logout
-from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 @csrf_exempt
@@ -386,3 +370,99 @@ def delete_account(request):
         return redirect("home:landing") 
 
     return render(request, "users/profile.html")
+
+
+@login_required
+def connections(request):
+    """View for managing social and application connections"""
+    user = request.user
+    
+    # Get existing connections
+    social_connections = user.social_connections.all()
+    
+    # Create a dictionary for quick lookup
+    connected_platforms = {conn.platform: conn for conn in social_connections}
+    
+    # Process connection actions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        platform = request.POST.get('platform')
+        
+        if action == 'connect':
+            form = SocialConnectionForm(request.POST)
+            if form.is_valid():
+                # Check if connection exists
+                connection, created = SocialConnection.objects.get_or_create(
+                    user=user,
+                    platform=platform,
+                    defaults={
+                        'is_connected': True
+                    }
+                )
+                
+                # Update connection data
+                connection.username = form.cleaned_data['username']
+                connection.profile_url = form.cleaned_data['profile_url']
+                connection.is_connected = True
+                connection.save()
+                
+                messages.success(request, f"Successfully connected to {connection.get_platform_display()}")
+                return redirect('users:connections')
+            else:
+                messages.error(request, "Please correct the errors below.")
+                # Pass error back to the template with the specific platform modal open
+                return redirect(f"{reverse('users:connections')}?show_modal={platform}")
+                
+        elif action == 'disconnect':
+            if platform in connected_platforms:
+                connected_platforms[platform].delete()
+                messages.success(request, f"Successfully disconnected from {SocialConnection.PlatformTypes(platform).label}")
+            else:
+                messages.error(request, "Connection not found")
+    
+    # Group connections by type
+    app_connections = ['GOOGLE', 'SLACK', 'GITHUB', 'MAILCHIMP', 'ASANA']
+    social_media = ['FACEBOOK', 'TWITTER', 'INSTAGRAM', 'DRIBBBLE', 'BEHANCE']
+    
+    app_connection_data = []
+    for platform in app_connections:
+        is_connected = platform in connected_platforms
+        
+        if platform in connected_platforms:
+            form = SocialConnectionForm(instance=connected_platforms[platform])
+        else:
+            form = SocialConnectionForm()
+            
+        app_connection_data.append({
+            'platform': platform,
+            'label': SocialConnection.PlatformTypes(platform).label,
+            'is_connected': is_connected,
+            'connection': connected_platforms.get(platform, None),
+            'oauth_required': False,  # Changed to False for all platforms
+            'form': form
+        })
+    
+    social_media_data = []
+    for platform in social_media:
+        is_connected = platform in connected_platforms
+        
+        if platform in connected_platforms:
+            form = SocialConnectionForm(instance=connected_platforms[platform])
+        else:
+            form = SocialConnectionForm()
+        
+        social_media_data.append({
+            'platform': platform,
+            'label': SocialConnection.PlatformTypes(platform).label,
+            'is_connected': is_connected,
+            'connection': connected_platforms.get(platform, None),
+            'oauth_required': False,  # Changed to False for all platforms
+            'form': form
+        })
+    
+    context = {
+        'app_connections': app_connection_data,
+        'social_media': social_media_data,
+    }
+    
+    return render(request, 'users/connections.html', context)
