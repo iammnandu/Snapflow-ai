@@ -1,13 +1,18 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.views.generic import TemplateView, FormView
 from django.contrib import messages
-from django.core.mail import send_mail
 from django import forms
 from django.urls import reverse_lazy
-from django.contrib.auth.decorators import login_required
 from events.models import Event
 from photos.models import EventPhoto 
 from users.models import CustomUser  
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.html import strip_tags
+
+
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=100)
     email = forms.EmailField()
@@ -44,9 +49,6 @@ def index(request):
         'stats': stats,
         'testimonials': testimonials
     })
-
-def landing(request):
-    return render(request, 'home/landing.html')
 
 def get_features(request):
     features = [
@@ -96,16 +98,6 @@ class AboutView(TemplateView):
         return context
     
 
-
-
-from django.conf import settings
-from django.contrib import messages
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils import timezone
-from django.utils.html import strip_tags
-from django.urls import reverse_lazy
-from django.views.generic import FormView
 
 class ContactView(FormView):
     template_name = 'home/contact.html'
