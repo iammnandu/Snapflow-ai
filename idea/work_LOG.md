@@ -209,6 +209,33 @@
 - added the privacy blur and hide feature for participants
 
 
+## 30 March
+
+### 2pm
+- corrected user registration errors and bugs (all three types )
+
+### 7 pm
+- created quick_registration module
+
+##  8 30pm
+- added the event delete view
+
+
+## Errors to correct
+
+- automatically update the status of the event. now it always set as draft
+
+
+
+
+
+
+
+
+
+
+
+
 # To-Do List  
 
 ✅ **Completed**  

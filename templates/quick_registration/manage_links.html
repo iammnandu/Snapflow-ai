@@ -1,7 +1,7 @@
 {% extends 'users/db_base.html' %}
 {% load static %}
 
-{% block title %}Manage Registration Links - {{ event.title }}{% endblock %}
+{% block title %}<title>SnapFlow : {{ event.title }} | Manage Registration Links</title>{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -67,7 +67,8 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a class="dropdown-item copy-link" href="#" data-link="{{ link.get_full_url }}">
+                                                            <a class="dropdown-item copy-link" href="#" data-link="{{ link.get_full_url|default:'#' }}">
+
                                                                 <i class="fas fa-copy"></i> Copy Link
                                                             </a>
                                                         </li>
@@ -116,23 +117,28 @@
     </div>
 </div>
 
-{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Copy link functionality
-        const copyLinks = document.querySelectorAll('.copy-link');
-        copyLinks.forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
+        // Select all copy link buttons
+        document.querySelectorAll('.copy-link').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();  // Prevent default link behavior
+                
                 const link = this.getAttribute('data-link');
-                navigator.clipboard.writeText(link).then(function() {
-                    alert('Link copied to clipboard!');
-                }, function() {
-                    alert('Failed to copy link');
+                
+                if (!link || link === '#') {
+                    alert('Error: No valid link to copy.');
+                    return;
+                }
+                
+                navigator.clipboard.writeText(link).then(() => {
+                    alert('✅ Link copied to clipboard!');
+                }).catch(() => {
+                    alert('❌ Failed to copy link. Please try again.');
                 });
             });
         });
     });
 </script>
-{% endblock %}
+
 {% endblock %}

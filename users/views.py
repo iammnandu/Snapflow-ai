@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.base import ContentFile
 from .models import SocialConnection
-from photos.models import EventPhoto
+from photos.models import EventPhoto, UserGallery
 from events.models import Event, EventAccessRequest, EventCrew, EventParticipant
 from .forms import BasicRegistrationForm, OrganizerProfileForm, ParticipantProfileForm, PhotographerProfileForm, SocialConnectionForm
 from django.urls import reverse
@@ -346,13 +346,16 @@ def dashboard(request):
     elif user.role == 'PARTICIPANT':
         # Get events the participant is part of
         participations = EventParticipant.objects.filter(user=user)
+        user_gallery, created = UserGallery.objects.get_or_create(user=request.user)
+        total_photos = user_gallery.photo_count  # Accessing the property
+
         
-        # Calculate statistics
-        photos_of_user = 0  # You'll need to implement photo tracking
-        
+
         context.update({
             'participations': participations,
-            'photos_of_user': photos_of_user,
+            'photos_of_user': total_photos,
+            'featured_photos': EventPhoto.objects.filter(user_matches__user=user).order_by('-upload_date')[:5],
+            'upcoming_events': participations.filter(event__start_date__gt=timezone.now()).order_by('event__start_date')[:5],
         })
         template_name = 'users/dashboard_participant.html'
     

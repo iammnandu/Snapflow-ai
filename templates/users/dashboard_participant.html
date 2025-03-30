@@ -3,6 +3,72 @@
 {% block title %} 
 <title>SnapFlow : Participant Dashboard </title>
 {% endblock title %}
+
+
+{% block sidebar %}
+
+<li class="menu-item active">
+   <a href="{% url 'users:dashboard' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-home-circle"></i>
+      <div data-i18n="Analytics">Dashboard</div>
+   </a>
+</li>
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Account</span>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:profile' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-dock-top"></i>
+      <div>View Profile</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'notifications:list' %}" class="menu-link">
+      <i class="bx bx-bell me-1"></i>
+      <div>Notifications</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:connections' %}" class="menu-link">
+      <i class="bx bx-link-alt me-1"></i>
+      <div>Connections</div>
+   </a>
+</li>
+
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Events</span>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'events:event_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-list-check"></i>
+      <div>My Events</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'events:request_access_form' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>Join Events</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>My Photos</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'events:access_requests' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>View Requests</div>
+   </a>
+</li>
+
+
+{% endblock sidebar %}
+
+
+
 {% block content %}
 <!-- Content wrapper -->
 <div class="content-wrapper">
@@ -21,7 +87,7 @@
                            You are registered to <span class="fw-bold">{{ participations.count }}</span> events and 
                            <span class="fw-bold">{{ photos_of_user }}</span> photos are available for you.
                         </p>
-                        <a href="" class="btn btn-sm btn-primary">Manage Privacy Settings</a>
+                        
                      </div>
                   </div>
                   <div class="col-sm-5 text-center text-sm-left">
@@ -62,7 +128,7 @@
                         <i class="bx bx-dots-vertical-rounded"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                           <a class="dropdown-item" href="">View All Photos</a>
+                           <a class="dropdown-item" href="{% url 'photos:user_gallery' %}">View All Photos</a>
                         </div>
                      </div>
                   </div>
@@ -206,53 +272,7 @@
                </div>
             </div>
          </div>
-         <!-- Recent Activity Card -->
-         <div class="col-lg-6 col-md-6 mb-4">
-            <div class="card h-100">
-               <div class="card-header d-flex align-items-center justify-content-between">
-                  <h5 class="card-title m-0 me-2">Recent Activity</h5>
-                  <div class="dropdown">
-                     <button
-                        class="btn p-0"
-                        type="button"
-                        id="activityOpt"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                        >
-                     <i class="bx bx-dots-vertical-rounded"></i>
-                     </button>
-                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="activityOpt">
-                        <a class="dropdown-item" href="">View All Activity</a>
-                     </div>
-                  </div>
-               </div>
-               <div class="card-body">
-                  <ul class="p-0 m-0">
-                     {% for activity in user_activities|slice:":5" %}
-                     <li class="d-flex mb-4 pb-1">
-                        <div class="avatar flex-shrink-0 me-3">
-                           <span class="avatar-initial rounded bg-label-primary">
-                           <i class="bx {% if activity.type == 'EVENT' %}bx-calendar{% elif activity.type == 'PHOTO' %}bx-image{% else %}bx-bell{% endif %}"></i>
-                           </span>
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                           <div class="me-2">
-                              <small class="text-muted d-block mb-1">{{ activity.get_type_display }}</small>
-                              <h6 class="mb-0">{{ activity.description }}</h6>
-                           </div>
-                           <div class="user-progress d-flex align-items-center gap-1">
-                              <small class="fw-semibold">{{ activity.created_at|timesince }} ago</small>
-                           </div>
-                        </div>
-                     </li>
-                     {% empty %}
-                     <li class="text-center py-4">No recent activity</li>
-                     {% endfor %}
-                  </ul>
-               </div>
-            </div>
-         </div>
+
          <!-- Upcoming Events -->
          <div class="col-lg-6 col-md-6 mb-4">
             <div class="card h-100">
@@ -270,7 +290,7 @@
                      <i class="bx bx-dots-vertical-rounded"></i>
                      </button>
                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="upcomingEventsMenu">
-                        <a class="dropdown-item" href="{% url 'events:event_list' %}?status=upcoming">View All Upcoming</a>
+                        <a class="dropdown-item" href="{% url 'events:event_list' %}">View All </a>
                      </div>
                   </div>
                </div>

@@ -10,7 +10,7 @@ urlpatterns = [
     path('<slug:slug>/dashboard/', views.EventDashboardView.as_view(), name='event_dashboard'),  # done
     path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'),  # done
     path('<slug:slug>/setup/<str:step>/', views.EventSetupView.as_view(), name='event_setup'),
-    path('<slug:slug>/ai-features/', views.toggle_ai_features, name='toggle_ai_features'),
+    path('<slug:slug>/delete/', views.EventDeleteView.as_view(), name='event_delete'),
 
     # Crew Management
     path('<slug:slug>/crew/', views.CrewManagementView.as_view(), name='crew_management'),

@@ -3,6 +3,71 @@
 {% block title %} 
 <title>SnapFlow : Photographer Dashboard </title>
 {% endblock title %}
+
+
+{% block sidebar %}
+
+<li class="menu-item active">
+   <a href="{% url 'users:dashboard' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-home-circle"></i>
+      <div data-i18n="Analytics">Dashboard</div>
+   </a>
+</li>
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Account</span>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:profile' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-dock-top"></i>
+      <div>View Profile</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'notifications:list' %}" class="menu-link">
+      <i class="bx bx-bell me-1"></i>
+      <div>Notifications</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:connections' %}" class="menu-link">
+      <i class="bx bx-link-alt me-1"></i>
+      <div>Connections</div>
+   </a>
+</li>
+
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Events</span>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'events:event_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-list-check"></i>
+      <div>My Events</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'events:request_access_form' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>Join Events</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'events:access_requests' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>View Requests</div>
+   </a>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>My Photos</div>
+   </a>
+</li>
+{% endblock sidebar %}
+
+
+
 {% block content %}
 <!-- Content wrapper -->
 <div class="content-wrapper">
@@ -49,21 +114,7 @@
                            class="rounded"
                            />
                      </div>
-                     <div class="dropdown">
-                        <button
-                           class="btn p-0"
-                           type="button"
-                           id="cardOpt3"
-                           data-bs-toggle="dropdown"
-                           aria-haspopup="true"
-                           aria-expanded="false"
-                           >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                           <a class="dropdown-item" href="">View All Photos</a>
-                        </div>
-                     </div>
+
                   </div>
                   <span class="fw-semibold d-block mb-1">Total Photos</span>
                   <h3 class="card-title mb-2">{{ total_photos }}</h3>
@@ -112,21 +163,7 @@
                      <div class="avatar flex-shrink-0">
                         <img src="{% static 'users/assets/img/icons/unicons/photos.png' %}" alt="Photos" class="rounded" />
                      </div>
-                     <div class="dropdown">
-                        <button
-                           class="btn p-0"
-                           type="button"
-                           id="cardOpt4"
-                           data-bs-toggle="dropdown"
-                           aria-haspopup="true"
-                           aria-expanded="false"
-                           >
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                           <a class="dropdown-item" href="">View Recent Photos</a>
-                        </div>
-                     </div>
+                     
                   </div>
                   <span class="d-block mb-1">This Month</span>
                   <h3 class="card-title text-nowrap mb-2">{{ monthly_photos|default:0 }}</h3>

@@ -50,53 +50,9 @@ def index(request):
         'testimonials': testimonials
     })
 
-def get_features(request):
-    features = [
-        {
-            'title': 'AI-Powered Photo Management',
-            'description': 'Automatically categorize and organize photos in real-time with our advanced AI system.',
-            'icon': 'bi-camera-reels'
-        },
-        {
-            'title': 'Real-time Event Coverage',
-            'description': 'Instantly upload and share photos during events for immediate access by participants.',
-            'icon': 'bi-cloud-upload'
-        },
-        {
-            'title': 'Smart Image Organization',
-            'description': 'Intelligent tagging and categorization based on faces, moments, and content.',
-            'icon': 'bi-grid-3x3'
-        },
-        {
-            'title': 'Privacy Controls',
-            'description': 'Granular privacy settings with face-blurring technology for those who opt out.',
-            'icon': 'bi-shield-check'
-        },
-        {
-            'title': 'Collaborative Workflow',
-            'description': 'Multi-user platform for event organizers, photographers, and participants.',
-            'icon': 'bi-people'
-        }
-    ]
-    return render(request, 'home/features.html', {'features': features})
 
 def get_maintanence_page(request):
     return render(request, 'home/under_maintanence.html')
-
-class AboutView(TemplateView):
-    template_name = 'home/about.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['features'] = [
-            'AI-Powered Photo Management',
-            'Real-time Event Coverage',
-            'Smart Image Organization',
-            'Privacy Controls',
-            'Collaborative Workflow'
-        ]
-        return context
-    
 
 
 class ContactView(FormView):

@@ -25,6 +25,11 @@ from .forms import (
     ParticipantInvitationForm, EventThemeForm, PrivacySettingsForm
 )
 
+
+from django.views.generic import DeleteView
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import UserPassesTestMixin
+
 from .models import Event, EventAccessRequest, EventParticipant
 
 import logging
@@ -36,20 +41,43 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventCreationForm
     template_name = 'events/event_create.html'
-    
+   
     def form_valid(self, form):
         if self.request.user.role != 'ORGANIZER':
             messages.error(self.request, 'Only organizers can create events.')
             return redirect('events:event_list')
-        else:
-            form.instance.organizer = self.request.user
-            form.instance.status = Event.EventStatus.DRAFT
-            response = super().form_valid(form)
+        
+        # Check for duplicate event name
+        event_title = form.cleaned_data['title']
+        if Event.objects.filter(title__iexact=event_title).exists():
+            form.add_error('title', 'An event with this name already exists. Please choose a different name.')
+            return self.form_invalid(form)
             
-            # Create default configuration
-            EventConfiguration.objects.create(event=self.object)
-            messages.success(self.request, 'Event created successfully! Complete the setup process.')
-            return response
+        form.instance.organizer = self.request.user
+        form.instance.status = Event.EventStatus.DRAFT
+        response = super().form_valid(form)
+        
+        # Create default configuration
+        EventConfiguration.objects.create(event=self.object)
+        messages.success(self.request, 'Event created successfully! Complete the setup process.')
+        return response
+
+
+class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Event
+    template_name = 'events/event_confirm_delete.html'
+    success_url = reverse_lazy('events:event_list')
+    
+    def test_func(self):
+        event = self.get_object()
+        return self.request.user == event.organizer
+    
+    def delete(self, request, *args, **kwargs):
+        event = self.get_object()
+        messages.success(request, f'Event "{event.title}" has been deleted.')
+        return super().delete(request, *args, **kwargs)
+    
+
 
 class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Event
@@ -419,32 +447,6 @@ class EquipmentConfigurationView(LoginRequiredMixin, UpdateView):
             ).select_related('event')
             
         return context
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-
-@csrf_exempt  # Temporarily disable CSRF for testing; remove later!
-@login_required
-def toggle_ai_features(request, slug):
-    if request.method != "POST":
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
-    
-    try:
-        data = json.loads(request.body)
-        feature = data.get('feature')
-        enabled = data.get('enabled', False)
-
-        event = get_object_or_404(Event, slug=slug, organizer=request.user)
-
-        if feature in ['face_detection', 'moment_detection', 'auto_tagging']:
-            setattr(event, f'enable_{feature}', enabled)
-            event.save()
-            return JsonResponse({'status': 'success'})
-        return JsonResponse({'status': 'error', 'message': 'Invalid feature'}, status=400)
-    
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
 
 
 class EventListView(ListView):

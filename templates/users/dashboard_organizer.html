@@ -3,6 +3,64 @@
 {% block title %}
 <title>SnapFlow : Organizer Dashboard</title>
 {% endblock title %}
+
+{% block sidebar %}
+
+<li class="menu-item active">
+   <a href="{% url 'users:dashboard' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-home-circle"></i>
+      <div data-i18n="Analytics">Dashboard</div>
+   </a>
+</li>
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Account</span>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:profile' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-dock-top"></i>
+      <div>View Profile</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'notifications:list' %}" class="menu-link">
+      <i class="bx bx-bell me-1"></i>
+      <div>Notifications</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:connections' %}" class="menu-link">
+      <i class="bx bx-link-alt me-1"></i>
+      <div>Connections</div>
+   </a>
+</li>
+
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Event Management</span>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'events:event_create' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-calendar-event"></i>
+      <div>Create Event</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'events:event_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-cog"></i>
+      <div>View Events</div>
+   </a>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'events:access_requests' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-list-check"></i>
+      <div>Requests</div>
+   </a>
+</li>
+
+{% endblock sidebar %}
+
+
 {% block content %}
 <!-- Content wrapper -->
 <div class="content-wrapper">
@@ -37,14 +95,7 @@
                      <div class="avatar flex-shrink-0">
                         <img src="{% static 'users/assets/img/icons/unicons/photographer.png' %}" alt="Photographers" class="rounded" />
                      </div>
-                     <div class="dropdown">
-                        <button class="btn p-0" type="button" id="cardOpt4" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                           <a class="dropdown-item" href="">View All Photographers</a>
-                        </div>
-                     </div>
+
                   </div>
                   <span class="d-block mb-1">Photographers</span>
                   <h3 class="card-title text-nowrap mb-2">{{ total_photographers }}</h3>
@@ -109,14 +160,7 @@
                      <div class="avatar flex-shrink-0">
                         <img src="{% static 'users/assets/img/icons/unicons/teamwork.png' %}" alt="Participants" class="rounded" />
                      </div>
-                     <div class="dropdown">
-                        <button class="btn p-0" type="button" id="cardOpt7" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="bx bx-dots-vertical-rounded"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt7">
-                           <a class="dropdown-item" href="">View All Participants</a>
-                        </div>
-                     </div>
+
                   </div>
                   <span>Recent Participants</span>
                   <h3 class="card-title text-nowrap mb-1">{{ total_participants }}</h3>
@@ -265,7 +309,7 @@
                         </div>
                         <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                            <div class="me-2">
-                              <h6 class="mb-0">{{ event_data.event.title }}</h6>
+                              <h6 class="mb-0"><a style="color:black" href="{% url 'events:event_dashboard' event_data.event.slug %}" >{{ event_data.event.title }}</a></h6>
                               <small class="text-muted d-block">{{ event_data.event.get_event_type_display }}</small>
                            </div>
                            <div class="user-progress">
@@ -307,7 +351,7 @@
                               <small class="text-muted d-block">{{ event.start_date|date:"M d, Y" }}</small>
                            </div>
                            <div class="user-progress">
-                              <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-sm btn-outline-primary">View</a>
+                              <a href="{% url 'events:event_dashboard' event.slug %}" class="btn btn-sm btn-outline-primary">View</a>
                            </div>
                         </div>
                      </li>

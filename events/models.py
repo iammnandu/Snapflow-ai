@@ -37,7 +37,6 @@ class Event(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    timezone = models.CharField(max_length=50, default='UTC')
     location = models.CharField(max_length=255)
     event_code = models.CharField(max_length=6, unique=True, blank=True)
     primary_color = models.CharField(max_length=7, default="#ffffff")  # Hex color
@@ -70,11 +69,6 @@ class Event(models.Model):
     is_public = models.BooleanField(default=False)
     require_registration = models.BooleanField(default=True)
     allow_guest_upload = models.BooleanField(default=False)
-    
-    # AI Features
-    enable_face_detection = models.BooleanField(default=True)
-    enable_moment_detection = models.BooleanField(default=True)
-    enable_auto_tagging = models.BooleanField(default=True)
     
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)

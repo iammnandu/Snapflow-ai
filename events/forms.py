@@ -11,7 +11,7 @@ class EventCreationForm(forms.ModelForm):
         model = Event
         fields = [
             'title', 'event_type', 'description', 'start_date', 
-            'end_date', 'timezone', 'location', 'is_public', 
+            'end_date', 'location', 'is_public', 
             'require_registration', 'logo', 'cover_image'
         ]
         widgets = {

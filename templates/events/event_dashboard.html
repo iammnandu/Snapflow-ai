@@ -15,7 +15,6 @@
   </a>
 </li>
 
-
 <li class="menu-item">
   <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
   <i class="menu-icon tf-icons bx bx-dock-top"></i>
@@ -31,145 +30,146 @@
 </li>
 {% endif %}
 
-      <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Quick Actions</span>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
-          <i class="menu-icon tf-icons bx bx-dock-top"></i>
-          <div>View Gallery</div>
-        </a>
-      </li>
-      {% if user.role == 'ORGANIZER' %}
-      <li class="menu-item">
-        <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Manage Crew</div>
-        </a>
-      </li>
+<li class="menu-header small text-uppercase">
+  <span class="menu-header-text">Quick Actions</span>
+</li>
+<li class="menu-item">
+  <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>View Gallery</div>
+  </a>
+</li>
+{% if user.role == 'ORGANIZER' %}
+<li class="menu-item">
+  <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Manage Crew</div>
+  </a>
+</li>
 
-      <li class="menu-item">
-        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>View Participants</div>
-        </a>
-      </li>
+<li class="menu-item">
+  <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>View Participants</div>
+  </a>
+</li>
 
-      {% elif user.role == 'PHOTOGRAPHER' %}
-      <li class="menu-item">
-        <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Equipments</div>
-        </a>
-      </li>
+{% elif user.role == 'PHOTOGRAPHER' %}
+<li class="menu-item">
+  <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Equipments</div>
+  </a>
+</li>
 
-      <li class="menu-item">
-        <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>View Participants</div>
-        </a>
-      </li>
-      {% endif %}
+<li class="menu-item">
+  <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>View Participants</div>
+  </a>
+</li>
+{% endif %}
 
+<li class="menu-header small text-uppercase">
+  <span class="menu-header-text">Account</span>
+</li>
 
+<li class="menu-item">
+  <a href="{% url 'users:profile' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>View Profile</div>
+  </a>
+</li>
+
+<li class="menu-item">
+  <a href="{% url 'users:profile_update' %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Edit Profile</div>
+  </a>
+</li>
 
 {% endblock add_nav %}
-
-      <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Account</span>
-      </li>
-
-
-      <li class="menu-item">
-        <a href="{% url 'users:profile' %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-dock-top"></i>
-          <div>View Profile</div>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'users:profile_update' %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-cog"></i>
-          <div>Edit Profile</div>
-        </a>
-      </li>
 
 {% block content %}
 
 <div class="container-fluid px-4 py-5">
-  <!-- Header Card with Event Info -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
-        <div class="card-body p-0">
-          <div class="row g-0">
-            <div class="col-md-8 p-4">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="card-title text-primary mb-0">{{ event.title }}</h1>
-                <span class="badge rounded-pill px-3 py-2 
-                  {% if event.status == 'ACTIVE' %}bg-success{% elif event.status == 'DRAFT' %}bg-warning text-dark
-                  {% elif event.status == 'COMPLETED' %}bg-info{% else %}bg-danger{% endif %}">
-                  {{ event.get_status_display }}
-                </span>
-              </div>
-              <div class="row mt-4">
-                <div class="col-md-4">
-                  <div class="mb-3">
-                    <p class="text-muted mb-1"><i class="bi bi-calendar-event me-2"></i>Date & Time</p>
-                    <p class="fw-bold">{{ event.start_date|date:"M d, Y h:i A" }}</p>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="mb-3">
-                    <p class="text-muted mb-1"><i class="bi bi-geo-alt me-2"></i>Location</p>
-                    <p class="fw-bold">{{ event.location }}</p>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="mb-3">
-                    <p class="text-muted mb-1"><i class="bi bi-tag me-2"></i>Type</p>
-                    <p class="fw-bold">{{ event.get_event_type_display }}</p>
-                  </div>
+<!-- Header Card with Event Info -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
+      <div class="card-body p-0">
+        <div class="row g-0">
+          <div class="col-md-8 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h1 class="card-title text-primary mb-0">{{ event.title }}</h1>
+              <span class="badge rounded-pill px-3 py-2 
+                {% if event.status == 'ACTIVE' %}bg-success{% elif event.status == 'DRAFT' %}bg-warning text-dark
+                {% elif event.status == 'COMPLETED' %}bg-info{% else %}bg-danger{% endif %}">
+                {{ event.get_status_display }}
+              </span>
+            </div>
+            <div class="row mt-4">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <p class="text-muted mb-1"><i class="bi bi-calendar-event me-2"></i>Date & Time</p>
+                  <p class="fw-bold">{{ event.start_date|date:"M d, Y h:i A" }}</p>
                 </div>
               </div>
-              <div class="mt-4">
-                <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-primary me-2">
-                  <i class="bi bi-images me-2"></i>View Gallery
-                </a>
-                {% if is_organizer %}
-                <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary me-2">
-                  <i class="bi bi-people me-2"></i>Manage Crew
-                </a>
-                <a href="{% url 'events:event_edit' event.slug %}" class="btn btn-outline-primary me-2">
-                  <i class="bi bi-pencil me-2"></i>Edit Event
-                </a>
-                {% endif %}
-                <a href="javascript:void(0);" onclick="copyToClipboard('{{ event.event_code }}')" class="btn btn-outline-primary">
-                  <i class="bi bi-clipboard me-2"></i>Copy Event Code
-                </a>             
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <p class="text-muted mb-1"><i class="bi bi-geo-alt me-2"></i>Location</p>
+                  <p class="fw-bold">{{ event.location }}</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <p class="text-muted mb-1"><i class="bi bi-tag me-2"></i>Type</p>
+                  <p class="fw-bold">{{ event.get_event_type_display }}</p>
+                </div>
               </div>
             </div>
-            <div class="col-md-4 bg-light p-4 d-flex flex-column justify-content-center">
-              <div class="text-center">
-                <div class="avatar mb-3">
-                  {% if event.logo %}
-                  <img src="{{ event.logo.url }}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
-                  {% else %}
-                  <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center shadow" style="width: 120px; height: 120px; margin: 0 auto;">
-                    <img src="{% static 'event_default.jpg' %}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
-                  </div>
-                  {% endif %}
+            <div class="mt-4 d-flex flex-wrap gap-2 align-items-center">
+              <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-primary me-2">
+                <i class="bi bi-images me-2"></i>View Gallery
+              </a>
+              {% if is_organizer %}
+              <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary">
+                  <i class="bi bi-people me-2"></i>Manage Crew
+                </a>
+                <a href="{% url 'events:event_edit' event.slug %}" class="btn btn-outline-primary">
+                  <i class="bi bi-pencil me-2"></i>Edit Event
+                </a>
+                <a href="#" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEventModal">
+                  <i class="bi bi-trash me-2"></i>Delete Event
+                </a>
+              </div>
+              {% endif %}
+              <a href="javascript:void(0);" onclick="copyToClipboard('{{ event.event_code }}')" class="btn btn-outline-primary">
+                <i class="bi bi-clipboard me-2"></i>Copy Event Code
+              </a>             
+            </div>
+          </div>
+          <div class="col-md-4 bg-light p-4 d-flex flex-column justify-content-center">
+            <div class="text-center">
+              <div class="avatar mb-3">
+                {% if event.logo %}
+                <img src="{{ event.logo.url }}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center shadow" style="width: 120px; height: 120px; margin: 0 auto;">
+                  <img src="{% static 'event_default.jpg' %}" alt="{{ event.title }}" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
                 </div>
-                <div class="mb-3">
-                  <span class="badge rounded-pill px-3 py-2 {% if event.is_public %}bg-success{% else %}bg-secondary{% endif %} mb-2">
-                    {{ event.is_public|yesno:"Public,Private" }}
-                  </span>
-                  {% if event.days_until > 0 %}
-                  <div class="mt-2">
-                    <span class="badge bg-info text-dark">{{ event.days_until }} days until event</span>
-                  </div>
-                  {% endif %}
+                {% endif %}
+              </div>
+              <div class="mb-3">
+                <span class="badge rounded-pill px-3 py-2 {% if event.is_public %}bg-success{% else %}bg-secondary{% endif %} mb-2">
+                  {{ event.is_public|yesno:"Public,Private" }}
+                </span>
+                {% if event.days_until > 0 %}
+                <div class="mt-2">
+                  <span class="badge bg-info text-dark">{{ event.days_until }} days until event</span>
                 </div>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -177,32 +177,29 @@
       </div>
     </div>
   </div>
+</div>
 
-
-  <!-- Add this to the event dashboard template where appropriate -->
-{% if user == event.organizer or is_crew_member %}
-<div class="card mb-4">
+  <!-- Quick Registration Section -->
+  {% if user == event.organizer or is_crew_member %}
+  <div class="card mb-4">
     <div class="card-header bg-light">
-        <h5 class="mb-0">Quick Registration</h5>
+      <h5 class="mb-0">Quick Registration</h5>
     </div>
     <div class="card-body">
-        <p>Generate quick registration links and QR codes for participants to join without account creation.</p>
-        <div class="btn-group">
-            <a href="{% url 'quick_registration:create_link' event_slug=event.slug %}" class="btn btn-primary">
-                <i class="fas fa-link"></i> Create Registration Link
-            </a>
-            <a href="{% url 'quick_registration:manage_links' event_slug=event.slug %}" class="btn btn-outline-primary">
-                <i class="fas fa-qrcode"></i> Manage Registration Links
-            </a>
-        </div>
+      <p>Generate quick registration links and QR codes for participants to join without account creation.</p>
+      <div class="btn-group">
+        <a href="{% url 'quick_registration:create_link' event_slug=event.slug %}" class="btn btn-primary">
+          <i class="fas fa-link"></i> Create Registration Link
+        </a>
+        <a href="{% url 'quick_registration:manage_links' event_slug=event.slug %}" class="btn btn-outline-primary">
+          <i class="fas fa-qrcode"></i> Manage Registration Links
+        </a>
+      </div>
     </div>
-</div>
-{% endif %}
+  </div>
+  {% endif %}
 
-
-
-
-  <!-- Photo Carousel Section - Made Smaller -->
+  <!-- Photo Carousel Section -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="card shadow-sm border-0">
@@ -261,15 +258,18 @@
       </div>
     </div>
   </div>
+
+  <!-- Highlights Section -->
   {% include 'highlights/snippets/dashboard_card.html' %}
-  <!-- Statistics Cards in Masonry Layout -->
-  <div class="row mb-4" data-masonry='{"percentPosition": true }'>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div class="avatar flex-shrink-0">
-                <img src="{% static 'events/img/crew.png' %}">
+              <img src="{% static 'events/img/crew.png' %}">
             </div>
             <div class="dropdown">
               <button class="btn p-0" type="button" id="crewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -300,7 +300,7 @@
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div class="avatar flex-shrink-0">
-                <img src="{% static 'events/img/team.png' %}">
+              <img src="{% static 'events/img/team.png' %}">
             </div>
             <div class="dropdown">
               <button class="btn p-0" type="button" id="participantDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -317,7 +317,7 @@
           {% if event.capacity %}
           <div class="progress rounded-pill mt-2" style="height: 8px;">
             <div class="progress-bar bg-success" role="progressbar" 
-                 style="width:" 
+                 style="width: {{ participants.count }}%" 
                  aria-valuenow="{{ participants.count }}" aria-valuemin="0" aria-valuemax="{{ event.capacity }}"></div>
           </div>
           <small class="mt-1 d-block">{{ participants.count }} of {{ event.capacity }}</small>
@@ -326,138 +326,82 @@
       </div>
     </div>
 
-
-{% if is_organizer %}
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Gallery Access Requests</h6>
-            <a href="{% url 'events:manage_gallery_access' event.slug %}" class="btn btn-sm btn-outline-primary">
-                Manage Requests
-            </a>
-        </div>
-        <div class="card-body">
-            {% if pending_gallery_requests > 0 %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-bell me-2"></i>
-                    You have {{ pending_gallery_requests }} pending gallery access {% if pending_gallery_requests == 1 %}request{% else %}requests{% endif %}.
-                </div>
-            {% else %}
-                <div class="alert alert-light">
-                    <i class="fas fa-check-circle me-2"></i>
-                    No pending gallery access requests.
-                </div>
-            {% endif %}
-        </div>
-    </div>
-{% endif %}
-
-
-{% if is_organizer %}
-<div class="card mb-4">
-  <div class="card-header bg-light">
-      <h5 class="mb-0">Privacy Requests</h5>
-  </div>
-  <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center">
-          <p>Manage participant privacy requests for this event</p>
-          <a href="{% url 'privacy:event_requests' event.slug %}" class="btn btn-primary">
-              <i class="fas fa-shield-alt"></i> Manage Privacy Requests
-          </a>
-      </div>
-
-      <!-- Show pending request count if available -->
-      {% with event.privacy_requests.all as privacy_requests %}
-          {% with privacy_requests|dictsort:"status"|length as pending_count %}
-              {% if pending_count > 0 %}
-              <div class="mt-2">
-                  <span class="badge bg-warning">{{ pending_count }} pending requests</span>
-              </div>
-              {% endif %}
-          {% endwith %}
-      {% endwith %}
-  </div>
-</div>
-{% endif %}
-
-
-
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="avatar flex-shrink-0">
-                        {% if event.photos.exists %}
-                            <img src="{{ event.photos.first.image.url }}" alt="Latest photo" 
-                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
-                        {% else %}
-                            <img src="{% static 'events/img/picture.png' %}" alt="No photos">
-                        {% endif %}
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn p-0" type="button" id="photoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="photoDropdown">
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center" href="{% url 'photos:event_gallery' event.slug %}">
-                                    <i class="bi bi-images me-2"></i>
-                                    View Gallery
-                                </a>
-                            </li>
-                            {% if is_organizer or is_crew %}
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
-                                    <i class="bi bi-upload me-2"></i>
-                                    Upload Photos
-                                </a>
-                            </li>
-                            {% if event.photos.exists %}
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center" href="{% url 'photos:event_gallery' event.slug %}?view=manage">
-                                    <i class="bi bi-gear me-2"></i>
-                                    Manage Photos
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% endif %}
-                        </ul>
-                    </div>
-                </div>
-                <span class="fw-semibold d-block mb-1">Photos</span>
-                <div class="d-flex align-items-center gap-2">
-                    <h3 class="card-title mb-2">{{ event.photos.count }}</h3>
-
-                </div>
-                {% if event.photos.exists %}
-                <div class="d-flex flex-column gap-1">
-                    <small class="text-muted">
-                        Latest: {{ event.photos.first.upload_date|timesince }} ago by 
-                        {{ event.photos.first.uploaded_by.get_full_name|default:event.photos.first.uploaded_by.username }}
-                    </small>
-                    <small class="text-muted">
-                        <i class="bi bi-eye"></i> {{ event.photos.aggregate.total_views|default:0 }}
-                        {% if event.configuration.enable_likes %}
-                        &nbsp;•&nbsp;
-                        <i class="bi bi-heart"></i> {{ event.photos.aggregate.total_likes|default:0 }}
-                        {% endif %}
-                    </small>
-                </div>
-                {% else %}
-                <div class="text-muted small">
-                    {% if is_organizer or is_crew %}
-                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
-                        <i class="bi bi-cloud-upload"></i> Upload your first photos
-                    </a>
-                    {% else %}
-                    <span>No photos uploaded yet</span>
-                    {% endif %}
-                </div>
-                {% endif %}
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="avatar flex-shrink-0">
+              {% if event.photos.exists %}
+                <img src="{{ event.photos.first.image.url }}" alt="Latest photo" 
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
+              {% else %}
+                <img src="{% static 'events/img/picture.png' %}" alt="No photos">
+              {% endif %}
             </div>
+            <div class="dropdown">
+              <button class="btn p-0" type="button" id="photoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="photoDropdown">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" href="{% url 'photos:event_gallery' event.slug %}">
+                    <i class="bi bi-images me-2"></i>
+                    View Gallery
+                  </a>
+                </li>
+                {% if is_organizer or is_crew %}
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+                    <i class="bi bi-upload me-2"></i>
+                    Upload Photos
+                  </a>
+                </li>
+                {% if event.photos.exists %}
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" href="{% url 'photos:event_gallery' event.slug %}?view=manage">
+                    <i class="bi bi-gear me-2"></i>
+                    Manage Photos
+                  </a>
+                </li>
+                {% endif %}
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+          <span class="fw-semibold d-block mb-1">Photos</span>
+          <div class="d-flex align-items-center gap-2">
+            <h3 class="card-title mb-2">{{ event.photos.count }}</h3>
+          </div>
+          {% if event.photos.exists %}
+          <div class="d-flex flex-column gap-1">
+            <small class="text-muted">
+              Latest: {{ event.photos.first.upload_date|timesince }} ago by 
+              {{ event.photos.first.uploaded_by.get_full_name|default:event.photos.first.uploaded_by.username }}
+            </small>
+            <small class="text-muted">
+              <i class="bi bi-eye"></i> {{ event.photos.aggregate.total_views|default:0 }}
+              {% if event.configuration.enable_likes %}
+              &nbsp;•&nbsp;
+              <i class="bi bi-heart"></i> {{ event.photos.aggregate.total_likes|default:0 }}
+              {% endif %}
+            </small>
+          </div>
+          {% else %}
+          <div class="text-muted small">
+            {% if is_organizer or is_crew %}
+            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
+              <i class="bi bi-cloud-upload"></i> Upload your first photos
+            </a>
+            {% else %}
+            <span>No photos uploaded yet</span>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
+      </div>
     </div>
     
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
@@ -489,57 +433,61 @@
     </div>
   </div>
 
-  <!-- Additional Features in Masonry Layout -->
-  <div class="row" data-masonry='{"percentPosition": true }'>
-    <!-- AI Features -->
+  <!-- Additional Sections -->
+  <div class="row">
+    {% if is_organizer %}
     <div class="col-md-6 mb-4">
-      <div class="card shadow-sm border-0">
-        <div class="card-header border-0 bg-transparent">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">AI Features</h5>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="aiToggle" 
-                    {% if event.ai_features_enabled %}checked{% endif %}
-                    onchange="toggleAIFeatures('{{ event.slug }}')">
-            </div>
-          </div>
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+          <h6 class="m-0 font-weight-bold text-primary">Gallery Access Requests</h6>
+          <a href="{% url 'events:manage_gallery_access' event.slug %}" class="btn btn-sm btn-outline-primary">
+            Manage Requests
+          </a>
         </div>
         <div class="card-body">
-          <div class="d-flex flex-column">
-            <div class="ai-feature-item d-flex align-items-center mb-3 p-2 rounded {% if not event.ai_features_enabled %}text-muted{% endif %}">
-              <div class="me-3 feature-icon">
-                <i class="bi bi-camera"></i>
-              </div>
-              <div>
-                <h6 class="mb-1">Auto Image Tagging</h6>
-                <p class="mb-0 small">Automatically tag and categorize uploaded images</p>
-              </div>
+          {% if pending_gallery_requests > 0 %}
+            <div class="alert alert-warning">
+              <i class="fas fa-bell me-2"></i>
+              You have {{ pending_gallery_requests }} pending gallery access {% if pending_gallery_requests == 1 %}request{% else %}requests{% endif %}.
             </div>
-            <div class="ai-feature-item d-flex align-items-center mb-3 p-2 rounded {% if not event.ai_features_enabled %}text-muted{% endif %}">
-              <div class="me-3 feature-icon">
-                <i class="bi bi-people"></i>
-              </div>
-              <div>
-                <h6 class="mb-1">Face Recognition</h6>
-                <p class="mb-0 small">Identify participants in photos</p>
-              </div>
+          {% else %}
+            <div class="alert alert-light">
+              <i class="fas fa-check-circle me-2"></i>
+              No pending gallery access requests.
             </div>
-            <div class="ai-feature-item d-flex align-items-center p-2 rounded {% if not event.ai_features_enabled %}text-muted{% endif %}">
-              <div class="me-3 feature-icon">
-                <i class="bi bi-chat-left-text"></i>
-              </div>
-              <div>
-                <h6 class="mb-1">Comment Analysis</h6>
-                <p class="mb-0 small">Analyze feedback and sentiment</p>
-              </div>
-            </div>
-          </div>
+          {% endif %}
         </div>
       </div>
     </div>
-    
-    <!-- Quick Links -->
+
     <div class="col-md-6 mb-4">
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Privacy Requests</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <p>Manage participant privacy requests for this event</p>
+            <a href="{% url 'privacy:event_requests' event.slug %}" class="btn btn-primary">
+              <i class="fas fa-shield-alt"></i> Manage Privacy Requests
+            </a>
+          </div>
+          {% with event.privacy_requests.all as privacy_requests %}
+            {% with privacy_requests|dictsort:"status"|length as pending_count %}
+              {% if pending_count > 0 %}
+              <div class="mt-2">
+                <span class="badge bg-warning">{{ pending_count }} pending requests</span>
+              </div>
+              {% endif %}
+            {% endwith %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Links -->
+    <div class="col-md-12 mb-4">
       <div class="card shadow-sm border-0">
         <div class="card-header border-0 bg-transparent">
           <h5 class="mb-0">Quick Actions</h5>
@@ -547,31 +495,26 @@
         <div class="card-body">
           <div class="row g-3">
             {% if user.role == 'ORGANIZER' %}
-            <div class="col-6">
-                
-                    <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary w-100 py-3">
+            <div class="col-md-3 col-6">
+              <a href="{% url 'events:crew_management' event.slug %}" class="btn btn-outline-primary w-100 py-3">
                 <i class="bi bi-people-fill mb-2 d-block" style="font-size: 1.5rem;"></i>
                 Manage Crew
               </a>
-              
-                
             </div>
-
-            <div class="col-6">
+            {% endif %}
+            <div class="col-md-3 col-6">
               <a href="{% url 'photos:event_gallery' event.slug %}" class="btn btn-outline-primary w-100 py-3">
                 <i class="bi bi-images mb-2 d-block" style="font-size: 1.5rem;"></i>
                 Gallery
               </a>
             </div>
-            {% endif %}
-            <div class="col-6">
+            <div class="col-md-3 col-6">
               <a href="{% url 'events:equipment_config' event.slug %}" class="btn btn-outline-primary w-100 py-3">
                 <i class="bi bi-tools mb-2 d-block" style="font-size: 1.5rem;"></i>
                 Equipment
               </a>
             </div>
-
-            <div class="col-6">
+            <div class="col-md-3 col-6">
               <a href="#" class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#shareEventModal">
                 <i class="bi bi-share mb-2 d-block" style="font-size: 1.5rem;"></i>
                 Share Event
@@ -586,45 +529,45 @@
   <!-- Upload Photos Modal -->
   {% if is_organizer or is_crew %}
   <div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-labelledby="uploadPhotosModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h5 class="modal-title" id="uploadPhotosModalLabel">Upload Photos</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadPhotosModalLabel">Upload Photos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Select Photos</label>
+              <input type="file" name="images" multiple class="form-control" 
+                    accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
+                    required>
+              {% if event.configuration %}
+              <div class="form-text">
+                Allowed formats: {{ event.configuration.allowed_formats }}
+                <br>
+                Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
               </div>
-              <form method="POST" action="{% url 'photos:upload_photos' event.slug %}" enctype="multipart/form-data">
-                  {% csrf_token %}
-                  <div class="modal-body">
-                      <div class="mb-3">
-                          <label class="form-label">Select Photos</label>
-                          <input type="file" name="images" multiple class="form-control" 
-                                 accept="{% if event.configuration %}{{ event.configuration.allowed_formats|join:',' }}{% else %}image/*{% endif %}" 
-                                 required>
-                          {% if event.configuration %}
-                          <div class="form-text">
-                              Allowed formats: {{ event.configuration.allowed_formats }}
-                              <br>
-                              Maximum file size: {{ event.configuration.max_upload_size|filesizeformat }}
-                          </div>
-                          {% endif %}
-                      </div>
-                      <div id="preview-container" class="row g-2">
-                          <!-- Preview images will be inserted here via JavaScript -->
-                      </div>
-                  </div>
-                  <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="submit" class="btn btn-primary">
-                          <i class="bi bi-cloud-upload"></i> Upload Photos
-                      </button>
-                  </div>
-              </form>
+              {% endif %}
+            </div>
+            <div id="preview-container" class="row g-2">
+              <!-- Preview images will be inserted here via JavaScript -->
+            </div>
           </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-cloud-upload"></i> Upload Photos
+            </button>
+          </div>
+        </form>
       </div>
+    </div>
   </div>
   {% endif %}
 
-  <!-- Share Event Modal (was missing) -->
+  <!-- Share Event Modal -->
   <div class="modal fade" id="shareEventModal" tabindex="-1" aria-labelledby="shareEventModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -664,10 +607,31 @@
             </a>
             <a href="https://wa.me/?text={{ 'Join me at ' | add:event.title | add:'! Details: ' | add:request.build_absolute_uri | add:' Code: ' | add:event.event_code | urlencode }}" 
             target="_blank" class="btn btn-outline-primary">
-            <i class="bi bi-whatsapp"></i>
-         </a>
-         
+              <i class="bi bi-whatsapp"></i>
+            </a>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Event Modal -->
+  <div class="modal fade" id="deleteEventModal" tabindex="-1" aria-labelledby="deleteEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteEventModalLabel">Confirm Delete</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete "{{ event.title }}"? This action cannot be undone.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form method="post" action="{% url 'events:event_delete' event.slug %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Delete Event</button>
+          </form>
         </div>
       </div>
     </div>
@@ -677,32 +641,6 @@
 <!-- JavaScript for the dashboard -->
 <script>
 
-    function toggleAIFeatures(eventSlug) {
-      const aiToggle = document.getElementById("aiToggle");
-      const enabled = aiToggle.checked;
-      
-      fetch(`/events/${eventSlug}/ai-features/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken() // Include CSRF token
-        },
-        body: JSON.stringify({
-          feature: "auto_tagging",  // You may modify this based on the feature being toggled
-          enabled: enabled
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === "success") {
-          console.log("AI Features updated successfully!");
-        } else {
-          console.error("Error updating AI Features.");
-        }
-      })
-      .catch(error => console.error("Request failed", error));
-    }
-  
     function getCSRFToken() {
       return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
