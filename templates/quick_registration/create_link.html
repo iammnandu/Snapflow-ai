@@ -1,0 +1,55 @@
+{% extends 'users/db_base.html' %}
+{% load static %}
+
+{% block title %}Create Registration Link - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Create Quick Registration Link</h3>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Event: {{ event.title }}</h5>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Active
+                                </label>
+                            </div>
+                            <small class="text-muted">Toggle to enable/disable this registration link</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.expires_at.id_for_label }}" class="form-label">Expiration Date (Optional)</label>
+                            {{ form.expires_at }}
+                            <small class="text-muted">Leave blank for no expiration</small>
+                            {% if form.expires_at.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.expires_at.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'events:event_dashboard' slug=event.slug %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Create Registration Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

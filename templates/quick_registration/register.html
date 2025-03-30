@@ -1,0 +1,152 @@
+{% extends 'users/db_base.html' %}
+{% load static %}
+
+{% block title %}Register for {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Register for Event</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if event.logo %}
+                            <img src="{{ event.logo.url }}" alt="{{ event.title }} Logo" class="img-fluid mb-3" style="max-height: 100px;">
+                        {% endif %}
+                        <h4 class="card-title">{{ event.title }}</h4>
+                        <p class="text-muted">
+                            <i class="fas fa-calendar-alt"></i> 
+                            {{ event.start_date|date:"M d, Y" }}
+                            {% if event.end_date and event.end_date != event.start_date %}
+                                - {{ event.end_date|date:"M d, Y" }}
+                            {% endif %}
+                        </p>
+                        {% if event.location %}
+                            <p class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                                   class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Your name will be used as your username</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" 
+                                   class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.email.value|default:'' }}" required>
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.email.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">This will be used to identify your photos</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                            <input type="tel" name="{{ form.phone_number.name }}" id="{{ form.phone_number.id_for_label }}" 
+                                   class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.phone_number.value|default:'' }}">
+                            {% if form.phone_number.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.phone_number.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" 
+                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}" required>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Create a strong password for your account</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.confirm_password.id_for_label }}" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" name="{{ form.confirm_password.name }}" id="{{ form.confirm_password.id_for_label }}" 
+                                   class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" required>
+                            {% if form.confirm_password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.confirm_password.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.profile_image.id_for_label }}" class="form-label">Profile Image</label>
+                            <input type="file" name="{{ form.profile_image.name }}" id="{{ form.profile_image.id_for_label }}" 
+                                   class="form-control {% if form.profile_image.errors %}is-invalid{% endif %}" 
+                                   accept="image/*">
+                            {% if form.profile_image.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.profile_image.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">A clear face photo helps us identify you in event photos</small>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                I agree to participate in this event and allow the use of my information for event purposes
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Register Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}
+{% endblock %}

@@ -47,8 +47,8 @@ INSTALLED_APPS = [
     'photos',
     'notifications',
     'highlights',
-    'quick_registration'
     
+    'quick_registration.apps.QuickRegistrationConfig',
     'privacy.apps.PrivacyConfig',
 
 

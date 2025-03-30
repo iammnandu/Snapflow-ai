@@ -1,0 +1,35 @@
+{% extends 'users/db_base.html' %}
+{% load static %}
+
+{% block title %}Link Expired{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Registration Link Expired</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 64px;"></i>
+                    </div>
+                    
+                    <h4 class="card-title">This registration link has expired</h4>
+                    <p class="lead">The registration link you're trying to use is no longer valid or has expired.</p>
+                    
+                    <div class="alert alert-info mb-4">
+                        <p class="mb-0">Please contact the event organizer for a new registration link or alternative ways to register.</p>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'home' %}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Go to Homepage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

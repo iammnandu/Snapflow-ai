@@ -28,6 +28,7 @@ urlpatterns = [
     path('notifications/', include('notifications.urls', namespace='notifications')),
     path('highlights/', include('highlights.urls', namespace='highlights')),
     path('privacy/', include('privacy.urls')),
+    path('quick-registration/', include('quick_registration.urls', namespace='quick_registration')),
 
 
     
