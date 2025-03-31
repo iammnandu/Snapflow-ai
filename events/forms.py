@@ -126,3 +126,12 @@ class EventAccessRequestForm(forms.Form):
             return code
         except Event.DoesNotExist:
             raise forms.ValidationError('Invalid event code')
+        
+
+
+        # events/forms.py
+from django import forms
+
+class ContactOrganizerForm(forms.Form):
+    subject = forms.CharField(max_length=100, required=True)
+    message = forms.CharField(widget=forms.Textarea, required=True)

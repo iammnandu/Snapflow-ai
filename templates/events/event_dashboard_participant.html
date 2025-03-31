@@ -3,26 +3,86 @@
 {% load event_filters %}
 {% block title %}<title>SnapFlow : Event Dashboard</title>{% endblock %}
 {% load thumbnail %}
-{% block add_nav %}
+
+
+
+
+{% block sidebar %}
+
+<li class="menu-item ">
+   <a href="{% url 'users:dashboard' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-home-circle"></i>
+      <div data-i18n="Analytics">Dashboard</div>
+   </a>
+</li>
 <li class="menu-header small text-uppercase">
-  <span class="menu-header-text">Event Actions</span>
+   <span class="menu-header-text">Account</span>
 </li>
 <li class="menu-item">
+   <a href="{% url 'users:profile' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-dock-top"></i>
+      <div>View Profile</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'notifications:list' %}" class="menu-link">
+      <i class="bx bx-bell me-1"></i>
+      <div>Notifications</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:connections' %}" class="menu-link">
+      <i class="bx bx-link-alt me-1"></i>
+      <div>Connections</div>
+   </a>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>My Photos</div>
+   </a>
+</li>
+
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Events</span>
+</li>
+
+
+<li class="menu-item">
+   <a href="{% url 'events:event_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-cog"></i>
+      <div>View Events</div>
+   </a>
+</li>
+
+<li class="menu-item">
+   <a href="{% url 'events:access_requests' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-list-check"></i>
+      <div>Event Requests</div>
+   </a>
+</li>
+
+<li class="menu-item">
+  <a href="{% url 'privacy:participant_requests' %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Privacy Requests</div>
+  </a>
+</li>
+<li class="menu-header small text-uppercase">
+  <span class="menu-header-text">Event Details</span>
+</li>
+<li class="menu-item active">
   <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
   <i class="menu-icon tf-icons bx bx-dock-top"></i>
   <div>Event Dashboard</div>
   </a>
 </li>
-
 <li class="menu-item">
   <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
   <i class="menu-icon tf-icons bx bx-dock-top"></i>
   <div>Event Highlights</div>
   </a>
-</li>
-
-<li class="menu-header small text-uppercase">
-  <span class="menu-header-text">Quick Actions</span>
 </li>
 <li class="menu-item">
   <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
@@ -31,24 +91,8 @@
   </a>
 </li>
 
-<li class="menu-header small text-uppercase">
-  <span class="menu-header-text">Account</span>
-</li>
 
-<li class="menu-item">
-  <a href="{% url 'users:profile' %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-dock-top"></i>
-    <div>View Profile</div>
-  </a>
-</li>
-
-<li class="menu-item">
-  <a href="{% url 'users:profile_update' %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-cog"></i>
-    <div>Edit Profile</div>
-  </a>
-</li>
-{% endblock add_nav %}
+{% endblock sidebar %}
 
 {% block content %}
 <div class="container-fluid px-4 py-5">
@@ -418,34 +462,34 @@
     </div>
     {% endif %}
     
-    <!-- Contact Organizer Modal -->
-    <div class="modal fade" id="contactOrganizerModal" tabindex="-1" aria-labelledby="contactOrganizerModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="contactOrganizerModalLabel">Contact Organizer</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form action="" method="post">
-            {% csrf_token %}
-            <div class="modal-body">
-              <div class="mb-3">
-                <label for="messageSubject" class="form-label">Subject</label>
-                <input type="text" class="form-control" id="messageSubject" name="subject" required>
-              </div>
-              <div class="mb-3">
-                <label for="messageContent" class="form-label">Message</label>
-                <textarea class="form-control" id="messageContent" name="message" rows="4" required></textarea>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Send Message</button>
-            </div>
-          </form>
-        </div>
+<!-- Contact Organizer Modal -->
+<div class="modal fade" id="contactOrganizerModal" tabindex="-1" aria-labelledby="contactOrganizerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="contactOrganizerModalLabel">Contact Event Organizer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      <form method="post" action="{% url 'events:contact_organizer' event.slug %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="subject" class="form-label">Subject</label>
+            <input type="text" class="form-control" id="subject" name="subject" required>
+          </div>
+          <div class="mb-3">
+            <label for="message" class="form-label">Message</label>
+            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
   
     <!-- Share Event Modal -->
     <div class="modal fade" id="shareEventModal" tabindex="-1" aria-labelledby="shareEventModalLabel" aria-hidden="true">

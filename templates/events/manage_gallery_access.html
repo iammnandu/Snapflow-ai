@@ -2,6 +2,197 @@
 {% load static %}
 
 {% block title %}<title>SnapFlow :{{ event.title }} | Manage Gallery Access</title>{% endblock %}
+
+
+
+
+{% block sidebar %}
+
+<li class="menu-item ">
+   <a href="{% url 'users:dashboard' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-home-circle"></i>
+      <div data-i18n="Analytics">Dashboard</div>
+   </a>
+</li>
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Account</span>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:profile' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-dock-top"></i>
+      <div>View Profile</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'notifications:list' %}" class="menu-link">
+      <i class="bx bx-bell me-1"></i>
+      <div>Notifications</div>
+   </a>
+</li>
+<li class="menu-item">
+   <a href="{% url 'users:connections' %}" class="menu-link">
+      <i class="bx bx-link-alt me-1"></i>
+      <div>Connections</div>
+   </a>
+</li>
+{% if user.role != 'ORGANIZER' %}
+<li class="menu-item">
+   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>My Photos</div>
+   </a>
+</li>
+{% endif %}
+{% if user.role == 'ORGANIZER' %}
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Event Handle</span>
+</li>
+{% else %}
+<li class="menu-header small text-uppercase">
+   <span class="menu-header-text">Events</span>
+</li>
+{% endif %}
+{% if user.role == 'ORGANIZER' %}
+<li class="menu-item">
+   <a href="{% url 'events:event_create' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-calendar-event"></i>
+      <div>Create Event</div>
+   </a>
+</li>
+{% else %}
+<li class="menu-item">
+   <a href="{% url 'events:request_access_form' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>Join Events</div>
+   </a>
+</li>
+{% endif %}
+
+
+<li class="menu-item">
+   <a href="{% url 'events:event_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-cog"></i>
+      <div>View Events</div>
+   </a>
+</li>
+
+<li class="menu-item">
+  <a href="{% url 'events:access_requests' %}" class="menu-link">
+     <i class="menu-icon tf-icons bx bx-list-check"></i>
+     <div>Event Requests</div>
+  </a>
+</li>
+{% if user.role == 'ORGANIZER' %}
+<li class="menu-item">
+ <a href="{% url 'privacy:organizer_requests' %} " class="menu-link">
+   <i class="menu-icon tf-icons bx bx-dock-top"></i>
+   <div>Privacy Requests</div>
+ </a>
+</li>
+{% endif %}
+
+
+<li class="menu-header small text-uppercase">
+  <span class="menu-header-text">Event Details</span>
+</li>
+<li class="menu-item">
+  <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
+  <i class="menu-icon tf-icons bx bx-dock-top"></i>
+  <div>Event Dashboard</div>
+  </a>
+</li>
+<li class="menu-item">
+  <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
+  <i class="menu-icon tf-icons bx bx-dock-top"></i>
+  <div>Event Highlights</div>
+  </a>
+</li>
+<li class="menu-item">
+  <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>View Gallery</div>
+  </a>
+</li>
+{% if user.role == "PHOTOGRAPHER" %}
+<li class="menu-item  ">
+  <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>View Participants</div>
+  </a>
+</li>
+{% endif %}
+
+
+<li class="menu-header small text-uppercase">
+  <span class="menu-header-text">Event Settings</span>
+</li>
+{% if user.role == 'ORGANIZER' %}
+<li class="menu-item">
+  <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
+  <i class="menu-icon tf-icons bx bx-dock-top"></i>
+  <div>Event Configuration</div>
+  </a>
+</li>
+<li class="menu-item  ">
+    <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-cog"></i>
+      <div>Equipment Config </div>
+    </a>
+  </li>
+
+  <li class="menu-header small text-uppercase">
+    <span class="menu-header-text">Event Management</span>
+  </li>
+  {% if user.role == 'ORGANIZER' %}
+  <li class="menu-item">
+    <a href="{% url 'quick_registration:manage_links' event.slug %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-cog"></i>
+      <div>Manage Links</div>
+    </a>
+  </li>
+{% endif %}
+  
+<li class="menu-item">
+  <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Manage Crew</div>
+  </a>
+</li>
+
+<li class="menu-item">
+  <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>View Participants</div>
+  </a>
+</li>
+{% endif %}
+
+{% if user.role == "PHOTOGRAPHER" %}
+<li class="menu-item ">
+  <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Equipment Config</div>
+  </a>
+</li>
+{% endif %}
+
+{% if user.role == "ORGANIZER" %}
+<li class="menu-item active">
+  <a href="{% url 'events:manage_gallery_access' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Gallery Requests</div>
+  </a>
+</li>
+<li class="menu-item">
+  <a href="{% url 'privacy:event_requests' event.slug %}" class="menu-link">
+    <i class="menu-icon tf-icons bx bx-cog"></i>
+    <div>Privacy requests</div>
+  </a>
+</li>
+{% endif %}
+{% endblock sidebar %}
+
+
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row">

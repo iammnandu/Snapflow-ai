@@ -11,7 +11,7 @@ urlpatterns = [
     path('<slug:slug>/edit/', views.EventUpdateView.as_view(), name='event_edit'),  # done
     path('<slug:slug>/setup/<str:step>/', views.EventSetupView.as_view(), name='event_setup'),
     path('<slug:slug>/delete/', views.EventDeleteView.as_view(), name='event_delete'),
-
+    path('<slug:slug>/contact-organizer/', views.contact_organizer, name='contact_organizer'),
     # Crew Management
     path('<slug:slug>/crew/', views.CrewManagementView.as_view(), name='crew_management'),
     path('crew/invite/<str:token>/', views.accept_crew_invitation, name='accept_crew_invitation'),  # done

@@ -34,17 +34,16 @@
       <div>Connections</div>
    </a>
 </li>
-
+<li class="menu-item">
+   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>My Photos</div>
+   </a>
+</li>
 <li class="menu-header small text-uppercase">
    <span class="menu-header-text">Events</span>
 </li>
 
-<li class="menu-item">
-   <a href="{% url 'events:event_list' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-list-check"></i>
-      <div>My Events</div>
-   </a>
-</li>
 <li class="menu-item">
    <a href="{% url 'events:request_access_form' %}" class="menu-link">
       <i class="menu-icon tf-icons bx bx-photo-album"></i>
@@ -52,17 +51,27 @@
    </a>
 </li>
 <li class="menu-item">
-   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-photo-album"></i>
-      <div>My Photos</div>
+   <a href="{% url 'events:event_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-cog"></i>
+      <div>View Events</div>
    </a>
 </li>
+
 <li class="menu-item">
    <a href="{% url 'events:access_requests' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-photo-album"></i>
-      <div>View Requests</div>
+      <i class="menu-icon tf-icons bx bx-list-check"></i>
+      <div>Event Requests</div>
    </a>
-</li>
+ </li>
+
+ <li class="menu-item">
+  <a href="{% url 'privacy:participant_requests' %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Privacy Requests</div>
+  </a>
+ </li>
+
+
 
 
 {% endblock sidebar %}

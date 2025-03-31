@@ -33,9 +33,17 @@
       <div>Connections</div>
    </a>
 </li>
+{% if user.role != 'ORGANIZER' %}
+<li class="menu-item">
+   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-photo-album"></i>
+      <div>My Photos</div>
+   </a>
+</li>
+{% endif %}
 {% if user.role == 'ORGANIZER' %}
 <li class="menu-header small text-uppercase">
-   <span class="menu-header-text">Event Management</span>
+   <span class="menu-header-text">Event Handle</span>
 </li>
 {% else %}
 <li class="menu-header small text-uppercase">
@@ -67,17 +75,27 @@
 <li class="menu-item">
    <a href="{% url 'events:access_requests' %}" class="menu-link">
       <i class="menu-icon tf-icons bx bx-list-check"></i>
-      <div>View Requests</div>
+      <div>Event Requests</div>
    </a>
-</li>
-{% if user.role != 'ORGANIZER' %}
-<li class="menu-item">
-   <a href="{% url 'photos:user_gallery' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-photo-album"></i>
-      <div>My Photos</div>
+ </li>
+
+ {% if user.role == 'ORGANIZER' %}
+ <li class="menu-item">
+  <a href="{% url 'privacy:organizer_requests' %} " class="menu-link">
+    <i class="menu-icon tf-icons bx bx-dock-top"></i>
+    <div>Privacy Requests</div>
+  </a>
+ </li>
+ {% elif user.role == 'PARTICIPANT' %}
+
+ <li class="menu-item">
+   <a href="{% url 'privacy:participant_requests' %} " class="menu-link">
+     <i class="menu-icon tf-icons bx bx-dock-top"></i>
+     <div>Privacy Requests</div>
    </a>
-</li>
-{% endif %}
+  </li>
+ {% endif %}
+
 {% endblock sidebar %}
 
 

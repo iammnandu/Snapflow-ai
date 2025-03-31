@@ -219,6 +219,44 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
         return context
 
 
+# events/views.py
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404
+from django.core.mail import send_mail
+from django.conf import settings
+from .forms import ContactOrganizerForm
+
+def contact_organizer(request, slug):
+    event = get_object_or_404(Event, slug=slug)
+    
+    if request.method == 'POST':
+        form = ContactOrganizerForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
+            
+            # Add sender information to the message
+            full_message = f"From: {request.user.get_full_name() or request.user.username}\n"
+            full_message += f"Email: {request.user.email}\n\n"
+            full_message += message
+            
+            # Send email to organizer
+            try:
+                send_mail(
+                    f"[{event.title}] {subject}",
+                    full_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [event.organizer.email],
+                    fail_silently=False,
+                )
+                messages.success(request, "Your message has been sent to the event organizer.")
+            except Exception as e:
+                messages.error(request, f"Failed to send message: {str(e)}")
+                
+    return redirect('events:event_dashboard', slug=slug)
+
+
+
 class EventParticipantsView(LoginRequiredMixin, DetailView):
     model = Event
     template_name = 'events/event_participants.html'
