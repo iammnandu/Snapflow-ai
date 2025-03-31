@@ -1,4 +1,5 @@
 # quick_registration/views.py
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
@@ -9,7 +10,10 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.crypto import get_random_string
 from django.contrib.auth import login
-
+import os
+from django.http import FileResponse
+from wsgiref.util import FileWrapper
+from django.utils.text import slugify
 from .models import QuickRegistrationLink
 from .forms import QuickRegistrationForm, QuickRegistrationLinkForm
 from events.models import Event, EventParticipant
@@ -108,7 +112,7 @@ def register_participant(request, code):
             name = form.cleaned_data['name']
             email = form.cleaned_data['email']
             phone_number = form.cleaned_data['phone_number']
-            profile_image = form.cleaned_data.get('profile_image')
+            avatar_data = form.cleaned_data.get('avatar_data')
             password = form.cleaned_data['password']
             
             # Get the username from the form
@@ -131,8 +135,19 @@ def register_participant(request, code):
                 )
                 user_exists = False
                 
-                if profile_image:
-                    user.avatar = profile_image
+                # Handle the avatar_data for profile image
+                if avatar_data and avatar_data.startswith('data:image'):
+                    # Convert base64 to file
+                    import base64
+                    from django.core.files.base import ContentFile
+                    
+                    # Extract the image data
+                    format, imgstr = avatar_data.split(';base64,') 
+                    ext = format.split('/')[-1]
+                    
+                    # Generate file from base64
+                    data = ContentFile(base64.b64decode(imgstr), name=f'{username}_avatar.{ext}')
+                    user.avatar = data
                 
                 if phone_number:
                     user.phone_number = phone_number
@@ -200,3 +215,89 @@ def download_qr_code(request, link_id):
     response = HttpResponse(registration_link.qr_code, content_type='image/png')
     response['Content-Disposition'] = f'attachment; filename="event_{registration_link.event.slug}_qrcode.png"'
     return response
+
+@login_required
+def generate_event_card(request, link_id, format_type='both'):
+    """Generate event card for a registration link"""
+    registration_link = get_object_or_404(QuickRegistrationLink, id=link_id)
+    
+    # Check if the user is the organizer or a crew member
+    if (registration_link.event.organizer != request.user and 
+        not registration_link.event.eventcrew_set.filter(member=request.user).exists()):
+        raise PermissionDenied("You don't have permission to manage this registration link.")
+    
+    # Delete old cards if they exist
+    if format_type in ['image', 'both'] and registration_link.event_card_image:
+        registration_link.event_card_image.delete(save=False)
+    
+    if format_type in ['pdf', 'both'] and registration_link.event_card_pdf:
+        registration_link.event_card_pdf.delete(save=False)
+    
+    # Generate new cards
+    registration_link.generate_event_card(request, format_type)
+    
+    messages.success(request, "Event card generated successfully.")
+    return redirect('quick_registration:manage_links', event_slug=registration_link.event.slug)
+
+
+@login_required
+def download_event_card(request, link_id, format_type='image'):
+    """Download event card for a registration link"""
+    registration_link = get_object_or_404(QuickRegistrationLink, id=link_id)
+    
+    # Check if the user is the organizer or a crew member
+    if (not request.user.is_authenticated or 
+        (registration_link.event.organizer != request.user and 
+         not registration_link.event.eventcrew_set.filter(member=request.user).exists())):
+        raise PermissionDenied("You don't have permission to download this event card.")
+    
+    # Generate the card if it doesn't exist
+    if format_type == 'image' and not registration_link.event_card_image:
+        registration_link.generate_event_card(request, 'image')
+    elif format_type == 'pdf' and not registration_link.event_card_pdf:
+        registration_link.generate_event_card(request, 'pdf')
+    
+    # Get the file path
+    if format_type == 'image':
+        file_path = registration_link.event_card_image.path
+        content_type = 'image/png'
+        filename = f"event_{slugify(registration_link.event.title)}_card.png"
+    else:
+        file_path = registration_link.event_card_pdf.path
+        content_type = 'application/pdf'
+        filename = f"event_{slugify(registration_link.event.title)}_card.pdf"
+    
+    # Serve the file
+    response = FileResponse(
+        FileWrapper(open(file_path, 'rb')),
+        content_type=content_type
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+
+
+@login_required
+def delete_link(request, link_id):
+    """Delete a quick registration link"""
+    registration_link = get_object_or_404(QuickRegistrationLink, id=link_id)
+    
+    # Check if the user is the organizer or a crew member
+    if (registration_link.event.organizer != request.user and 
+        not registration_link.event.eventcrew_set.filter(member=request.user).exists()):
+        raise PermissionDenied("You don't have permission to delete this registration link.")
+    
+    # Store event slug for redirect
+    event_slug = registration_link.event.slug
+    
+    # Delete the QR code file if it exists
+    if registration_link.qr_code:
+        if os.path.isfile(registration_link.qr_code.path):
+            os.remove(registration_link.qr_code.path)
+    
+    # Delete the registration link
+    registration_link.delete()
+    
+    messages.success(request, "Registration link deleted successfully.")
+    return redirect('quick_registration:manage_links', event_slug=event_slug)

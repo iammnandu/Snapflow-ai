@@ -156,8 +156,6 @@
   </a>
 </li>
 
-
-
 {% endblock sidebar %}
 
 
@@ -177,25 +175,23 @@
                     
                     {% if registration_links %}
                         <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>Created</th>
-                                        <th>Code</th>
-                                        <th>Status</th>
-                                        <th>Expires</th>
-                                        <th>QR Code</th>
-                                        <th>Actions</th>
+                                        <th class="align-middle">Created</th>
+                                        <th class="align-middle">Code</th>
+                                        <th class="align-middle">Status</th>
+                                        <th class="align-middle">Expires</th>
+                                        <th class="align-middle">Cards</th>
+                                        <th class="align-middle">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for link in registration_links %}
-                                        <tr>
-                                            <td>{{ link.created_at|date:"M d, Y" }}</td>
+                                        <tr class="align-middle" style="min-height: 70px;">
+                                            <td class="text-dark">{{ link.created_at|date:"M d, Y" }}</td>
                                             <td>
-                                                <span class="text-truncate d-inline-block" style="max-width: 120px;">
-                                                    {{ link.code }}
-                                                </span>
+                                                <code class="text-dark">{{ link.code }}</code>
                                             </td>
                                             <td>
                                                 {% if link.is_active %}
@@ -204,7 +200,7 @@
                                                     <span class="badge bg-danger">Inactive</span>
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td class="text-dark">
                                                 {% if link.expires_at %}
                                                     {{ link.expires_at|date:"M d, Y H:i" }}
                                                 {% else %}
@@ -212,41 +208,81 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if link.qr_code %}
-                                                    <img src="{{ link.qr_code.url }}" alt="QR Code" width="50" height="50" class="img-thumbnail">
-                                                {% else %}
-                                                    <span class="text-muted">Not generated</span>
-                                                {% endif %}
+                                                <div class="d-flex gap-2">
+                                                    {% if link.qr_code %}
+                                                        <img src="{{ link.qr_code.url }}" alt="QR Code" class="img-thumbnail" width="50" height="50" 
+                                                             data-bs-toggle="tooltip" title="QR Code">
+                                                    {% endif %}
+                                                    
+                                                    {% if link.event_card_image %}
+                                                        <a href="{{ link.event_card_image.url }}" target="_blank">
+                                                            <img src="{{ link.event_card_image.url }}" alt="Event Card" class="img-thumbnail" width="50" height="50"
+                                                                 data-bs-toggle="tooltip" title="Event Card">
+                                                        </a>
+                                                    {% endif %}
+                                                    
+                                                    {% if link.event_card_pdf %}
+                                                        <a href="{{ link.event_card_pdf.url }}" target="_blank" class="btn btn-sm btn-outline-danger"
+                                                           data-bs-toggle="tooltip" title="PDF Card">
+                                                            <i class="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                             <td>
-                                                <div class="btn-group">
-                                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                                <div class="btn-group dropstart">
+                                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                                         Actions
                                                     </button>
-                                                    <ul class="dropdown-menu">
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 220px;">
                                                         <li>
-                                                            <a class="dropdown-item copy-link" href="#" data-link="{{ link.get_full_url|default:'#' }}">
-
-                                                                <i class="fas fa-copy"></i> Copy Link
+                                                            <a class="dropdown-item text-dark" href="javascript:void(0)" 
+                                                               data-link="{{ link.get_full_url|default:'#' }}">
+                                                                <i class="fas fa-copy me-2"></i> Copy Link
                                                             </a>
                                                         </li>
-                                                        <li>
-                                                            <a class="dropdown-item" href="{% url 'quick_registration:download_qr' link_id=link.id %}">
-                                                                <i class="fas fa-download"></i> Download QR
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="dropdown-item" href="{% url 'quick_registration:regenerate_qr' link_id=link.id %}">
-                                                                <i class="fas fa-sync"></i> Regenerate QR
-                                                            </a>
-                                                        </li>
+                                                        
                                                         <li><hr class="dropdown-divider"></li>
+                                                        
+                                                        <li class="dropdown-header">QR Code</li>
                                                         <li>
-                                                            <a class="dropdown-item text-danger" href="#" 
-                                                               onclick="if(confirm('Are you sure you want to delete this registration link?')) document.getElementById('delete-form-{{ link.id }}').submit();">
-                                                                <i class="fas fa-trash"></i> Delete
+                                                            <a class="dropdown-item text-dark" href="{% url 'quick_registration:download_qr' link_id=link.id %}">
+                                                                <i class="fas fa-download me-2"></i> Download QR
                                                             </a>
-                                                            <form id="delete-form-{{ link.id }}" action="#" method="post" style="display: none;">
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-dark" href="{% url 'quick_registration:regenerate_qr' link_id=link.id %}">
+                                                                <i class="fas fa-sync me-2"></i> Regenerate QR
+                                                            </a>
+                                                        </li>
+                                                        
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        
+                                                        <li class="dropdown-header">Event Cards</li>
+                                                        <li>
+                                                            <a class="dropdown-item text-dark" href="{% url 'quick_registration:generate_card' link_id=link.id %}">
+                                                                <i class="fas fa-id-card me-2"></i> Generate Event Cards
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-dark" href="{% url 'quick_registration:download_card_image' link_id=link.id %}">
+                                                                <i class="fas fa-image me-2"></i> Download Image Card
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-dark" href="{% url 'quick_registration:download_card_pdf' link_id=link.id %}">
+                                                                <i class="fas fa-file-pdf me-2"></i> Download PDF Card
+                                                            </a>
+                                                        </li>
+                                                        
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="javascript:void(0)"
+                                                               onclick="confirmDelete('{{ link.id }}')">
+                                                                <i class="fas fa-trash me-2"></i> Delete
+                                                            </a>
+                                                            <form id="delete-form-{{ link.id }}" action="{% url 'quick_registration:delete_link' link_id=link.id %}" method="post" style="display: none;">
                                                                 {% csrf_token %}
                                                             </form>
                                                         </li>
@@ -259,15 +295,15 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No registration links have been created yet.
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i> No registration links created yet.
                             <a href="{% url 'quick_registration:create_link' event_slug=event.slug %}" class="alert-link">Create your first link</a>.
                         </div>
                     {% endif %}
                 </div>
-                <div class="card-footer">
+                <div class="card-footer d-flex justify-content-end">
                     <a href="{% url 'events:event_dashboard' slug=event.slug %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Event Dashboard
+                        <i class="fas fa-arrow-left me-2"></i> Back to Event Dashboard
                     </a>
                 </div>
             </div>
@@ -275,28 +311,106 @@
     </div>
 </div>
 
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+    <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i> Link copied to clipboard!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal for Event Cards -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Event Card Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Event Card Preview" class="img-fluid mb-3">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="downloadLink" href="#" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Select all copy link buttons
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Toast initialization
+        var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+        var toastList = toastElList.map(function (toastEl) {
+            return new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 2000
+            });
+        });
+        
+        // Copy link functionality
         document.querySelectorAll('.copy-link').forEach(button => {
             button.addEventListener('click', function(event) {
-                event.preventDefault();  // Prevent default link behavior
-                
+                event.preventDefault();
                 const link = this.getAttribute('data-link');
-                
                 if (!link || link === '#') {
                     alert('Error: No valid link to copy.');
                     return;
                 }
                 
                 navigator.clipboard.writeText(link).then(() => {
-                    alert('✅ Link copied to clipboard!');
-                }).catch(() => {
+                    // Show toast notification
+                    var toast = bootstrap.Toast.getInstance(document.getElementById('copyToast'));
+                    if (toast) {
+                        toast.show();
+                    } else {
+                        var toast = new bootstrap.Toast(document.getElementById('copyToast'));
+                        toast.show();
+                    }
+                }).catch(err => {
+                    console.error('Clipboard error:', err);
                     alert('❌ Failed to copy link. Please try again.');
                 });
             });
         });
+        
+        // Image preview functionality
+        document.querySelectorAll('img.img-thumbnail').forEach(img => {
+            if (img.alt === "Event Card") {
+                img.style.cursor = 'pointer';
+                img.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const modalImg = document.getElementById('previewImage');
+                    const downloadLink = document.getElementById('downloadLink');
+                    const imgUrl = img.parentElement.href;
+                    
+                    modalImg.src = imgUrl;
+                    downloadLink.href = imgUrl;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                    modal.show();
+                });
+            }
+        });
     });
+    
+    // Confirm delete function
+    function confirmDelete(linkId) {
+        if (confirm('Are you sure you want to delete this registration link? This action cannot be undone.')) {
+            document.getElementById('delete-form-' + linkId).submit();
+        }
+    }
 </script>
-
 {% endblock %}

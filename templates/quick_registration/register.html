@@ -1,308 +1,332 @@
-{% extends 'users/db_base.html' %}
+{% extends 'users/auth_base.html' %}
 {% load static %}
-
-{% block title %}<title>SnapFlow : {{ event.title }} | Register</title>{% endblock %}
-
-
-{% block sidebar %}
-
-<li class="menu-item ">
-   <a href="{% url 'users:dashboard' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-home-circle"></i>
-      <div data-i18n="Analytics">Dashboard</div>
-   </a>
-</li>
-<li class="menu-header small text-uppercase">
-   <span class="menu-header-text">Account</span>
-</li>
-<li class="menu-item">
-   <a href="{% url 'users:profile' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-dock-top"></i>
-      <div>View Profile</div>
-   </a>
-</li>
-<li class="menu-item">
-   <a href="{% url 'notifications:list' %}" class="menu-link">
-      <i class="bx bx-bell me-1"></i>
-      <div>Notifications</div>
-   </a>
-</li>
-<li class="menu-item">
-   <a href="{% url 'users:connections' %}" class="menu-link">
-      <i class="bx bx-link-alt me-1"></i>
-      <div>Connections</div>
-   </a>
-</li>
-
-
-<li class="menu-header small text-uppercase">
-   <span class="menu-header-text">Event Handle</span>
-</li>
-
-
-<li class="menu-item">
-   <a href="{% url 'events:event_create' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-calendar-event"></i>
-      <div>Create Event</div>
-   </a>
-</li>
-
-
-
-
-<li class="menu-item">
-   <a href="{% url 'events:event_list' %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-cog"></i>
-      <div>View Events</div>
-   </a>
-</li>
-
-<li class="menu-item">
-  <a href="{% url 'events:access_requests' %}" class="menu-link">
-     <i class="menu-icon tf-icons bx bx-list-check"></i>
-     <div>Event Requests</div>
-  </a>
-</li>
-
-<li class="menu-item">
- <a href="{% url 'privacy:organizer_requests' %} " class="menu-link">
-   <i class="menu-icon tf-icons bx bx-dock-top"></i>
-   <div>Privacy Requests</div>
- </a>
-</li>
-
-
-<li class="menu-header small text-uppercase">
-  <span class="menu-header-text">Event Details</span>
-</li>
-<li class="menu-item">
-  <a href="{% url 'events:event_dashboard' event.slug %} " class="menu-link">
-  <i class="menu-icon tf-icons bx bx-dock-top"></i>
-  <div>Event Dashboard</div>
-  </a>
-</li>
-<li class="menu-item">
-  <a href="{% url 'highlights:event_highlights' event.slug %} " class="menu-link">
-  <i class="menu-icon tf-icons bx bx-dock-top"></i>
-  <div>Event Highlights</div>
-  </a>
-</li>
-<li class="menu-item">
-  <a href="{% url 'photos:event_gallery' event.slug %} " class="menu-link">
-    <i class="menu-icon tf-icons bx bx-dock-top"></i>
-    <div>View Gallery</div>
-  </a>
-</li>
-
-
-
-<li class="menu-header small text-uppercase">
-  <span class="menu-header-text">Event Settings</span>
-</li>
-<li class="menu-item">
-  <a href="{% url 'events:event_setup' event.slug 'privacy' %}" class="menu-link">
-  <i class="menu-icon tf-icons bx bx-dock-top"></i>
-  <div>Event Configuration</div>
-  </a>
-</li>
-<li class="menu-item  ">
-    <a href="{% url 'events:equipment_config' event.slug %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-cog"></i>
-      <div>Equipment Config </div>
-    </a>
-  </li>
-
-  <li class="menu-header small text-uppercase">
-    <span class="menu-header-text">Event Management</span>
-  </li>
-
-  <li class="menu-item active ">
-    <a href="{% url 'quick_registration:manage_links' event.slug %}" class="menu-link">
-      <i class="menu-icon tf-icons bx bx-cog"></i>
-      <div>Manage Links</div>
-    </a>
-  </li>
-
-
-
-<li class="menu-item">
-  <a href="{% url 'events:crew_management' event.slug %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-cog"></i>
-    <div>Manage Crew</div>
-  </a>
-</li>
-
-<li class="menu-item">
-  <a href="{% url 'events:event_participants' event.slug %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-cog"></i>
-    <div>View Participants</div>
-  </a>
-</li>
-
-
-
-
-<li class="menu-item">
-  <a href="{% url 'events:manage_gallery_access' event.slug %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-cog"></i>
-    <div>Gallery Requests</div>
-  </a>
-</li>
-<li class="menu-item">
-  <a href="{% url 'privacy:event_requests' event.slug %}" class="menu-link">
-    <i class="menu-icon tf-icons bx bx-cog"></i>
-    <div>Privacy requests</div>
-  </a>
-</li>
-
-
-
-{% endblock sidebar %}
-
-{% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Register for Event</h3>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        {% if event.logo %}
-                            <img src="{{ event.logo.url }}" alt="{{ event.title }} Logo" class="img-fluid mb-3" style="max-height: 100px;">
-                        {% endif %}
-                        <h4 class="card-title">{{ event.title }}</h4>
-                        <p class="text-muted">
-                            <i class="fas fa-calendar-alt"></i> 
-                            {{ event.start_date|date:"M d, Y" }}
-                            {% if event.end_date and event.end_date != event.start_date %}
-                                - {{ event.end_date|date:"M d, Y" }}
-                            {% endif %}
-                        </p>
-                        {% if event.location %}
-                            <p class="text-muted">
-                                <i class="fas fa-map-marker-alt"></i> {{ event.location }}
-                            </p>
-                        {% endif %}
-                    </div>
-                    
-                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                {{ form.non_field_errors }}
-                            </div>
-                        {% endif %}
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.name.id_for_label }}" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
-                                   class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
-                                   value="{{ form.name.value|default:'' }}" required>
-                            {% if form.name.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.name.errors }}
-                                </div>
-                            {% endif %}
-                            <small class="text-muted">Your name will be used as your username</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" 
-                                   class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
-                                   value="{{ form.email.value|default:'' }}" required>
-                            {% if form.email.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.email.errors }}
-                                </div>
-                            {% endif %}
-                            <small class="text-muted">This will be used to identify your photos</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
-                            <input type="tel" name="{{ form.phone_number.name }}" id="{{ form.phone_number.id_for_label }}" 
-                                   class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" 
-                                   value="{{ form.phone_number.value|default:'' }}">
-                            {% if form.phone_number.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.phone_number.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" 
-                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}" required>
-                            {% if form.password.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.password.errors }}
-                                </div>
-                            {% endif %}
-                            <small class="text-muted">Create a strong password for your account</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.confirm_password.id_for_label }}" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" name="{{ form.confirm_password.name }}" id="{{ form.confirm_password.id_for_label }}" 
-                                   class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" required>
-                            {% if form.confirm_password.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.confirm_password.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="{{ form.profile_image.id_for_label }}" class="form-label">Profile Image</label>
-                            <input type="file" name="{{ form.profile_image.name }}" id="{{ form.profile_image.id_for_label }}" 
-                                   class="form-control {% if form.profile_image.errors %}is-invalid{% endif %}" 
-                                   accept="image/*">
-                            {% if form.profile_image.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.profile_image.errors }}
-                                </div>
-                            {% endif %}
-                            <small class="text-muted">A clear face photo helps us identify you in event photos</small>
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
-                            <label class="form-check-label" for="termsCheck">
-                                I agree to participate in this event and allow the use of my information for event purposes
-                            </label>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">Register Now</button>
-                    </form>
-                </div>
-            </div>
+{% block title %} 
+<title>SnapFlow : Event Registration </title>
+{% endblock title %}
+{% block body_block %}
+<div class="container-xxl">
+   <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+         <div class="card">
+            <div class="card-body">
+               <div class="app-brand justify-content-center">
+                  <a href="{% url 'home:index' %}" class="app-brand-link gap-2">
+                  <span class="app-brand-text demo text-body fw-bolder">SnapFlow</span>
+                  </a>
+               </div>
+               <h4 class="mb-2">Register for Event 🚀</h4>
+               <p class="mb-4">{{ event.title }}</p>
+               
+               <div class="text-center mb-4">
+                  {% if event.logo %}
+                      <img src="{{ event.logo.url }}" alt="{{ event.title }} Logo" class="img-fluid mb-3" style="max-height: 100px;">
+                  {% endif %}
+                  <p class="text-muted">
+                      <i class="bx bx-calendar"></i> 
+                      {{ event.start_date|date:"M d, Y" }}
+                      {% if event.end_date and event.end_date != event.start_date %}
+                          - {{ event.end_date|date:"M d, Y" }}
+                      {% endif %}
+                  </p>
+                  {% if event.location %}
+                      <p class="text-muted">
+                          <i class="bx bx-map"></i> {{ event.location }}
+                      </p>
+                  {% endif %}
+               </div>
+               
+               <form method="post" enctype="multipart/form-data" class="mb-3" id="profile-form">
+                  {% csrf_token %}
+                  {% if form.non_field_errors %}
+                  <div class="alert alert-danger">
+                     {{ form.non_field_errors }}
+                  </div>
+                  {% endif %}
+                  
+                  <div class="mb-3">
+                     <label for="{{ form.name.id_for_label }}" class="form-label">Full Name <span class="text-danger">*</span></label>
+                     <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                            class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                            value="{{ form.name.value|default:'' }}" placeholder="Enter your full name" required />
+                     {% if form.name.errors %}
+                     <div class="text-danger">{{ form.name.errors }}</div>
+                     {% endif %}
+                  </div>
+                  
+                  <div class="mb-3">
+                     <label for="{{ form.email.id_for_label }}" class="form-label">Email <span class="text-danger">*</span></label>
+                     <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" 
+                            class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                            value="{{ form.email.value|default:'' }}" placeholder="Enter your email" required />
+                     {% if form.email.errors %}
+                     <div class="text-danger">{{ form.email.errors }}</div>
+                     {% endif %}
+                     <small class="text-muted">This will be used to identify your photos</small>
+                  </div>
+                  
+                  <div class="mb-3">
+                     <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                     <input type="tel" name="{{ form.phone_number.name }}" id="{{ form.phone_number.id_for_label }}" 
+                            class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" 
+                            value="{{ form.phone_number.value|default:'' }}" placeholder="Enter your phone number" />
+                     {% if form.phone_number.errors %}
+                     <div class="text-danger">{{ form.phone_number.errors }}</div>
+                     {% endif %}
+                  </div>
+                  
+<!-- Avatar Upload with Cropping -->
+<div class="mb-3 {% if form.avatar.errors %}has-error{% endif %}">
+    <label class="form-label">PROFILE PICTURE <span class="text-danger">*</span></label>
+    
+    <!-- Custom file input -->
+    <input type="file" class="form-control" id="avatar-input" accept="image/*" required>
+    <input type="hidden" name="avatar_data" id="avatar-data" value="{{ form.avatar_data.value|default:'' }}">
+    
+    <small class="form-text text-muted">Upload a clear profile image (required)</small>
+    
+    <!-- Error message container -->
+    <div id="avatar-error" class="text-danger mt-1 field-error" style="display: none;"></div>
+    
+    <!-- Image Preview and Cropping Area -->
+    <div class="mt-3" id="cropper-container" style="display: none;">
+        <div class="cropper-wrapper" style="max-height: 400px; overflow: hidden; border: 1px solid #ddd; border-radius: 4px;">
+            <img id="preview" src="#" alt="Preview" style="max-width: 100%;">
+        </div>
+        <div class="mt-2 d-flex justify-content-center">
+            <button type="button" class="btn btn-primary btn-sm me-2" id="crop-btn">
+                Crop Image
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cancel-crop">
+                Cancel
+            </button>
         </div>
     </div>
+    
+    <!-- Cropped Preview -->
+    <div class="mt-3 text-center" id="cropped-preview-container" style="display: none;">
+        <div class="cropped-preview-wrapper" style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; overflow: hidden; border: 1px solid #ddd;">
+            <img id="cropped-preview" src="#" alt="Cropped Preview" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <small class="text-muted d-block mt-2">Profile preview</small>
+    </div>
+    
+    {% if form.avatar.errors %}
+    <div class="text-danger mt-1 field-error">
+        {{ form.avatar.errors }}
+    </div>
+    {% endif %}
+</div>
+                  
+                  <div class="mb-3 form-password-toggle">
+                     <label class="form-label" for="{{ form.password.id_for_label }}">Password <span class="text-danger">*</span></label>
+                     <div class="input-group input-group-merge">
+                        <input type="password" id="{{ form.password.id_for_label }}" name="{{ form.password.name }}" 
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                               placeholder="••••••••" required />
+                        <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                     </div>
+                     {% if form.password.errors %}
+                     <div class="text-danger">{{ form.password.errors }}</div>
+                     {% endif %}
+                  </div>
+                  
+                  <div class="mb-3 form-password-toggle">
+                     <label class="form-label" for="{{ form.confirm_password.id_for_label }}">Confirm Password <span class="text-danger">*</span></label>
+                     <div class="input-group input-group-merge">
+                        <input type="password" id="{{ form.confirm_password.id_for_label }}" name="{{ form.confirm_password.name }}" 
+                               class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" 
+                               placeholder="••••••••" required />
+                        <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                     </div>
+                     {% if form.confirm_password.errors %}
+                     <div class="text-danger">{{ form.confirm_password.errors }}</div>
+                     {% endif %}
+                  </div>
+                  
+                  <div class="mb-3 form-check">
+                     <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                     <label class="form-check-label" for="termsCheck">
+                        I agree to participate in this event and allow the use of my information for event purposes
+                     </label>
+                  </div>
+                  
+                  <button class="btn btn-primary d-grid w-100" type="submit">Register Now</button>
+               </form>
+               
+               <p class="text-center">
+                  <span>Already have an account?</span>
+                  <a href="{% url 'users:login' %}">
+                  <span>Sign in instead</span>
+                  </a>
+               </p>
+            </div>
+         </div>
+      </div>
+   </div>
 </div>
 
-{% block extra_js %}
+<!-- Add Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+
+<!-- JavaScript for Image Cropping -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
-    // Form validation
-    (function() {
-        'use strict';
-        window.addEventListener('load', function() {
-            var forms = document.getElementsByClassName('needs-validation');
-            var validation = Array.prototype.filter.call(forms, function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (form.checkValidity() === false) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatarInput = document.getElementById('avatar-input');
+        const avatarData = document.getElementById('avatar-data');
+        const preview = document.getElementById('preview');
+        const cropperContainer = document.getElementById('cropper-container');
+        const croppedPreviewContainer = document.getElementById('cropped-preview-container');
+        const croppedPreview = document.getElementById('cropped-preview');
+        const cropBtn = document.getElementById('crop-btn');
+        const cancelBtn = document.getElementById('cancel-crop');
+        const avatarError = document.getElementById('avatar-error');
+        let cropper;
+
+        // Show preview and initialize cropper when image is selected
+        avatarInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            avatarError.style.display = 'none';
+            
+            if (!files || !files.length) return;
+            
+            const file = files[0];
+            if (!file.type.match('image.*')) {
+                showError('Please select an image file.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                cropperContainer.style.display = 'block';
+                croppedPreviewContainer.style.display = 'none';
+                
+                // Destroy existing cropper if it exists
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                // Initialize cropper
+                cropper = new Cropper(preview, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 0.8,
+                    responsive: true,
+                    checkOrientation: false,
+                    guides: true,
+                    center: true,
+                    background: false,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: true,
+                    scalable: true
+                });
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        // Crop the image when crop button is clicked
+        cropBtn.addEventListener('click', function() {
+            if (!cropper) {
+                showError('Please select an image first.');
+                return;
+            }
+            
+            // Get cropped image as a canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300,
+                minWidth: 150,
+                minHeight: 150,
+                maxWidth: 800,
+                maxHeight: 800,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
             });
-        }, false);
-    })();
+            
+            if (!canvas) {
+                showError('Failed to crop image. Please try again.');
+                return;
+            }
+            
+            // Show the cropped image
+            croppedPreview.src = canvas.toDataURL('image/jpeg', 0.9);
+            croppedPreviewContainer.style.display = 'block';
+            
+            // Store the cropped image data in the hidden input
+            avatarData.value = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Hide the cropper
+            cropperContainer.style.display = 'none';
+            
+            // Destroy the cropper
+            cropper.destroy();
+            cropper = null;
+        });
+        
+        // Cancel button event handler
+        cancelBtn.addEventListener('click', function() {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            cropperContainer.style.display = 'none';
+            avatarInput.value = '';
+            avatarData.value = '';
+            croppedPreviewContainer.style.display = 'none';
+        });
+        
+        // Validate form submission
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            const hasFile = avatarInput.files.length > 0;
+            const hasCroppedImage = avatarData.value !== '';
+            
+            if (!hasFile) {
+                e.preventDefault();
+                showError('Please upload a profile picture.');
+                return;
+            }
+            
+            if (hasFile && !hasCroppedImage) {
+                e.preventDefault();
+                showError('Please crop your profile picture before submitting.');
+                return;
+            }
+        });
+        
+        function showError(message) {
+            avatarError.textContent = message;
+            avatarError.style.display = 'block';
+        }
+    });
 </script>
-{% endblock %}
+
+<style>
+    .cropper-wrapper {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+    
+    .cropper-view-box,
+    .cropper-face {
+        border-radius: 50%;
+    }
+    
+    #preview {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    .cropped-preview-wrapper {
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+</style>
 {% endblock %}

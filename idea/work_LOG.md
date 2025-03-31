@@ -229,6 +229,10 @@
 - updated highlights/tasks and analysis to correct blur photo detection
 - reduced the notification sent frequecy to 2 times a day and a weekly digest
 
+### 12 noon
+- added the delete link functionality
+- corrected and updated the quick registration template.
+- implemented event card creation functionality
 
 ## Errors to correct
 

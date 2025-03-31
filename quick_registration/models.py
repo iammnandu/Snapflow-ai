@@ -9,6 +9,19 @@ from PIL import Image
 import os
 from django.conf import settings
 
+# Update your quick_registration/models.py
+
+from django.db import models
+from django.urls import reverse
+from django.core.files.base import ContentFile
+from events.models import Event
+import qrcode
+from io import BytesIO
+from django.core.files import File
+from PIL import Image
+import os
+from django.conf import settings
+
 
 class QuickRegistrationLink(models.Model):
     """Model to store quick registration links for events"""
@@ -18,6 +31,8 @@ class QuickRegistrationLink(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
+    event_card_image = models.ImageField(upload_to='event_cards/', blank=True, null=True)
+    event_card_pdf = models.FileField(upload_to='event_cards_pdf/', blank=True, null=True)
     
     def __str__(self):
         return f"Quick Registration for {self.event.title}"
@@ -59,3 +74,32 @@ class QuickRegistrationLink(models.Model):
         self.save()
         
         return self.qr_code
+    
+    def generate_event_card(self, request=None, format_type='both'):
+        """
+        Generate event card with event details and QR code
+        
+        Args:
+            request: HTTP request object for generating full URLs
+            format_type: Type of card to generate ('image', 'pdf', or 'both')
+            
+        Returns:
+            self: The updated object with generated cards
+        """
+        # Import utility functions here to avoid circular imports
+        from .utils import generate_event_card_image, generate_event_card_pdf
+        
+        # Generate image card if requested
+        if format_type in ['image', 'both']:
+            buffer = generate_event_card_image(self, request)
+            image_filename = f'event_{self.event.id}_card_{self.code}.png'
+            self.event_card_image.save(image_filename, File(buffer), save=False)
+        
+        # Generate PDF card if requested
+        if format_type in ['pdf', 'both']:
+            buffer = generate_event_card_pdf(self, request)
+            pdf_filename = f'event_{self.event.id}_card_{self.code}.pdf'
+            self.event_card_pdf.save(pdf_filename, File(buffer), save=False)
+        
+        self.save()
+        return self

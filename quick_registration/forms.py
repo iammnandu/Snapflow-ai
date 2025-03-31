@@ -10,9 +10,12 @@ class QuickRegistrationForm(forms.Form):
     name = forms.CharField(max_length=150, required=True)
     email = forms.EmailField(required=True)
     phone_number = forms.CharField(max_length=15, required=False)
-    profile_image = forms.ImageField(required=False)
+    avatar = forms.ImageField(required=False)  # Changed to not required
+    avatar_data = forms.CharField(required=False, widget=forms.HiddenInput())
     password = forms.CharField(widget=forms.PasswordInput(), required=True)
     confirm_password = forms.CharField(widget=forms.PasswordInput(), required=True)
+    
+    # Rest of the form remains the same
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
