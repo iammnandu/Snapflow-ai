@@ -1,0 +1,86 @@
+<!-- templates/notifications/emails/batch_digest.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your {{ batch_time|title }} SnapFlow Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #3498db;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            font-size: 18px;
+            margin-top: 25px;
+        }
+        .notification {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            background-color: #f9f9f9;
+        }
+        .notification-time {
+            color: #888;
+            font-size: 12px;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>Your {{ batch_time|title }} SnapFlow Update</h1>
+    
+    <p>Hello {{ user.first_name|default:user.username }},</p>
+    
+    <p>Here's a summary of what's happened since our last update:</p>
+    
+    {% for group_name, group_notifications in notification_groups.items %}
+        <h2>{{ group_name }} ({{ group_notifications|length }})</h2>
+        
+        {% for notification in group_notifications %}
+            <div class="notification">
+                <div>{{ notification.message }}</div>
+                <div class="notification-time">{{ notification.created_at|date:"F j, Y, g:i a" }}</div>
+                
+                {% if notification.action_url %}
+                    <a href="{{ site_url }}{{ notification.action_url }}" class="action-button">View Details</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% endfor %}
+    
+    <div class="footer">
+        <p>
+            You received this email because you've chosen to receive {{ batch_time }} email updates.
+            You can change your notification preferences in your 
+            <a href="{{ site_url }}{% url 'notifications:preferences' %}">account settings</a>.
+        </p>
+        
+        <p>© {{ site_name }} - All rights reserved</p>
+    </div>
+</body>
+</html>

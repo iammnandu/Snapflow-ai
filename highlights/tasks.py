@@ -51,9 +51,14 @@ def analyze_photo_quality(photo_id):
             'LIGHTING': {'limit': 5, 'min_score': 80},
         }
         
-        # Define thresholds for problem categories
+        # Define thresholds for problem categories with shot-type awareness
         problem_categories = {
-            'BLURRY': {'limit': 10, 'threshold': 40},  # Photos with blur_score < 40
+            'BLURRY': {
+                'limit': 10, 
+                'portrait_threshold': 30,  # More permissive for portraits
+                'group_threshold': 35,     # Slightly more permissive for groups
+                'standard_threshold': 40   # Standard threshold for other shots
+            },
             'UNDEREXPOSED': {'limit': 10, 'threshold': True},  # Boolean value
             'OVEREXPOSED': {'limit': 10, 'threshold': True},  # Boolean value
             'ACCIDENTAL': {'limit': 10, 'threshold': True},  # Boolean value
@@ -86,9 +91,19 @@ def analyze_photo_quality(photo_id):
                     update_category_best_shot(event, photo, category_score, category, 
                                             good_categories[category]['limit'])
         
-        # Handle problem categories separately
-        # BLURRY photos
-        if results['blur_score'] < problem_categories['BLURRY']['threshold']:
+        # Handle problem categories separately with shot-type awareness
+        # BLURRY photos - use different thresholds based on shot type
+        shot_type = results['shot_type']
+        
+        # Determine blur threshold based on shot type
+        if shot_type == 'PORTRAIT':
+            blur_threshold = problem_categories['BLURRY']['portrait_threshold']
+        elif shot_type == 'GROUP':
+            blur_threshold = problem_categories['BLURRY']['group_threshold']
+        else:
+            blur_threshold = problem_categories['BLURRY']['standard_threshold']
+            
+        if results['blur_score'] < blur_threshold:
             # For problem categories, lower score = worse = higher priority to show
             inverted_score = 100 - results['blur_score']
             update_problem_shot(event, photo, inverted_score, 'BLURRY', 
@@ -120,34 +135,6 @@ def analyze_photo_quality(photo_id):
     except Exception as e:
         logger.error(f"Error analyzing photo {photo_id}: {str(e)}")
         return None
-
-
-def update_category_best_shot(event, photo, score, category, limit):
-    """Helper function to update best shots for a category."""
-    try:
-        with transaction.atomic():
-            existing_count = BestShot.objects.filter(event=event, category=category).count()
-            
-            if existing_count < limit:
-                # Always add if we have fewer than the limit
-                BestShot.objects.create(
-                    event=event,
-                    photo=photo,
-                    score=score,
-                    category=category
-                )
-            else:
-                # Otherwise, replace the lowest-scoring shot if this one is better
-                lowest_shot = BestShot.objects.filter(
-                    event=event, category=category
-                ).order_by('score').first()
-                
-                if lowest_shot and score > lowest_shot.score:
-                    lowest_shot.photo = photo
-                    lowest_shot.score = score
-                    lowest_shot.save()
-    except Exception as e:
-        logger.error(f"Error updating best shot for category {category}: {str(e)}")
 
 
 def update_problem_shot(event, photo, inverted_score, category, limit):

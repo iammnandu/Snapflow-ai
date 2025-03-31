@@ -220,6 +220,15 @@
 ##  8 30pm
 - added the event delete view
 
+## 31 March
+### 6 45 am
+- corrected and updated the sidebar of all template
+### 8 am
+- modified photo detail template
+- updated the photos/tasks to enhance tag generation
+- updated highlights/tasks and analysis to correct blur photo detection
+- reduced the notification sent frequecy to 2 times a day and a weekly digest
+
 
 ## Errors to correct
 

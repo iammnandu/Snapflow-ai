@@ -1,38 +1,35 @@
-from django.conf import settings
-from django.utils import timezone
+# events/views.py
 import json
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+import logging
+
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 from django.db.models import Q, Sum
-from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
+from django.http import (
+    Http404, HttpResponseRedirect, JsonResponse, HttpResponseForbidden
+)
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_http_methods
 from django.views.generic import (
-    ListView, DetailView, CreateView, UpdateView, FormView, View
+    ListView, DetailView, CreateView, UpdateView, DeleteView, FormView, View
 )
-from django.views.generic.edit import UpdateView
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from .models import (
     Event, EventAccessRequest, EventCrew, EventParticipant, EventConfiguration, EventTheme
 )
 from .forms import (
     EventAccessRequestForm, EventCreationForm, EventConfigurationForm, CrewInvitationForm,
-    ParticipantInvitationForm, EventThemeForm, PrivacySettingsForm
+    ParticipantInvitationForm, EventThemeForm, PrivacySettingsForm, ContactOrganizerForm
 )
 
-
-from django.views.generic import DeleteView
-from django.urls import reverse_lazy
-from django.contrib.auth.mixins import UserPassesTestMixin
-
-from .models import Event, EventAccessRequest, EventParticipant
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -164,10 +161,7 @@ class EventSetupView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return reverse('events:event_dashboard', kwargs={'slug': event.slug})
 
 
-from django.shortcuts import render
-from django.views.generic import DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Sum
+
 
 class EventDashboardView(LoginRequiredMixin, DetailView):
     model = Event
@@ -217,14 +211,6 @@ class EventDashboardView(LoginRequiredMixin, DetailView):
             context['gallery_access_status'] = participant.gallery_access
 
         return context
-
-
-# events/views.py
-from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
-from django.core.mail import send_mail
-from django.conf import settings
-from .forms import ContactOrganizerForm
 
 def contact_organizer(request, slug):
     event = get_object_or_404(Event, slug=slug)
@@ -542,6 +528,8 @@ class EventListView(ListView):
         
         return context
 
+
+
 class RequestEventAccessView(LoginRequiredMixin, FormView):
     template_name = 'events/request_access.html'
     form_class = EventAccessRequestForm
@@ -665,6 +653,7 @@ def request_access(request):
     })
 
 
+
 @login_required
 def cancel_access_request(request, request_id):
     """
@@ -705,6 +694,8 @@ def cancel_access_request(request, request_id):
     # Redirect back to the access requests list
     return redirect('events:access_requests')
 
+
+
 @login_required
 def access_requests_list(request):
     # First check if any of the events exist
@@ -742,6 +733,9 @@ def access_requests_list(request):
     }
     
     return render(request, 'events/request_list.html', context)
+
+
+
 @login_required
 @require_http_methods(["POST"])
 def approve_request(request, request_id):
@@ -802,6 +796,8 @@ def approve_request(request, request_id):
         messages.error(request, f'An error occurred while processing the request: {str(e)}')
     
     return redirect('events:access_requests')
+
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -955,12 +951,6 @@ class ResendParticipantInviteView(LoginRequiredMixin, View):
         messages.success(request, f"Invitation has been resent to {participant.name}.")
         return HttpResponseRedirect(reverse('events:event_participants', kwargs={'slug': event.slug}))
     
-
-
-
-
-# In events/views.py
-
 class RequestGalleryAccessView(LoginRequiredMixin, View):
     def get(self, request, slug):
         event = get_object_or_404(Event, slug=slug)
@@ -1032,7 +1022,6 @@ class ManageGalleryAccessView(LoginRequiredMixin, View):
             'denied_requests': denied_requests
         })
 
-from django.core.mail import send_mail
 
 
 def approve_gallery_access(request, slug, participant_id):

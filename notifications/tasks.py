@@ -16,6 +16,18 @@ def send_notification_email(notification_id):
         return f"Error sending email for notification {notification_id}: {str(e)}"
 
 @shared_task
+def process_morning_email_batch():
+    """Process morning batch of emails"""
+    NotificationService.process_email_batches('morning')
+    return "Morning email batch processed"
+
+@shared_task
+def process_evening_email_batch():
+    """Process evening batch of emails"""
+    NotificationService.process_email_batches('evening')
+    return "Evening email batch processed"
+
+@shared_task
 def send_daily_digest():
     """Send daily digest emails to users who have opted in"""
     from .models import NotificationPreference, Notification

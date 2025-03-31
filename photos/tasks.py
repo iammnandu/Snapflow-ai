@@ -1,26 +1,28 @@
-# tasks.py
+# photos/tasks.py
 import os
-import cv2
-import face_recognition
-import numpy as np
+import shutil
+import logging
+import tempfile
+import concurrent.futures
+from functools import partial
+from pathlib import Path
+
+import cv2 # type: ignore
+import face_recognition  # type: ignore
+import numpy as np # type: ignore
+from PIL import Image, ImageEnhance, ImageFilter
+from scipy.spatial.distance import cosine  # type: ignore
+from deepface import DeepFace  # type: ignore
+
+from celery import shared_task, chord, group  # type: ignore
+from celery.exceptions import MaxRetriesExceededError  # type: ignore
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from celery import shared_task, chord, group # type: ignore
-from PIL import Image, ImageEnhance, ImageFilter
-import logging
-from scipy.spatial.distance import cosine # type: ignore
-import tempfile
-from pathlib import Path
-import shutil
-import concurrent.futures
-from functools import partial
 
 from .models import EventPhoto, UserPhotoMatch
-from celery.exceptions import MaxRetriesExceededError # type: ignore
 
-# Add this import at the top of tasks.py
-from deepface import DeepFace # type: ignore
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -630,42 +632,260 @@ def match_face_with_users(face_rep, event_users_data):
 
 
 def generate_tags(image, event_type):
-    """Generate tags based on image content and event type."""
-    # Note: In a production environment, you would integrate with a computer vision 
-    # API like Google Vision, Azure Computer Vision, or use a pre-trained model
-    
-    # Simple placeholder implementation - this would be replaced with actual ML model
+    """
+    Generate tags based on image content and event type.
+    Uses multiple detection techniques to provide rich scene understanding.
+    """
+    import numpy as np
+    import cv2
+    from sklearn.cluster import KMeans
+    import logging
+
+    logger = logging.getLogger(__name__)
     tags = []
     
     # 1. Add event type as a tag
     if event_type:
         tags.append(event_type.lower())
     
-    # 2. Basic color analysis for scene detection
     try:
+        # 2. Advanced scene analysis
         hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        
-        # Check if it's likely an outdoor scene (analyzing blue sky presence)
         h_channel, s_channel, v_channel = cv2.split(hsv_image)
+        
+        # 2.1 Indoor/Outdoor detection
+        # Check for sky presence (blue color)
         blue_mask = cv2.inRange(hsv_image, (100, 50, 50), (130, 255, 255))
         blue_ratio = cv2.countNonZero(blue_mask) / (image.shape[0] * image.shape[1])
         
-        if blue_ratio > 0.15:
+        # Check for green (vegetation)
+        green_mask = cv2.inRange(hsv_image, (35, 50, 50), (85, 255, 255))
+        green_ratio = cv2.countNonZero(green_mask) / (image.shape[0] * image.shape[1])
+        
+        # Combined outdoor indicators
+        if blue_ratio > 0.15 or green_ratio > 0.2:
             tags.append("outdoor")
+            
+            # Add nature tags if significant greenery
+            if green_ratio > 0.3:
+                tags.append("nature")
+                
+            # Check for beach/water scene
+            if blue_ratio > 0.25:
+                # Water and sand detection
+                sand_mask = cv2.inRange(hsv_image, (20, 10, 180), (40, 60, 255))
+                sand_ratio = cv2.countNonZero(sand_mask) / (image.shape[0] * image.shape[1])
+                
+                if sand_ratio > 0.1:
+                    tags.append("beach")
+                elif blue_ratio > 0.35:
+                    tags.append("water")
         else:
             tags.append("indoor")
+            
+            # Check for indoor venue characteristics
+            # Detect stage/performance setting
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 50, 150)
+            
+            # Check for strong horizontal/vertical lines (typical in indoor venues)
+            lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=100, minLineLength=100, maxLineGap=10)
+            if lines is not None and len(lines) > 10:
+                horizontal_lines = 0
+                vertical_lines = 0
+                
+                for line in lines:
+                    x1, y1, x2, y2 = line[0]
+                    if abs(y2 - y1) < 20:  # Horizontal line
+                        horizontal_lines += 1
+                    if abs(x2 - x1) < 20:  # Vertical line
+                        vertical_lines += 1
+                
+                if horizontal_lines > 5 and vertical_lines > 5:
+                    tags.append("venue")
         
-        # 3. Check for specific lighting conditions
-        if np.mean(v_channel) < 75:
+        # 2.2 Time of day detection
+        avg_brightness = np.mean(v_channel)
+        if avg_brightness < 70:
+            tags.append("night")
             tags.append("dark")
-        elif np.mean(v_channel) > 200:
+        elif avg_brightness < 120:
+            # Check color temperature for sunset/sunrise
+            if np.mean(h_channel) > 10 and np.mean(h_channel) < 30:
+                tags.append("sunset")
+            else:
+                tags.append("dim")
+        elif avg_brightness > 200:
             tags.append("bright")
+        
+        # 2.3 Color palette analysis
+        # Resize image for faster processing
+        small_image = cv2.resize(image, (100, 100))
+        pixels = small_image.reshape(-1, 3)
+        
+        # Extract dominant colors using K-means
+        kmeans = KMeans(n_clusters=3)
+        kmeans.fit(pixels)
+        dominant_colors = kmeans.cluster_centers_
+        
+        # Check for vibrant colors
+        saturation_values = []
+        for color in dominant_colors:
+            b, g, r = color
+            color_hsv = cv2.cvtColor(np.uint8([[[b, g, r]]]), cv2.COLOR_BGR2HSV)[0][0]
+            saturation_values.append(color_hsv[1])
+        
+        avg_saturation = np.mean(saturation_values)
+        if avg_saturation > 150:
+            tags.append("colorful")
+        elif avg_saturation < 70:
+            tags.append("muted")
+        
+        # 2.4 Detect crowd density
+        # Use face detection to approximate crowd
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        
+        if len(faces) > 10:
+            tags.append("crowd")
+        elif len(faces) > 5:
+            tags.append("group")
+        elif len(faces) > 0:
+            tags.append("people")
+        
+        # 2.5 Context-specific tags based on event_type
+        if event_type:
+            event_type_lower = event_type.lower()
+            
+            # Wedding specific
+            if "wedding" in event_type_lower:
+                # Detect white (bride's dress)
+                white_mask = cv2.inRange(image, (200, 200, 200), (255, 255, 255))
+                white_ratio = cv2.countNonZero(white_mask) / (image.shape[0] * image.shape[1])
+                
+                if white_ratio > 0.15:
+                    tags.append("ceremony")
+                
+                # Check for specific colors associated with weddings
+                if is_color_present(image, (0, 0, 128), 0.1):  # Dark blue
+                    tags.append("formal")
+            
+            # Concert/music specific
+            elif "concert" in event_type_lower or "music" in event_type_lower:
+                # Detect stage lighting (bright spots in dark environment)
+                if "dark" in tags or "night" in tags:
+                    # Find bright spots in dark setting
+                    bright_spots = cv2.threshold(v_channel, 200, 255, cv2.THRESH_BINARY)[1]
+                    bright_ratio = cv2.countNonZero(bright_spots) / (image.shape[0] * image.shape[1])
+                    
+                    if bright_ratio > 0.05 and bright_ratio < 0.3:
+                        tags.append("stage_lighting")
+                        tags.append("performance")
+            
+            # Sports specific
+            elif "sports" in event_type_lower or "game" in event_type_lower:
+                # Detect green field
+                if green_ratio > 0.4:
+                    tags.append("field")
+                
+                # Detect stadium features
+                if "crowd" in tags and "outdoor" in tags:
+                    tags.append("stadium")
+            
+            # Conference specific
+            elif "conference" in event_type_lower or "meeting" in event_type_lower:
+                # Detect presentation screens
+                # Look for bright rectangular regions
+                if "indoor" in tags:
+                    # Simple screen detection using contours
+                    _, thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+                    contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                    
+                    for contour in contours:
+                        x, y, w, h = cv2.boundingRect(contour)
+                        aspect_ratio = float(w) / h
+                        
+                        # Screen-like aspect ratio and minimum size
+                        if 1.2 < aspect_ratio < 2.0 and w > image.shape[1] / 5:
+                            tags.append("presentation")
+                            break
+        
+        # 3. Detection of specific compositions
+        # Check for food
+        if event_type and ("dinner" in event_type.lower() or "reception" in event_type.lower() or 
+                           "party" in event_type.lower() or "banquet" in event_type.lower()):
+            # Simple food detection based on color patterns and textures
+            # This is very basic - real production would use a trained model
+            saturation_mean = np.mean(s_channel)
+            saturation_std = np.std(s_channel)
+            
+            # Food often has varied colors and textures
+            if saturation_mean > 80 and saturation_std > 40 and "people" not in tags:
+                tags.append("food")
+                
+        # 4. Quality-based tags
+        # Calculate blur using Laplacian variance
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        if laplacian_var < 100:
+            tags.append("blurry")
+        elif laplacian_var > 500:
+            tags.append("sharp")
+        
+        # Check if it's a portrait-style photo
+        if len(faces) == 1:
+            face_area = faces[0][2] * faces[0][3]
+            image_area = image.shape[0] * image.shape[1]
+            
+            if face_area / image_area > 0.15:
+                tags.append("portrait")
+            
+        # 5. Common objects detection
+        # In production, you'd use a model like YOLO or SSD
+        # This is a simplified approximation
+        
+        # Add other contextual tags based on event type
+        if event_type:
+            event_lower = event_type.lower()
+            
+            event_tag_map = {
+                'birthday': ['celebration', 'party'],
+                'wedding': ['celebration', 'ceremony'],
+                'corporate': ['business', 'professional'],
+                'conference': ['business', 'presentation'],
+                'concert': ['entertainment', 'music'],
+                'festival': ['celebration', 'entertainment'],
+                'sports': ['athletic', 'competition'],
+                'party': ['celebration', 'social'],
+                'graduation': ['academic', 'ceremony'],
+                'reunion': ['social', 'gathering']
+            }
+            
+            # Add relevant tags based on event type
+            for key, value_tags in event_tag_map.items():
+                if key in event_lower:
+                    tags.extend(value_tags)
+        
     except Exception as e:
-        logger.error(f"Error in color analysis: {str(e)}")
-        # Add default tags if color analysis fails
-        tags.append("indoor")
+        logger.error(f"Error in tag generation: {str(e)}", exc_info=True)
+        # Add default tags if analysis fails
+        if not any(tag in tags for tag in ['indoor', 'outdoor']):
+            tags.append("indoor")
     
-    return list(set(tags))  # Remove duplicates
+    # Return unique tags (remove duplicates)
+    return list(set(tags))
+
+def is_color_present(image, color_bgr, min_ratio=0.05):
+    """Check if a specific color is present in significant amount in the image"""
+    # Convert BGR color to a range
+    lower_bound = np.array([max(0, c - 30) for c in color_bgr])
+    upper_bound = np.array([min(255, c + 30) for c in color_bgr])
+    
+    # Create a mask for the color
+    mask = cv2.inRange(image, lower_bound, upper_bound)
+    ratio = cv2.countNonZero(mask) / (image.shape[0] * image.shape[1])
+    
+    return ratio > min_ratio
 
 
 def enhance_photo(photo):

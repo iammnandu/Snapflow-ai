@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-
+from .models import Event, DuplicateGroup
 from events.models import Event
 from .models import BestShot, DuplicateGroup, DuplicatePhoto
 
@@ -44,10 +44,6 @@ def event_highlights(request, event_slug):
     
     return render(request, 'highlights/event_highlights.html', context)
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from .models import Event, DuplicateGroup
 
 @login_required
 def duplicate_photos(request, event_slug):

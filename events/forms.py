@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.contrib.auth import get_user_model
+
 
 class EventCreationForm(forms.ModelForm):
     class Meta:
@@ -31,11 +33,6 @@ class EventConfigurationForm(forms.ModelForm):
             choices=[('jpg', 'JPG'), ('png', 'PNG'), ('heic', 'HEIC')]
         )
 
-# forms.py
-from django import forms
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
 
 class CrewInvitationForm(forms.ModelForm):
     username = forms.CharField(
@@ -127,11 +124,6 @@ class EventAccessRequestForm(forms.Form):
         except Event.DoesNotExist:
             raise forms.ValidationError('Invalid event code')
         
-
-
-        # events/forms.py
-from django import forms
-
 class ContactOrganizerForm(forms.Form):
     subject = forms.CharField(max_length=100, required=True)
     message = forms.CharField(widget=forms.Textarea, required=True)

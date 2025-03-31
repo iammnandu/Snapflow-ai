@@ -1,22 +1,30 @@
-# views.py (updated)
+# photos/views.py
+import os
+import io
 import json
+import zipfile
+from io import BytesIO
+
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import DetailView, View
-from django.views.generic.list import ListView
+from django.views.generic import DetailView, View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.urls import path, reverse
+from django.http import JsonResponse, HttpResponse, FileResponse
+from django.views.decorators.http import require_POST
+
 from django.db.models import F, Q
-from django.contrib.auth.decorators import login_required
+
 from events.models import Event, EventParticipant
-from .models import (
-    EventPhoto, PhotoLike, PhotoComment, 
-    UserPhotoMatch, UserGallery
-)
+from .models import EventPhoto, PhotoLike, PhotoComment, UserPhotoMatch, UserGallery
 from .tasks import *
 
-# In photos/views.py, m
+
+
 class EventGalleryView(DetailView):
     model = Event
     template_name = 'photos/gallery.html'
@@ -372,8 +380,6 @@ class UserGalleryView(LoginRequiredMixin, ListView):
     
 
 
-
-
 @login_required
 def reanalyze_faces(request, pk):
     photo = get_object_or_404(EventPhoto, pk=pk)
@@ -397,19 +403,6 @@ def reanalyze_faces(request, pk):
     messages.success(request, "Photo queued for face reanalysis.")
     return redirect('photos:photo_detail', pk=pk)
 
-
-
-
-# Add these imports at the top of your views.py file
-import os
-import zipfile
-from io import BytesIO
-from django.http import HttpResponse, FileResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.urls import path
-from django.core.files.storage import default_storage
-from django.views.decorators.http import require_POST
 
 @login_required
 @require_POST
@@ -472,17 +465,6 @@ def download_photos(request, slug):
     
     return response
 
-
-
-from django.http import FileResponse, HttpResponse
-from django.views.generic import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
-from django.urls import reverse
-from django.core.files.base import ContentFile
-import zipfile
-import io
-import os
 
 class DownloadPhotosView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):

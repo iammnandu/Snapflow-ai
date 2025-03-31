@@ -35,6 +35,23 @@ class NotificationPreference(models.Model):
     receive_daily_digest = models.BooleanField(default=False)
     receive_weekly_digest = models.BooleanField(default=True)
     
+    # Email batching preferences
+    EMAIL_FREQUENCY_CHOICES = (
+        ('immediate', 'Send Immediately'),
+        ('batched', 'Send in Morning and Evening Batches'),
+        ('daily', 'Send Once Daily'),
+        ('weekly', 'Send Weekly Digest Only')
+    )
+    email_frequency = models.CharField(max_length=10, choices=EMAIL_FREQUENCY_CHOICES, default='batched')
+    
+    # Time preferences for batched emails
+    BATCH_TIME_CHOICES = (
+        ('morning', 'Morning (9 AM)'),
+        ('evening', 'Evening (5 PM)'),
+        ('both', 'Both Morning and Evening')
+    )
+    preferred_batch_time = models.CharField(max_length=10, choices=BATCH_TIME_CHOICES, default='both')
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -177,3 +194,30 @@ class EmailLog(models.Model):
     
     def __str__(self):
         return f"Email to {self.recipient_email}: {self.subject}"
+    
+
+
+class PendingEmailNotification(models.Model):
+    """Queue for notifications waiting to be sent in the next batch"""
+    notification = models.OneToOneField(Notification, on_delete=models.CASCADE, related_name='pending_email')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Priority levels - higher numbers will be sent even in small batches
+    PRIORITY_LEVELS = (
+        (1, 'Low'),      # Likes, comments
+        (2, 'Medium'),   # Photo uploads, event updates
+        (3, 'High'),     # Invitations, face recognition
+        (4, 'Critical')  # System notifications, access approvals (always sent immediately)
+    )
+    priority = models.IntegerField(choices=PRIORITY_LEVELS, default=2)
+    
+    # Batch assignment - which email batch this notification is assigned to
+    # null means not yet assigned to a batch
+    batch_time = models.CharField(max_length=10, choices=(('morning', 'Morning'), ('evening', 'Evening')), 
+                                  null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-priority', 'created_at']  # Process higher priority and older notifications first
+    
+    def __str__(self):
+        return f"Pending email for notification {self.notification.id} ({self.get_priority_display()})"

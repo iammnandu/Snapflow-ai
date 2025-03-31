@@ -380,9 +380,6 @@
               </button>
               <ul class="dropdown-menu" aria-labelledby="crewDropdown">
                 <li><a class="dropdown-item" href="{% url 'events:crew_management' event.slug %}">View Details</a></li>
-                {% if is_organizer %}
-                <li><a class="dropdown-item" href="#">Add Members</a></li>
-                {% endif %}
               </ul>
             </div>
           </div>
@@ -520,7 +517,6 @@
               </button>
               <ul class="dropdown-menu" aria-labelledby="equipmentDropdown">
                 <li><a class="dropdown-item" href="{% url 'events:equipment_config' event.slug %}">Configure</a></li>
-                <li><a class="dropdown-item" href="#">View Checklist</a></li>
               </ul>
             </div>
           </div>
