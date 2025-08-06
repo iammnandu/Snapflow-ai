@@ -1,0 +1,282 @@
+import cv2
+import numpy as np
+import face_recognition
+from PIL import Image, ImageEnhance
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+class SnapFlowImageProcessor:
+    """
+    Core image processing component for SnapFlow event photo management system.
+    Handles face detection, recognition, and image quality enhancement.
+    """
+    
+    def __init__(self):
+        self.face_recognition_threshold = 0.6
+        self.quality_enhancement_threshold = 0.7
+        self.user_encodings_cache = {}
+    
+    def process_image(self, image_path, event_id):
+        """
+        Main processing function for newly uploaded event photos.
+        Analyzes image quality, detects faces, and generates tags.
+        
+        Args:
+            image_path: Path to the uploaded image
+            event_id: ID of the event this photo belongs to
+        
+        Returns:
+            dict: Processing results including faces, quality, and tags
+        """
+        logger.info(f"Processing image: {image_path} for event: {event_id}")
+        
+        try:
+            # Load image
+            image = cv2.imread(image_path)
+            if image is None:
+                logger.error(f"Failed to load image at {image_path}")
+                return {"error": "Failed to load image"}
+            
+            # 1. Analyze image quality
+            quality_score = self._analyze_quality(image)
+            
+            # 2. Detect and recognize faces
+            faces = self._detect_faces(image, event_id)
+            
+            # 3. Generate content tags
+            event_type = self._get_event_type(event_id)
+            tags = self._generate_tags(image, event_type)
+            
+            # 4. Create enhanced version if quality is poor
+            enhanced_path = None
+            if quality_score < self.quality_enhancement_threshold:
+                enhanced_path = self._enhance_image(image_path)
+            
+            return {
+                "quality_score": quality_score,
+                "faces": faces,
+                "tags": tags,
+                "enhanced_image": enhanced_path
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing image: {str(e)}", exc_info=True)
+            return {"error": str(e)}
+    
+    def _analyze_quality(self, image):
+        """Analyze image quality metrics and return a score from 0-1."""
+        # Convert to grayscale for analysis
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Calculate sharpness using Laplacian variance
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        sharpness_score = min(laplacian_var / 1000, 1.0)
+        
+        # Calculate brightness
+        brightness = np.mean(gray) / 255.0
+        
+        # Calculate contrast
+        contrast = np.std(gray) / 128.0
+        
+        # Combined quality score (weighted average)
+        quality_score = (0.5 * sharpness_score + 
+                        0.25 * (1 - abs(0.5 - brightness) * 2) + 
+                        0.25 * min(contrast, 1.0))
+        
+        return round(quality_score, 2)
+    
+    def _detect_faces(self, image, event_id):
+        """Detect faces in image and match with event participants."""
+        # Get participant encodings for this event
+        if event_id not in self.user_encodings_cache:
+            self.user_encodings_cache[event_id] = self._get_participant_encodings(event_id)
+        
+        participant_encodings = self.user_encodings_cache[event_id]
+        
+        # Detect face locations
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        face_locations = face_recognition.face_locations(rgb_image)
+        
+        if not face_locations:
+            return []
+        
+        # Get encodings for all detected faces
+        face_encodings = face_recognition.face_encodings(rgb_image, face_locations)
+        
+        # Match faces with participants
+        face_matches = []
+        for i, (face_loc, face_enc) in enumerate(zip(face_locations, face_encodings)):
+            top, right, bottom, left = face_loc
+            
+            # Find best match
+            best_match = None
+            best_confidence = 0
+            
+            for user_id, encoding in participant_encodings.items():
+                # Calculate face distance (lower is better)
+                face_distance = face_recognition.face_distance([encoding], face_enc)[0]
+                confidence = (1 - face_distance) * 100
+                
+                if confidence > self.face_recognition_threshold * 100 and confidence > best_confidence:
+                    best_confidence = confidence
+                    best_match = user_id
+            
+            face_data = {
+                "position": {
+                    "top": top, "right": right, "bottom": bottom, "left": left
+                },
+                "user_id": best_match,
+                "confidence": round(best_confidence, 2) if best_match else None
+            }
+            
+            face_matches.append(face_data)
+        
+        return face_matches
+    
+    def _generate_tags(self, image, event_type):
+        """Generate content tags based on image and event type."""
+        tags = []
+        
+        # Add event type as base tag
+        if event_type:
+            tags.append(event_type.lower())
+        
+        # HSV color analysis for scene understanding
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv_image)
+        
+        # Indoor/Outdoor detection
+        blue_mask = cv2.inRange(hsv_image, (100, 50, 50), (130, 255, 255))  # Sky blue
+        green_mask = cv2.inRange(hsv_image, (35, 50, 50), (85, 255, 255))   # Vegetation
+        
+        blue_ratio = cv2.countNonZero(blue_mask) / (image.shape[0] * image.shape[1])
+        green_ratio = cv2.countNonZero(green_mask) / (image.shape[0] * image.shape[1])
+        
+        if blue_ratio > 0.15 or green_ratio > 0.2:
+            tags.append("outdoor")
+            if green_ratio > 0.3:
+                tags.append("nature")
+        else:
+            tags.append("indoor")
+        
+        # Lighting conditions
+        avg_brightness = np.mean(v)
+        if avg_brightness < 70:
+            tags.append("dark")
+        elif avg_brightness > 200:
+            tags.append("bright")
+        
+        # People detection
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        
+        if len(faces) > 10:
+            tags.append("crowd")
+        elif len(faces) > 5:
+            tags.append("group")
+        elif len(faces) > 0:
+            tags.append("people")
+        
+        # Event context tags
+        if event_type:
+            event_tag_map = {
+                'wedding': ['celebration', 'ceremony'],
+                'corporate': ['business', 'professional'],
+                'conference': ['business', 'presentation'],
+                'concert': ['entertainment', 'music'],
+                'graduation': ['academic', 'ceremony'],
+                'party': ['celebration', 'social']
+            }
+            
+            for key, value_tags in event_tag_map.items():
+                if key in event_type.lower():
+                    tags.extend(value_tags)
+        
+        return list(set(tags))  # Remove duplicates
+    
+    def _enhance_image(self, image_path):
+        """Create an enhanced version of a low-quality photo."""
+        try:
+            # Open the image with PIL
+            img = Image.open(image_path)
+            
+            # Generate enhanced filename
+            path, filename = os.path.split(image_path)
+            base_name, ext = os.path.splitext(filename)
+            enhanced_path = os.path.join(path, f"{base_name}_enhanced{ext}")
+            
+            # Apply enhancements
+            img = ImageEnhance.Contrast(img).enhance(1.2)    # Improve contrast
+            img = ImageEnhance.Brightness(img).enhance(1.1)  # Slight brightness boost
+            img = ImageEnhance.Sharpness(img).enhance(1.5)   # Sharpen edges
+            
+            # Save enhanced image
+            img.save(enhanced_path)
+            return enhanced_path
+            
+        except Exception as e:
+            logger.error(f"Error enhancing image: {str(e)}")
+            return None
+    
+    def _get_participant_encodings(self, event_id):
+        """Get face encodings for all participants of an event."""
+        # This would retrieve user profile images from the database
+        # and generate face encodings for efficient matching
+        # Simplified implementation for demo purposes
+        return {}
+    
+    def _get_event_type(self, event_id):
+        """Get event type from database."""
+        # This would look up the event type in the database
+        # Simplified implementation for demo purposes
+        return "wedding"
+
+
+# Usage example
+def process_uploaded_photo(photo_id, event_id):
+    """Process a newly uploaded event photo."""
+    try:
+        # Get photo path from database
+        photo_path = f"/media/events/{event_id}/photos/{photo_id}.jpg"
+        
+        # Initialize processor
+        processor = SnapFlowImageProcessor()
+        
+        # Process the image
+        results = processor.process_image(photo_path, event_id)
+        
+        # Update photo record in database with processing results
+        if "error" not in results:
+            # Update database with face detection results
+            for face in results["faces"]:
+                if face["user_id"]:
+                    # Create association between photo and user
+                    create_photo_user_association(photo_id, face["user_id"], face["confidence"])
+            
+            # Update photo record with tags and quality score
+            update_photo_record(
+                photo_id, 
+                tags=results["tags"],
+                quality_score=results["quality_score"],
+                enhanced_image=results["enhanced_image"]
+            )
+            
+            return True
+        return False
+        
+    except Exception as e:
+        logger.error(f"Error processing photo {photo_id}: {str(e)}")
+        return False
+
+
+# Helper functions (simplified)
+def create_photo_user_association(photo_id, user_id, confidence):
+    """Create association between photo and recognized user."""
+    pass
+
+def update_photo_record(photo_id, **kwargs):
+    """Update photo record with processing results."""
+    pass
