@@ -97,35 +97,3 @@ class PhotoComment(models.Model):
     def __str__(self):
         return f"Comment by {self.user.username} on photo {self.photo.id}"
 
-class UserPhotoMatch(models.Model):
-    """Matches users to photos they appear in"""
-    photo = models.ForeignKey(EventPhoto, on_delete=models.CASCADE, related_name='user_matches')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='photo_appearances')
-    confidence_score = models.FloatField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    method = models.CharField(max_length=100, default='deepface')
-    class Meta:
-        unique_together = ('photo', 'user')
-        indexes = [
-            models.Index(fields=['photo']),
-            models.Index(fields=['user']),
-        ]
-    
-    def __str__(self):
-        return f"{self.user.username} in photo {self.photo.id} ({self.confidence_score}%)"
-
-class UserGallery(models.Model):
-    """Gallery of photos where a user appears"""
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='personal_gallery')
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"{self.user.username}'s personal gallery"
-    
-    def get_photos(self):
-        """Get all photos where this user appears"""
-        return EventPhoto.objects.filter(user_matches__user=self.user).order_by('-upload_date')
-    
-    @property
-    def photo_count(self):
-        return self.get_photos().count()
